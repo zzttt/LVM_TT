@@ -51,7 +51,7 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 				
 		try {
 			mCamera.setPreviewDisplay(holder);
-			/*mCamera.setPreviewCallback(new Camera.PreviewCallback() {
+			mCamera.setPreviewCallback(new Camera.PreviewCallback() {
 				public void onPreviewFrame(byte[] data, Camera _camera) {
 					// TODO Auto-generated method stub
 					Camera.Parameters params = _camera.getParameters();
@@ -63,7 +63,7 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 
 					//_MActivity.mImageview.setImageBitmap(prBitmap);
 				}
-			});*/
+			});
 		} catch (IOException exception) {
 			mCamera.release();
 			mCamera = null;
@@ -80,10 +80,17 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 	@SuppressLint("NewApi")
 	public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
 		Camera.Parameters parameters = mCamera.getParameters();
-		parameters.setPreviewSize(768, 1024);
+		parameters.setPreviewSize(h, w);
+		parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
 		Log.i("mydata", "surCh width:"+w+"/height:"+h);
 		mCamera.setParameters(parameters);
 		mCamera.setDisplayOrientation(90);
+//		mCamera.autoFocus(new Camera.AutoFocusCallback() {
+//			@Override
+//			public void onAutoFocus(boolean success, Camera camera) {
+//				// TODO Auto-generated method stub
+//			}
+//		});
 		mCamera.startPreview();
 	}
 
