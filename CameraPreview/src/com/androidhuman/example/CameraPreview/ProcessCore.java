@@ -42,7 +42,6 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 
 	public void surfaceCreated(SurfaceHolder holder) {
 		mCamera = Camera.open();
-						
 		try {
 			mCamera.setPreviewDisplay(holder);
 			mCamera.setPreviewCallback(new Camera.PreviewCallback() {

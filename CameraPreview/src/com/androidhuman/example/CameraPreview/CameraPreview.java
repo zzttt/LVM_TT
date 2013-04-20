@@ -23,7 +23,6 @@ public class CameraPreview extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		//startActivity(new Intent(this,SplashActivity.class));
 		// Hide the window title.
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -38,5 +37,6 @@ public class CameraPreview extends Activity {
 		setContentView(mPreview);
 		addContentView(mImageview,new LayoutParams(LayoutParams.WRAP_CONTENT,LayoutParams.WRAP_CONTENT));
 		addContentView(mDraw,new LayoutParams(LayoutParams.WRAP_CONTENT,LayoutParams.WRAP_CONTENT));
+		//startActivity(new Intent(this,SplashActivity.class));
 	}
 }
