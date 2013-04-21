@@ -80,6 +80,7 @@ JNIEXPORT void JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_N
 	int32_t lColorY, lColorU, lColorV;
 	int32_t lColorR, lColorG, lColorB;
 	int32_t y1192;
+	int32_t Ydata;
 	// Processes each pixel and converts YUV to RGB color.
 	for (lY = 0, lYIndex = 0; lY < lBitmapInfo.height; ++lY) {
 		lColorU = 0; lColorV = 0;
@@ -92,35 +93,40 @@ JNIEXPORT void JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_N
 			// Retrieves YUV components. UVs are subsampled
 			// horizontally too, hence %2 (1 UV for 2 Y).
 			lColorY = max(toInt(lSource[lYIndex]) - 16, 0);
-			if (!(lX % 2)) {
-				lColorV = toInt(lSource[lUVIndex++]) - 128;
-				lColorU = toInt(lSource[lUVIndex++]) - 128;
-			}
-			// Computes R, G and B from Y, U and V.
-			y1192 = 1192 * lColorY;
-
-			lColorR = (y1192 + 1634 * lColorV);
-			lColorG = (y1192 - 833 * lColorV - 400 * lColorU);
-			lColorB = (y1192 + 2066 * lColorU);
-			lColorR = clamp(lColorR, 0, 262143);
-			lColorG = clamp(lColorG, 0, 262143);
-			lColorB = clamp(lColorB, 0, 262143);
+			//			if (!(lX % 2)) {
+			//				lColorV = toInt(lSource[lUVIndex++]) - 128;
+			//				lColorU = toInt(lSource[lUVIndex++]) - 128;
+			//			}
+			//			// Computes R, G and B from Y, U and V.
+			//			y1192 = 1192 * lColorY;
+			//
+			//			lColorR = (y1192 + 1634 * lColorV);
+			//			lColorG = (y1192 - 833 * lColorV - 400 * lColorU);
+			//			lColorB = (y1192 + 2066 * lColorU);
+			//			lColorR = clamp(lColorR, 0, 262143);
+			//			lColorG = clamp(lColorG, 0, 262143);
+			//			lColorB = clamp(lColorB, 0, 262143);
 			// Combines R, G, B and A into the final pixel color.
-
+			//LOGI(1, "Y = %d | R = %d | G = %d | B = %d |", lColorY,lColorR,lColorG,lColorB);
 			//lBitmapContent[lYIndex] = color(lColorR,lColorG,lColorB);
 
-			if(color(lColorR,lColorG,lColorB)>0xFF7F7F7F){
-				lBitmapContent[lYIndex] = 0xFFFFFFFF;
-			}
-			else{
-				lBitmapContent[lYIndex] = 0xFF000000;
-			}
+			//lBitmapContent[lYIndex] = lColorY,lColorY,lColor.;
+			//			if(color(lColorR,lColorG,lColorB)>0xFF7F7F7F){
+			//				lBitmapContent[lYIndex] = 0xFFFFFFFF;
+			//			}
+			//			else{
+			//				lBitmapContent[lYIndex] = 0xFF000000;
+			//			}
+
+			Ydata = 0xFF000000 | (lColorY << 16) | (lColorY << 8)  | (lColorY);
+			lBitmapContent[lYIndex] = Ydata;
+
 		}
+		//LOGI(1, "Y = %d | Ydata = %d ", lColorY,Ydata);
 	}
 	LOGE(1, "**Start JNI bitmap converter %d",lColorR);
 
 	(*pEnv)-> ReleasePrimitiveArrayCritical(pEnv,pinArray,lSource,0);
 	AndroidBitmap_unlockPixels(pEnv, pBitmap);
 	LOGI(1, "end color conversion2");
-
 }

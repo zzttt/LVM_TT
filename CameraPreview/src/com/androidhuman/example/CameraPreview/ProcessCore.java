@@ -37,7 +37,7 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 		_MActivity = aaa;
 		mHolder = getHolder();
 		mHolder.addCallback(this);
-		//mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+		mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
 	}
 
 	public void surfaceCreated(SurfaceHolder holder) {
@@ -53,7 +53,6 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 					Log.i("mydata", "width:"+w+"/height:"+h);
 
 					prBitmap = Bitmap.createBitmap(w,h,Bitmap.Config.ARGB_8888);
-					
 					NativeProc(prBitmap, _data);
 
 					_MActivity.mImageview.setImageBitmap(prBitmap);
@@ -61,6 +60,8 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 				}
 			});
 		} catch (IOException exception) {
+			mCamera.stopPreview();
+			mCamera.setPreviewCallback(null);
 			mCamera.release();
 			mCamera = null;
 			// TODO: add more exception handling logic here
@@ -69,6 +70,7 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 
 	public void surfaceDestroyed(SurfaceHolder holder) {
 		mCamera.stopPreview();
+		mCamera.setPreviewCallback(null);
 		mCamera.release();
 		mCamera = null;
 	}
@@ -77,10 +79,10 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 	@SuppressLint("InlinedApi")
 	public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
 		Camera.Parameters parameters = mCamera.getParameters();
-		parameters.setPreviewSize(h, w);
+		parameters.setPreviewSize(w, h);
 		//parameters.setFocusMode(Camera.Parameters.FLASH_MODE_TORCH);
 		parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
-		Log.i("mydata", "surCh width:"+w+"/height:"+h);
+		Log.i("mymode", "surCh width:"+w+"/height:"+h);
 		
 		mCamera.setParameters(parameters);
 		mCamera.setDisplayOrientation(90);
@@ -91,8 +93,6 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 			}
 		});*/
 		mCamera.startPreview();
+		Log.i("mymode", "startPreview()");
 	}
-
-
-
 }
