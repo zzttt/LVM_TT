@@ -4,10 +4,12 @@ import java.io.IOException;
 
 import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
 import android.hardware.Camera;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.widget.ImageView.ScaleType;
 
 public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 	SurfaceHolder mHolder;
@@ -52,10 +54,14 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 					int h = params.getPreviewSize().height;
 					Log.i("mydata", "width:"+w+"/height:"+h);
 
-					prBitmap = Bitmap.createBitmap(w,h,Bitmap.Config.ARGB_8888);
+					
+					//prBitmap = Bitmap.createBitmap(w,h,Bitmap.Config.ARGB_8888);
+					prBitmap = Bitmap.createBitmap(200,200,Bitmap.Config.ARGB_8888);
 					NativeProc(prBitmap, _data);
+					
 
-					_MActivity.mImageview.setImageBitmap(prBitmap);
+					
+					_MActivity.mImageview.setImageBitmap(prBitmap);	
 					//_MActivity.mImageview.invalidate();
 				}
 			});
@@ -79,7 +85,9 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 	@SuppressLint("InlinedApi")
 	public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
 		Camera.Parameters parameters = mCamera.getParameters();
-		parameters.setPreviewSize(w, h);
+		parameters.setPreviewSize(h, w);
+		parameters.setRotation(90);
+		//parameters.setPreviewFpsRange(28000, 35000);
 		//parameters.setFocusMode(Camera.Parameters.FLASH_MODE_TORCH);
 		parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
 		Log.i("mymode", "surCh width:"+w+"/height:"+h);

@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.view.SurfaceHolder;
@@ -12,6 +13,7 @@ import android.view.ViewGroup.LayoutParams;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
+import android.widget.ImageView.ScaleType;
 
 import java.io.IOException;
 
@@ -38,9 +40,24 @@ public class CameraPreview extends Activity {
 		mPreview = new ProcessCore(this);
 		mImageview = new ImageView(this);
 
+		//mImageview.setPadding(150, 150, 150, 150);
+
+		Matrix m = new Matrix();
+		
+		m.setRotate(90);
+		m.postTranslate(484, 412);
+		
+		
+		//m.setRotate(90);
+		
+		mImageview.setScaleType(ScaleType.MATRIX);
+		mImageview.setImageMatrix(m);
+
 		setContentView(mPreview);
-		addContentView(mImageview,new LayoutParams(LayoutParams.WRAP_CONTENT,LayoutParams.WRAP_CONTENT));
-		addContentView(mDraw,new LayoutParams(LayoutParams.WRAP_CONTENT,LayoutParams.WRAP_CONTENT));		
+		addContentView(mImageview,new LayoutParams(LayoutParams.FILL_PARENT,LayoutParams.FILL_PARENT));
+		addContentView(mDraw,new LayoutParams(LayoutParams.WRAP_CONTENT,LayoutParams.WRAP_CONTENT));
+		
+	
 	}
 
 	@Override 
@@ -54,7 +71,7 @@ public class CameraPreview extends Activity {
 			backPressedTime = tempTime; 
 			Toast.makeText(getApplicationContext(),"'뒤로'버튼을한번더누르시면종료됩니다.",Toast.LENGTH_SHORT).show(); 
 		}*/
-		
+
 		finish();
 	} 
 }

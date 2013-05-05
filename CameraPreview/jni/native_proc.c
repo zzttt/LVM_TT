@@ -75,21 +75,21 @@ JNIEXPORT void JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_N
 	//LOGE(1, "**Start JNI bitmap converter ");
 
 	int32_t lFrameSize = lBitmapInfo.width * lBitmapInfo.height;
-	int32_t lYIndex, lUVIndex;
+	int32_t lYIndex, lUVIndex, lSrcIndex;
 	int32_t lX, lY;
 	int32_t lColorY, lColorU, lColorV;
 	int32_t lColorR, lColorG, lColorB;
 	int32_t y1192;
 	int32_t Ydata;
 	// Processes each pixel and converts YUV to RGB color.
-	for (lY = 0, lYIndex = 0; lY < lBitmapInfo.height; ++lY) {
+	for (lY = 0, lSrcIndex=0, lYIndex = 291228; lY < lBitmapInfo.height; ++lY) {
 		lColorU = 0; lColorV = 0;
 		// Y is divided by 2 because UVs are subsampled vertically.
 		// This means that two consecutives iterations refer to the
 		// same UV line (e.g when Y=0 and Y=1).
 		lUVIndex = lFrameSize + (lY >> 1) * lBitmapInfo.width;
 
-		for (lX = 0; lX < lBitmapInfo.width; ++lX, ++lYIndex) {
+		for (lX = 0; lX < lBitmapInfo.width; ++lX, ++lYIndex, ++lSrcIndex) {
 			// Retrieves YUV components. UVs are subsampled
 			// horizontally too, hence %2 (1 UV for 2 Y).
 			lColorY = max(toInt(lSource[lYIndex]) - 16, 0);
@@ -118,10 +118,14 @@ JNIEXPORT void JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_N
 			//				lBitmapContent[lYIndex] = 0xFF000000;
 			//			}
 
-			Ydata = 0xFF000000 | (lColorY << 16) | (lColorY << 8)  | (lColorY);
-			lBitmapContent[lYIndex] = Ydata;
 
+			//Ydata = 0xFF000000 | (lColorY << 16) | (lColorY << 8)  | (lColorY);
+			if(lColorY>127)
+			lBitmapContent[lSrcIndex] = 0xFFFFFFFF;
+			else
+			lBitmapContent[lSrcIndex] = 0xFF000000;
 		}
+		lYIndex = lYIndex+824;
 		//LOGI(1, "Y = %d | Ydata = %d ", lColorY,Ydata);
 	}
 	LOGE(1, "**Start JNI bitmap converter %d",lColorR);

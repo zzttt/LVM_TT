@@ -33,7 +33,7 @@ public class MainActivity extends Activity {
 			}
 		};
 
-		handler.sendEmptyMessageDelayed(0, 500);
+		handler.sendEmptyMessageDelayed(0, 100);
 		
 		
 		//startActivity(new Intent(this,CameraPreview.class));
