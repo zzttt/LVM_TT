@@ -17,7 +17,10 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 	boolean mPreviewState;
 	private Bitmap prBitmap;
 	private CameraPreview _MActivity = null;
-	private DrawOnTop _Drwa = null;
+	private int ThreshHold = 127;
+	private int ThreshHoldData = 0;
+	
+	private int data = 0;
 	protected boolean toggle=false;
 
 
@@ -25,7 +28,9 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 		System.loadLibrary("myproc");
 	}
 
-	private native void NativeProc(Bitmap _outBitmap, byte[] _in);
+	private native int NativeProc(Bitmap _outBitmap, byte[] _in, int _ThreshHold);
+	private native int Gonzalez(Bitmap _outBitmap, byte[] _in);
+	//at btn/classes/$ javah -classpath ~/android/adt-bundle-linux-x86-20130219/sdk/platforms/android-16/android.jar: com.androidhuman.example.CameraPreview.ProcessCore
 	
 	/*Preview(Context context) {
         super(context);
@@ -60,8 +65,14 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 					//prBitmap = Bitmap.createBitmap(w,h,Bitmap.Config.ARGB_8888);
 					prBitmap = Bitmap.createBitmap(200,200,Bitmap.Config.ARGB_8888);
 	
-					NativeProc(prBitmap, _data);
-					_MActivity.mDraw.SetMessage(10);
+					ThreshHoldData = NativeProc(prBitmap, _data,ThreshHold);
+					
+					/*if(ThreshHoldData>127){
+						data++;
+					}*/
+					_MActivity.mDraw.setStringTrashhold(ThreshHoldData);
+					_MActivity.mDraw.setStringData(data);
+					//_MActivity.mDraw.invalidate();
 					_MActivity.mImageview.setImageBitmap(prBitmap);	
 					//_MActivity.mImageview.invalidate();
 				}
