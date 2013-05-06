@@ -11,8 +11,18 @@ import android.view.View;
 
 @SuppressLint("DrawAllocation")
 public class DrawOnTop extends View{
+	
+	//private String message = new String("Test text");
+	public String message = new String("Test text");
+	
+	
 	public DrawOnTop(Context context){
 		super(context);
+	}
+	
+	public void SetMessage(int data){
+		message = "Data : "+data;
+		//return message;
 	}
 
 	@Override
@@ -28,7 +38,7 @@ public class DrawOnTop extends View{
 		paint.setStyle(Paint.Style.STROKE);
 		paint.setColor(Color.GREEN);
 		paint.setTextSize(20);
-		canvas.drawText("Test Text", 20, 20, paint);
+		canvas.drawText(message, 20, 20, paint);
 		canvas.drawLine(canvas.getWidth()/2, 0, canvas.getWidth()/2, canvas.getHeight(), paint);
 		canvas.drawLine(0, canvas.getHeight()/2, canvas.getWidth(), canvas.getHeight()/2, paint);
 		

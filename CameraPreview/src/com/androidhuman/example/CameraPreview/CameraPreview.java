@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.hardware.Camera;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.ViewGroup.LayoutParams;
@@ -21,7 +22,10 @@ import java.io.IOException;
 public class CameraPreview extends Activity {    
 	private ProcessCore mPreview;
 	public ImageView mImageview;
-	private DrawOnTop mDraw;
+	public DrawOnTop mDraw;
+	
+	private int pxWidth;
+	private int pxHeight;
 
 	/*private final long	FINSH_INTERVAL_TIME    = 2000;
 	private long		backPressedTime        = 0;*/
@@ -35,17 +39,25 @@ public class CameraPreview extends Activity {
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
 
+		
 		mDraw = new DrawOnTop(this);
 		// Create our Preview view and set it as the content of our activity.
 		mPreview = new ProcessCore(this);
 		mImageview = new ImageView(this);
 
+		
+
+		DisplayMetrics displayMetrics = new DisplayMetrics();
+		getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+		pxWidth  = displayMetrics.widthPixels/2;
+		pxHeight = displayMetrics.heightPixels/2;
+		
+				
 		//mImageview.setPadding(150, 150, 150, 150);
 
 		Matrix m = new Matrix();
-		
 		m.setRotate(90);
-		m.postTranslate(484, 412);
+		m.postTranslate((pxWidth-100), (pxHeight-100));
 		
 		
 		//m.setRotate(90);
@@ -56,8 +68,6 @@ public class CameraPreview extends Activity {
 		setContentView(mPreview);
 		addContentView(mImageview,new LayoutParams(LayoutParams.FILL_PARENT,LayoutParams.FILL_PARENT));
 		addContentView(mDraw,new LayoutParams(LayoutParams.WRAP_CONTENT,LayoutParams.WRAP_CONTENT));
-		
-	
 	}
 
 	@Override 

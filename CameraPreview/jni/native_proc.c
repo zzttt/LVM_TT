@@ -121,9 +121,9 @@ JNIEXPORT void JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_N
 
 			//Ydata = 0xFF000000 | (lColorY << 16) | (lColorY << 8)  | (lColorY);
 			if(lColorY>127)
-			lBitmapContent[lSrcIndex] = 0xFFFFFFFF;
-			else
 			lBitmapContent[lSrcIndex] = 0xFF000000;
+			else
+			lBitmapContent[lSrcIndex] = 0xFFFFFFFF;
 		}
 		lYIndex = lYIndex+824;
 		//LOGI(1, "Y = %d | Ydata = %d ", lColorY,Ydata);

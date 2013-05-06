@@ -17,6 +17,7 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 	boolean mPreviewState;
 	private Bitmap prBitmap;
 	private CameraPreview _MActivity = null;
+	private DrawOnTop _Drwa = null;
 	protected boolean toggle=false;
 
 
@@ -39,7 +40,8 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 		_MActivity = aaa;
 		mHolder = getHolder();
 		mHolder.addCallback(this);
-		mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+		//mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+		mHolder.setType(SurfaceHolder.SURFACE_TYPE_GPU);
 	}
 
 	public void surfaceCreated(SurfaceHolder holder) {
@@ -57,10 +59,9 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 					
 					//prBitmap = Bitmap.createBitmap(w,h,Bitmap.Config.ARGB_8888);
 					prBitmap = Bitmap.createBitmap(200,200,Bitmap.Config.ARGB_8888);
+	
 					NativeProc(prBitmap, _data);
-					
-
-					
+					_MActivity.mDraw.SetMessage(10);
 					_MActivity.mImageview.setImageBitmap(prBitmap);	
 					//_MActivity.mImageview.invalidate();
 				}
