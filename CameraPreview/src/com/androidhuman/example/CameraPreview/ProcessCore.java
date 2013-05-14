@@ -57,21 +57,27 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 				public void onPreviewFrame(byte[] _data, Camera _camera) {
 					// TODO Auto-generated method stub
 					Camera.Parameters params = _camera.getParameters();
-					int w = params.getPreviewSize().width;
-					int h = params.getPreviewSize().height;
-					Log.i("mydata", "width:"+w+"/height:"+h);
+					//int w = params.getPreviewSize().width;
+					//int h = params.getPreviewSize().height;
+					//Log.i("mydata", "width:"+w+"/height:"+h);
+					Log.i("mydata", "callback is called");
 
 					
 					//prBitmap = Bitmap.createBitmap(w,h,Bitmap.Config.ARGB_8888);
 					prBitmap = Bitmap.createBitmap(200,200,Bitmap.Config.ARGB_8888);
 	
-					ThreshHoldData = NativeProc(prBitmap, _data,ThreshHold);
+					ThreshHoldData = Gonzalez(prBitmap, _data);
+					//NativeProc(prBitmap, _data,ThreshHold);
 					
-					/*if(ThreshHoldData>127){
-						data++;
-					}*/
-					_MActivity.mDraw.setStringTrashhold(ThreshHoldData);
+					/*
+					 	if button.select code Area 
+					 */
+					data += NativeProc(prBitmap, _data,ThreshHoldData);
+					
+					
+					
 					_MActivity.mDraw.setStringData(data);
+					_MActivity.mDraw.setStringTrashhold(ThreshHoldData);
 					//_MActivity.mDraw.invalidate();
 					_MActivity.mImageview.setImageBitmap(prBitmap);	
 					//_MActivity.mImageview.invalidate();

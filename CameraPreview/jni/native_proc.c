@@ -53,6 +53,9 @@ inline int32_t color(pColorR, pColorG, pColorB) {
 JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_NativeProc(JNIEnv *pEnv, jobject pObj, jobject pBitmap, jbyteArray pinArray, jint Threshhold) {
 	AndroidBitmapInfo lBitmapInfo;
 	uint32_t* lBitmapContent;
+	uint32_t All_pixelsum = 0;
+	uint32_t Area_pixelsum = 0;
+	int All_average=0, Area_average=0;
 
 	int lRet;
 
@@ -127,34 +130,60 @@ JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_N
 
 			//Ydata = 0xFF000000 | (lColorY << 16) | (lColorY << 8)  | (lColorY);
 			if(lColorY>Threshhold)
-			lBitmapContent[lSrcIndex] = 0xFF000000;
+				lBitmapContent[lSrcIndex] = 0xFF000000;
 			else
-			lBitmapContent[lSrcIndex] = 0xFFFFFFFF;
+				lBitmapContent[lSrcIndex] = 0xFFFFFFFF;
 		}
 		lYIndex = lYIndex+824;
 		//LOGI(1, "Y = %d | Ydata = %d ", lColorY,Ydata);
 	}
+
+
+	//w=1024, h=768 //// 1024 x ((768/2)-(200/2)) = 290816
+	// 290816 + 412 (| 1024/2 -100 = 412)
+	// 1024 * 359 (| 768/2 - 25) = 367616 + 412 = 368028
+	for (lY = 0, lYIndex = 368028; lY < 30; ++lY) {
+		for (lX = 0; lX < lBitmapInfo.width; ++lX, ++lYIndex) {
+			lColorY = max(toInt(lSource[lYIndex]) - 16, 0);
+			Area_pixelsum += lColorY;
+		}
+		lYIndex = lYIndex+824; //1024-200
+	}
+
+	Area_average = Area_pixelsum/(lBitmapInfo.width*30);
+
 	//return max(toInt(lSource[150]) - 16, 0);
 	//return lColorY;
-	LOGE(1, "**Start JNI bitmap converter %d",lColorR);
+	//LOGE(1, "**Start JNI bitmap converter %d",lColorR);
 
 	(*pEnv)-> ReleasePrimitiveArrayCritical(pEnv,pinArray,lSource,0);
 	AndroidBitmap_unlockPixels(pEnv, pBitmap);
 	//free(lBitmapContent);
 	//free(lSource);
-	LOGI(1, "end color conversion2");
-	return max(toInt(lSource[19900]) - 16, 0);
+	//LOGI(1, "end color conversion2");
+
+	if(Area_average > Threshhold){
+		return 1;
+	}
+	else{
+		return 0;
+	}
+	//return max(toInt(lSource[19900]) - 16, 0);
 }
 
 
 JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_Gonzalez(JNIEnv *pEnv, jobject pObj, jobject pBitmap, jbyteArray pinArray){
 	AndroidBitmapInfo lBitmapInfo;
 	uint32_t* lBitmapContent;
+	uint32_t all_pixelsum = 0;
 
 	int lRet;
 
-	int hist[256]={0};
-	int i=0,j=0;
+	int tar_his[256]={0};
+	int out_his[256]={0};
+	int i=0,j=0,his_sum=0;
+	int avg=0, threshold=0;
+	int low_sum=0, high_sum=0, low_cnt=0, high_cnt=0;
 
 	//	LOGE(1, "**IN JNI bitmap converter IN!");
 	//1. retrieve information about the bitmap
@@ -181,15 +210,71 @@ JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_G
 	int32_t lX, lY;
 	int32_t lColorY;
 
+	int tmp_T, T, min_data, max_data;
+
 	//히스토그램
 	for (lY = 0, lSrcIndex=0, lYIndex = 291228; lY < lBitmapInfo.height; ++lY) {
 		for (lX = 0; lX < lBitmapInfo.width; ++lX, ++lYIndex, ++lSrcIndex) {
 			lColorY = max(toInt(lSource[lYIndex]) - 16, 0);
-			hist[lColorY]++;
+			all_pixelsum += lColorY;
+			tar_his[lColorY]++;
 		}
 		lYIndex = lYIndex+824;
-		//LOGI(1, "Y = %d | Ydata = %d ", lColorY,Ydata);
 	}
+
+	tmp_T = all_pixelsum/(lBitmapInfo.height*lBitmapInfo.width);
+
+	for(i=0;i<256;i++){
+		his_sum += tar_his[i];
+		out_his[i]=his_sum;
+	}
+
+	do
+	{
+		avg=tmp_T;
+		low_sum=0;
+		high_sum=0;
+		low_cnt=0;
+		high_cnt=0;
+		for(i=0; i<256; i++){
+			if(i <=tmp_T)
+			{
+				low_cnt=low_cnt+tar_his[i];
+				low_sum = low_sum + tar_his[i]*i;
+			}
+			else
+			{
+				high_cnt = high_cnt + tar_his[i];
+				high_sum = high_sum + tar_his[i]*i;
+			}
+		}
+		tmp_T = ((low_sum/(double)low_cnt)+(high_sum/(double)high_cnt))/2.0;
+	}
+	while(tmp_T != avg);
+	threshold = (int)tmp_T;
+
+	for(i=0; i<256; i++)
+	{
+		tar_his[i] = 10000*tar_his[i]/(lBitmapInfo.height*lBitmapInfo.width);
+		out_his[i] = 100 * out_his[i]/(lBitmapInfo.height*lBitmapInfo.width);
+	}
+
+
+
+	//	for(i=0;i<256;i++){
+	//		if(hist[i]>0){
+	//			min = i;           // 입력영상에서 가장 밝기값이 작은 값
+	//			i = 257;
+	//		}
+	//	}
+	//	for(i=255;i>0;i--){
+	//		if(hist[i]>0){
+	//			max = i;              // 입력영상에서 가장 밝기값이 큰 값
+	//			i = -1;
+	//		}
+	//	}
+	//	T = (min+max)/2;
+
 
 	LOGE(1, "**Start JNI bitmap converter ");
 
@@ -197,5 +282,6 @@ JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_G
 	AndroidBitmap_unlockPixels(pEnv, pBitmap);
 	//free(lBitmapContent);
 	//free(hist);
+	return threshold;
 	LOGI(1, "end color conversion2");
 }
