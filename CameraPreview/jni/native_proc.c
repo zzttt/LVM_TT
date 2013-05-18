@@ -56,7 +56,7 @@ JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_N
 	uint32_t All_pixelsum = 0;
 	uint32_t Area_pixelsum = 0;
 	int All_average=0, Area_average=0;
-
+	int treshed=0;
 	int lRet;
 
 	//	LOGE(1, "**IN JNI bitmap converter IN!");
@@ -130,7 +130,10 @@ JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_N
 
 			//Ydata = 0xFF000000 | (lColorY << 16) | (lColorY << 8)  | (lColorY);
 			if(lColorY>Threshhold)
+			{
 				lBitmapContent[lSrcIndex] = 0xFF000000;
+				treshed++;
+			}
 			else
 				lBitmapContent[lSrcIndex] = 0xFFFFFFFF;
 		}
@@ -162,12 +165,15 @@ JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_N
 	//free(lSource);
 	//LOGI(1, "end color conversion2");
 
-	if(Area_average > Threshhold){
-		return 1;
-	}
-	else{
-		return 0;
-	}
+//	if(Area_average > Threshhold){
+//		return 1;
+//	}
+//	else{
+//		return 0;
+//	}
+	return treshed;
+
+
 	//return max(toInt(lSource[19900]) - 16, 0);
 }
 
@@ -235,19 +241,21 @@ JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_G
 		low_sum=0;
 		high_sum=0;
 		low_cnt=0;
-		high_cnt=0;
+		high_cnt=0;										// initialization
+
 		for(i=0; i<256; i++){
-			if(i <=tmp_T)
+			if(i <=tmp_T)									//평균보다 낮은값
 			{
-				low_cnt=low_cnt+tar_his[i];
-				low_sum = low_sum + tar_his[i]*i;
+				low_cnt = low_cnt + tar_his[i];			//히스토 정합
+				low_sum = low_sum + tar_his[i]*i;		//밝기 depth
 			}
-			else
+			else											//평균보다 높은값
 			{
-				high_cnt = high_cnt + tar_his[i];
-				high_sum = high_sum + tar_his[i]*i;
+				high_cnt = high_cnt + tar_his[i];		//히스토 정합
+				high_sum = high_sum + tar_his[i]*i;	//밝기 depth
 			}
 		}
+
 		tmp_T = ((low_sum/(double)low_cnt)+(high_sum/(double)high_cnt))/2.0;
 	}
 	while(tmp_T != avg);

@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.widget.ImageView.ScaleType;
+import android.widget.Toast;
 
 public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 	SurfaceHolder mHolder;
@@ -21,6 +22,8 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 	private int ThreshHoldData = 0;
 	
 	private int data = 0;
+	private boolean flag = true;
+	private int[] drop_data = new int[2];
 	protected boolean toggle=false;
 
 
@@ -72,9 +75,20 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 					/*
 					 	if button.select code Area 
 					 */
-					data += NativeProc(prBitmap, _data,ThreshHoldData);
+					//data += NativeProc(prBitmap, _data,ThreshHoldData);
 					
 					
+					drop_data[1] = drop_data[0];
+					drop_data[0] = NativeProc(prBitmap, _data,ThreshHoldData);
+					
+					if(Math.abs(drop_data[0] - drop_data[1]) > 3000){
+						data++;
+					}
+					
+					if((flag)&&(data>30)){
+						Toast.makeText(_MActivity, ""+data, Toast.LENGTH_SHORT).show();
+						flag=false;
+					}
 					
 					_MActivity.mDraw.setStringData(data);
 					_MActivity.mDraw.setStringTrashhold(ThreshHoldData);
