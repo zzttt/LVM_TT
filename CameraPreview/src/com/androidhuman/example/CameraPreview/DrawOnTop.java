@@ -13,9 +13,9 @@ import android.view.View;
 public class DrawOnTop extends View{
 	
 	//private String message = new String("Test text");
-	private String message = new String("Test text");
-	private String trashhold = new String("Test text");
-	private String data = new String("Test text");
+	private String message = new String("Start 버튼을 누르세요");
+	private String trashhold = new String("Start 버튼을 누르세요");
+	private String data = new String("Start 버튼을 누르세요");
 	
 	
 	public DrawOnTop(Context context){
@@ -48,7 +48,8 @@ public class DrawOnTop extends View{
 		focus_rect.set((canvas.getWidth()/2)-100, (canvas.getHeight()/2)-15, (canvas.getWidth()/2)+100, (canvas.getHeight()/2)+15);
 		aid_rect.set((canvas.getWidth()/2)-40, (canvas.getHeight()/2)-80, (canvas.getWidth()/2)+40, (canvas.getHeight()/2)+80);
 		scale_rect.set((canvas.getWidth()/2)-100, (canvas.getHeight()/2)-100, (canvas.getWidth()/2)+100, (canvas.getHeight()/2)+100);
-		text_rect.set(0,0,250,120);
+		//text_rect.set(0,0,250,120);canvas.getWidth()
+		text_rect.set(0,0,canvas.getWidth(),120);
 		
 		
 		paint.setStyle(Paint.Style.FILL_AND_STROKE);

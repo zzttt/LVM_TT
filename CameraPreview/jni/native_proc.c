@@ -90,6 +90,19 @@ JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_N
 	int32_t lColorR, lColorG, lColorB;
 	int32_t y1192;
 	int32_t Ydata;
+	//	// Processes each pixel and converts YUV to RGB color.
+	//	for (lY = 0, lSrcIndex=0, lYIndex = 291228; lY < lBitmapInfo.height; ++lY) {
+	//		lColorU = 0; lColorV = 0;
+	//		// Y is divided by 2 because UVs are subsampled vertically.
+	//		// This means that two consecutives iterations refer to the
+	//		// same UV line (e.g when Y=0 and Y=1).
+	//		lUVIndex = lFrameSize + (lY >> 1) * lBitmapInfo.width;
+	//
+	//		for (lX = 0; lX < lBitmapInfo.width; ++lX, ++lYIndex, ++lSrcIndex) {
+	//			// Retrieves YUV components. UVs are subsampled
+	//			// horizontally too, hence %2 (1 UV for 2 Y).
+	//			lColorY = max(toInt(lSource[lYIndex]) - 16, 0);
+
 	// Processes each pixel and converts YUV to RGB color.
 	for (lY = 0, lSrcIndex=0, lYIndex = 291228; lY < lBitmapInfo.height; ++lY) {
 		lColorU = 0; lColorV = 0;
@@ -132,7 +145,7 @@ JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_N
 			if(lColorY>Threshhold)
 			{
 				lBitmapContent[lSrcIndex] = 0xFF000000;
-				treshed++;
+				//treshed++;
 			}
 			else
 				lBitmapContent[lSrcIndex] = 0xFFFFFFFF;
@@ -143,17 +156,21 @@ JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_N
 
 
 	//w=1024, h=768 //// 1024 x ((768/2)-(200/2)) = 290816
-	// 290816 + 412 (| 1024/2 -100 = 412)
-	// 1024 * 359 (| 768/2 - 25) = 367616 + 412 = 368028
+	// 290816 + 412 ( 1024/2 -100 = 412)
+	// 1024 * 359 ( 768/2 - 25) = 367616 + 412 = 368028
 	for (lY = 0, lYIndex = 368028; lY < 30; ++lY) {
 		for (lX = 0; lX < lBitmapInfo.width; ++lX, ++lYIndex) {
 			lColorY = max(toInt(lSource[lYIndex]) - 16, 0);
 			Area_pixelsum += lColorY;
+			if(lColorY>Threshhold)
+			{
+				treshed++;
+			}
 		}
 		lYIndex = lYIndex+824; //1024-200
 	}
 
-	Area_average = Area_pixelsum/(lBitmapInfo.width*30);
+	//Area_average = Area_pixelsum/(lBitmapInfo.width*30);
 
 	//return max(toInt(lSource[150]) - 16, 0);
 	//return lColorY;
@@ -165,14 +182,13 @@ JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_N
 	//free(lSource);
 	//LOGI(1, "end color conversion2");
 
-//	if(Area_average > Threshhold){
-//		return 1;
-//	}
-//	else{
-//		return 0;
-//	}
+	//	if(Area_average > Threshhold){
+	//		return 1;
+	//	}
+	//	else{
+	//		return 0;
+	//	}
 	return treshed;
-
 
 	//return max(toInt(lSource[19900]) - 16, 0);
 }
