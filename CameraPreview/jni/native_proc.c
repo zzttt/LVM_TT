@@ -158,7 +158,8 @@ JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_N
 	//w=1024, h=768 //// 1024 x ((768/2)-(200/2)) = 290816
 	// 290816 + 412 ( 1024/2 -100 = 412)
 	// 1024 * 359 ( 768/2 - 25) = 367616 + 412 = 368028
-	for (lY = 0, lYIndex = 368028; lY < 30; ++lY) {
+	// 1024 * 334 ( 768/2 - 50) = 342016 + 412 = 342428
+	for (lY = 0, lYIndex = 368028; lY < 50; ++lY) {
 		for (lX = 0; lX < lBitmapInfo.width; ++lX, ++lYIndex) {
 			lColorY = max(toInt(lSource[lYIndex]) - 16, 0);
 			Area_pixelsum += lColorY;

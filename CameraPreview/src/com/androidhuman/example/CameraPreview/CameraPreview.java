@@ -5,6 +5,8 @@ import android.graphics.Matrix;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.view.Window;
@@ -20,12 +22,14 @@ public class CameraPreview extends Activity {
 	private ProcessCore mPreview;
 	public ImageView mImageview;
 	public DrawOnTop mDraw;
-	
+
 	private Button mButton;
 	private FrameLayout.LayoutParams params;
-	
+
 	private int pxWidth;
 	private int pxHeight;
+	
+	private Pop pop;
 
 	/*private final long	FINSH_INTERVAL_TIME    = 2000;
 	private long		backPressedTime        = 0;*/
@@ -37,12 +41,12 @@ public class CameraPreview extends Activity {
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-		
+
 		mDraw = new DrawOnTop(this);
 		// Create our Preview view and set it as the content of our activity.
 		mPreview = new ProcessCore(this);
 		mImageview = new ImageView(this);
-		
+
 		mButton = new Button(this);
 		mButton.setText("Start");
 		//mButton.setGravity(Gravity.BOTTOM);
@@ -52,7 +56,7 @@ public class CameraPreview extends Activity {
 				// TODO Auto-generated method stub
 				Toast.makeText(getApplicationContext(), "반복적 이진화를 통한 임계값 추적을 시작합니다.", Toast.LENGTH_SHORT).show();
 				mPreview.SetState(true);
-				
+
 			}
 		});
 
@@ -71,12 +75,12 @@ public class CameraPreview extends Activity {
 		params.gravity = Gravity.BOTTOM;
 		//params.topMargin = displayMetrics.heightPixels - 100;
 		//params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-		
+
 		mImageview.setScaleType(ScaleType.MATRIX);
 		mImageview.setImageMatrix(m);
 
-//		setContentView(R.layout.controller);
-//		addContentView(mPreview, new LayoutParams(LayoutParams.FILL_PARENT,LayoutParams.FILL_PARENT));
+		//		setContentView(R.layout.controller);
+		//		addContentView(mPreview, new LayoutParams(LayoutParams.FILL_PARENT,LayoutParams.FILL_PARENT));
 		setContentView(mPreview);
 		//setContentView(R.layout.main);
 		addContentView(mImageview,new LayoutParams(LayoutParams.FILL_PARENT,LayoutParams.FILL_PARENT));
@@ -97,5 +101,26 @@ public class CameraPreview extends Activity {
 		}*/
 
 		finish();
-	} 
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		menu.add(0,0,0,"사용 설명서");
+		menu.add(0,1,0,"About");
+		return super.onCreateOptionsMenu(menu);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case 0:
+			pop = new Pop(mDraw);  
+			pop.show();
+			break;
+		case 1:
+			Toast.makeText(getApplicationContext(), "hoomcar@naver.com", Toast.LENGTH_SHORT).show();
+			break;
+		}
+		return super.onOptionsItemSelected(item);
+	}
 }

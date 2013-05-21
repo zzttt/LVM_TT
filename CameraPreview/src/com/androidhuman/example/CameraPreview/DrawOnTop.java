@@ -14,12 +14,18 @@ public class DrawOnTop extends View{
 	
 	//private String message = new String("Test text");
 	private String message = new String("Start 버튼을 누르세요");
-	private String trashhold = new String("Start 버튼을 누르세요");
 	private String data = new String("Start 버튼을 누르세요");
+	private String trashhold = new String("");
+	
 	
 	
 	public DrawOnTop(Context context){
 		super(context);
+	}
+	
+	public void setStringMessegeInit(){
+		data = "Start 버튼을 누르세요";
+		trashhold = "";
 	}
 	
 	public void setStringMessege(int data){
@@ -45,7 +51,7 @@ public class DrawOnTop extends View{
 		Rect scale_rect = new Rect();
 		Rect text_rect = new Rect();
 		
-		focus_rect.set((canvas.getWidth()/2)-100, (canvas.getHeight()/2)-15, (canvas.getWidth()/2)+100, (canvas.getHeight()/2)+15);
+		focus_rect.set((canvas.getWidth()/2)-100, (canvas.getHeight()/2)-25, (canvas.getWidth()/2)+100, (canvas.getHeight()/2)+25);
 		aid_rect.set((canvas.getWidth()/2)-40, (canvas.getHeight()/2)-80, (canvas.getWidth()/2)+40, (canvas.getHeight()/2)+80);
 		scale_rect.set((canvas.getWidth()/2)-100, (canvas.getHeight()/2)-100, (canvas.getWidth()/2)+100, (canvas.getHeight()/2)+100);
 		//text_rect.set(0,0,250,120);canvas.getWidth()
