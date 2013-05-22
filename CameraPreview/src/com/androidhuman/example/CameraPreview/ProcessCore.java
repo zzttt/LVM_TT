@@ -28,6 +28,8 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 
 	private boolean flag_start=false;
 	private boolean flag_threshold=true;
+	private boolean flag_snap=true;
+	private char snap_delay_filter=0;
 	
 	private long start_time=0;
 	private long end_time=0;
@@ -109,7 +111,21 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 						drop_data[0] = NativeProc(prBitmap, _data,ThreshHoldData);
 
 						if(Math.abs(drop_data[0] - drop_data[1]) > 500){
-							data++;
+							
+							snap_delay_filter++;
+							
+							if(flag_snap)
+							{
+								//if(data<5)	{
+									_MActivity.snapImageview[data].setImageBitmap(prBitmap);
+								//}
+								data++;
+								flag_snap=false;
+							}
+							if(snap_delay_filter>3){
+								flag_snap=true;
+								snap_delay_filter=0;
+							}
 						}
 						
 						_MActivity.mDraw.setStringData(data);
@@ -118,7 +134,7 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 						_MActivity.mImageview.setImageBitmap(prBitmap);	
 						//_MActivity.mImageview.invalidate();
 						
-						if(data>50){
+						if(data>4){
 							end_time =  System.currentTimeMillis();
 							result_time = (float) ((end_time - start_time)/1000.0);
 							flag_start = false;
