@@ -90,24 +90,24 @@ public class CameraPreview extends Activity {
 		
 		Matrix snap_m = new Matrix();
 		snap_m.setRotate(90);
-		snap_m.postTranslate(displayMetrics.widthPixels-100, 0);
+		snap_m.postTranslate(displayMetrics.widthPixels, 0);
 		//m.postTranslate((displayMetrics.widthPixels-200), (0));
 		snapImageview[0].setScaleType(ScaleType.MATRIX);
 		snapImageview[0].setImageMatrix(snap_m);
 		
-		snap_m.postTranslate(0, (200));
+		snap_m.postTranslate(0, (202));
 		snapImageview[1].setScaleType(ScaleType.MATRIX);
 		snapImageview[1].setImageMatrix(snap_m);
 		
-		snap_m.postTranslate(0, (200));
+		snap_m.postTranslate(0, (202));
 		snapImageview[2].setScaleType(ScaleType.MATRIX);
 		snapImageview[2].setImageMatrix(snap_m);
 		
-		snap_m.postTranslate(0, (200));
+		snap_m.postTranslate(0, (202));
 		snapImageview[3].setScaleType(ScaleType.MATRIX);
 		snapImageview[3].setImageMatrix(snap_m);
 		
-		snap_m.postTranslate(0, (200));
+		snap_m.postTranslate(0, (202));
 		snapImageview[4].setScaleType(ScaleType.MATRIX);
 		snapImageview[4].setImageMatrix(snap_m);
 		
@@ -119,6 +119,7 @@ public class CameraPreview extends Activity {
 		addContentView(mDraw,new LayoutParams(LayoutParams.WRAP_CONTENT,LayoutParams.WRAP_CONTENT));
 		
 		addContentView(mImageview,new LayoutParams(LayoutParams.FILL_PARENT,LayoutParams.FILL_PARENT));
+		addContentView(mButton,params);
 		
 		addContentView(snapImageview[0],new LayoutParams(LayoutParams.FILL_PARENT,LayoutParams.FILL_PARENT));
 		addContentView(snapImageview[1],new LayoutParams(LayoutParams.FILL_PARENT,LayoutParams.FILL_PARENT));
@@ -127,7 +128,7 @@ public class CameraPreview extends Activity {
 		addContentView(snapImageview[4],new LayoutParams(LayoutParams.FILL_PARENT,LayoutParams.FILL_PARENT));
 		
 		
-		addContentView(mButton,params);		
+				
 	}
 
 	@Override 

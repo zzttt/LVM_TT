@@ -55,7 +55,7 @@ public class DrawOnTop extends View{
 		aid_rect.set((canvas.getWidth()/2)-40, (canvas.getHeight()/2)-80, (canvas.getWidth()/2)+40, (canvas.getHeight()/2)+80);
 		scale_rect.set((canvas.getWidth()/2)-100, (canvas.getHeight()/2)-100, (canvas.getWidth()/2)+100, (canvas.getHeight()/2)+100);
 		//text_rect.set(0,0,250,120);canvas.getWidth()
-		text_rect.set(0,0,canvas.getWidth(),120);
+		text_rect.set(0,0,canvas.getWidth()/2,120);
 		
 		
 		paint.setStyle(Paint.Style.FILL_AND_STROKE);

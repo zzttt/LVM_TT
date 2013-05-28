@@ -247,6 +247,7 @@ JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_G
 
 	tmp_T = all_pixelsum/(lBitmapInfo.height*lBitmapInfo.width);
 
+
 	for(i=0;i<256;i++){
 		his_sum += tar_his[i];
 		out_his[i]=his_sum;
@@ -286,6 +287,7 @@ JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_G
 
 
 
+
 	//	for(i=0;i<256;i++){
 	//		if(hist[i]>0){
 	//			min = i;           // 입력영상에서 가장 밝기값이 작은 값
@@ -308,5 +310,6 @@ JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_G
 	//free(lBitmapContent);
 	//free(hist);
 	return threshold;
+	//return tmp_T;
 	LOGI(1, "end color conversion2");
 }

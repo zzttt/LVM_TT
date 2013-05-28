@@ -6,6 +6,7 @@ import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.hardware.Camera;
+import android.hardware.Camera.Parameters;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -19,7 +20,7 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 	private Bitmap prBitmap;
 	private CameraPreview _MActivity = null;
 	private int ThreshHold = 127;
-	private int ThreshHoldData = 0;
+	private int ThreshHoldData = 127;
 
 	private int data = 0;
 	private boolean flag = true;
@@ -28,9 +29,12 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 
 	private boolean flag_start=false;
 	private boolean flag_threshold=true;
-	private boolean flag_snap=true;
+	private boolean flag_snap=false;
+	private boolean flag_snap_delay=true;
+	private boolean flag_focus=false;
+	private boolean flag_count=false;
 	private char snap_delay_filter=0;
-	
+
 	private long start_time=0;
 	private long end_time=0;
 	private float result_time=0;
@@ -77,67 +81,91 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 					//int w = params.getPreviewSize().width;
 					//int h = params.getPreviewSize().height;
 					//Log.i("mydata", "width:"+w+"/height:"+h);
-					Log.i("mydata", "callback is called");
 
+					/*if(flag_start){
+						params.setFlashMode(Parameters.FLASH_MODE_TORCH);
+					}
+					else{
+						params.setFlashMode(Parameters.FLASH_MODE_OFF);
+					}
+					_camera.setParameters(params);
+					*/
 
 					//prBitmap = Bitmap.createBitmap(w,h,Bitmap.Config.ARGB_8888);
 					prBitmap = Bitmap.createBitmap(200,200,Bitmap.Config.ARGB_8888);
 
-					if(flag_threshold && flag_start){
+					//if(flag_threshold && flag_start){
+					if(flag_start){
 						mCamera.autoFocus (new Camera.AutoFocusCallback() {
-				            public void onAutoFocus(boolean success, Camera camera) {
-				                if(success){
-				                	// do something
-				                }
-				            }
-				        });
-						ThreshHoldData = Gonzalez(prBitmap, _data);
+							public void onAutoFocus(boolean success, Camera camera) {
+								if(success){
+									// do something
+									flag_focus=true;
+									flag_start=false;
+								}
+							}
+						});
+					}
+					
+					if(flag_focus){
 						data = 0;
-						flag_threshold = false;
+						//flag_threshold = false;
+						ThreshHoldData = Gonzalez(prBitmap, _data);
 						_MActivity.mDraw.setStringTrashhold(ThreshHoldData);
 						Toast.makeText(_MActivity, "임계값 "+ThreshHoldData+"을 구하였습니다.", Toast.LENGTH_SHORT).show();
+						flag_focus=false;
+						flag_count=true;
 					}
 					//NativeProc(prBitmap, _data,ThreshHold);
 
 					//data += NativeProc(prBitmap, _data,ThreshHoldData);
+					
+					drop_data[1] = drop_data[0];
+					drop_data[0] = NativeProc(prBitmap, _data,ThreshHoldData);
+					Log.i("mydata", ""+drop_data[0]);
+					
+					if(flag_snap_delay){
+						snap_delay_filter++;
+					}
+					if(snap_delay_filter>3){ //몇프레임 건너뛸지
+						flag_snap=true;
+						flag_snap_delay=false;
+						snap_delay_filter=0;
+					}
 
-					if(flag_start){
+
+					_MActivity.mImageview.setImageBitmap(prBitmap);
+					if(flag_count){
 						if(flag){
 							Toast.makeText(_MActivity, "추적을 시작합니다.", Toast.LENGTH_SHORT).show();
 							start_time = System.currentTimeMillis();
 							flag=false;
 						}
-						drop_data[1] = drop_data[0];
-						drop_data[0] = NativeProc(prBitmap, _data,ThreshHoldData);
+						//						drop_data[1] = drop_data[0];
+						//						drop_data[0] = NativeProc(prBitmap, _data,ThreshHoldData);
 
-						if(Math.abs(drop_data[0] - drop_data[1]) > 500){
-							
-							snap_delay_filter++;
-							
+						if(Math.abs(drop_data[0] - drop_data[1]) > 300){
 							if(flag_snap)
 							{
 								//if(data<5)	{
-									_MActivity.snapImageview[data].setImageBitmap(prBitmap);
+								_MActivity.snapImageview[data].setImageBitmap(prBitmap);
 								//}
 								data++;
 								flag_snap=false;
-							}
-							if(snap_delay_filter>3){
-								flag_snap=true;
-								snap_delay_filter=0;
+								flag_snap_delay=true;
 							}
 						}
-						
+
 						_MActivity.mDraw.setStringData(data);
 						//_MActivity.mDraw.setStringTrashhold(ThreshHoldData);
 						//_MActivity.mDraw.invalidate();
-						_MActivity.mImageview.setImageBitmap(prBitmap);	
+						//_MActivity.mImageview.setImageBitmap(prBitmap);	
 						//_MActivity.mImageview.invalidate();
-						
+
 						if(data>4){
 							end_time =  System.currentTimeMillis();
 							result_time = (float) ((end_time - start_time)/1000.0);
-							flag_start = false;
+							flag_count = false;
 							_MActivity.mDraw.setStringMessegeInit();
 							Toast.makeText(_MActivity, "걸린시간 : "+result_time+"초", Toast.LENGTH_SHORT).show();
 						}
@@ -175,6 +203,7 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 		//parameters.setFocusMode(Camera.Parameters.FLASH_MODE_TORCH);
 		//parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
 		parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
+		//parameters.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
 		Log.i("mymode", "surCh width:"+w+"/height:"+h);
 
 		mCamera.setParameters(parameters);
