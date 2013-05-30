@@ -131,6 +131,22 @@ JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_N
 JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_Gonzalez
   (JNIEnv *, jobject, jobject, jbyteArray);
 
+/*
+ * Class:     com_androidhuman_example_CameraPreview_ProcessCore
+ * Method:    Upper
+ * Signature: (Landroid/graphics/Bitmap;[B)I
+ */
+JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_Upper
+  (JNIEnv *, jobject, jobject, jbyteArray);
+
+/*
+ * Class:     com_androidhuman_example_CameraPreview_ProcessCore
+ * Method:    Under
+ * Signature: (Landroid/graphics/Bitmap;[B)I
+ */
+JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_Under
+  (JNIEnv *, jobject, jobject, jbyteArray);
+
 #ifdef __cplusplus
 }
 #endif

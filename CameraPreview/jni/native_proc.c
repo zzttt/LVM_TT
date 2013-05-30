@@ -313,3 +313,152 @@ JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_G
 	//return tmp_T;
 	LOGI(1, "end color conversion2");
 }
+
+
+
+
+JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_Upper(JNIEnv *pEnv, jobject pObj, jobject pBitmap, jbyteArray pinArray){
+	AndroidBitmapInfo lBitmapInfo;
+	uint32_t* lBitmapContent;
+
+	int lRet;
+
+	int percent=10;
+
+	int histogram[256]={0};
+	int i=0,his_sum=0,his_count=0;
+	int high_thresh=0, high_sum=0;
+
+	//	LOGE(1, "**IN JNI bitmap converter IN!");
+	//1. retrieve information about the bitmap
+	if ((lRet = AndroidBitmap_getInfo(pEnv, pBitmap, &lBitmapInfo)) < 0) {
+		LOGE(1, "AndroidBitmap_getInfo failed! error = %d", lRet);
+		return;
+	}
+	if (lBitmapInfo.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
+		LOGE(1, "Bitmap format is not RGBA_8888!");
+		return;
+	}
+	//2. lock the pixel buffer and retrieve a pointer to it
+	if ((lRet = AndroidBitmap_lockPixels(pEnv, pBitmap, (void**)&lBitmapContent)) < 0) {
+		LOGE(1, "AndroidBitmap_lockPixels() failed! error = %d", lRet);
+		return;
+	}
+	jbyte* lSource = (*pEnv)->GetPrimitiveArrayCritical(pEnv, pinArray, 0);
+	if (lSource == NULL) {
+		LOGE(1, "Source is null");
+		return;
+	}
+	//LOGE(1, "**Start JNI bitmap converter ");
+	int32_t lYIndex,lSrcIndex;
+	int32_t lX, lY;
+	int32_t lColorY;
+
+	int tmp_T, T, min_data, max_data;
+
+	//히스토그램
+	for (lY = 0, lSrcIndex=0, lYIndex = 291228; lY < lBitmapInfo.height; ++lY) {
+		for (lX = 0; lX < lBitmapInfo.width; ++lX, ++lYIndex, ++lSrcIndex) {
+			lColorY = max(toInt(lSource[lYIndex]) - 16, 0);
+			histogram[lColorY]++;
+		}
+		lYIndex = lYIndex+824;
+	}
+
+	for(i=255; i>0; i--){
+		his_sum += histogram[i];
+		if( (his_sum*100.0 / (float) (lBitmapInfo.height * lBitmapInfo.width)) >= percent){
+			high_thresh = i; break;
+		}
+	}
+
+	his_sum=0;
+	for(i=high_thresh; i<256; i++){
+		his_sum += (histogram[i]*i);
+		his_count += histogram[i];
+	}
+
+
+	tmp_T = his_sum/his_count;
+
+
+	(*pEnv)-> ReleasePrimitiveArrayCritical(pEnv,pinArray,lSource,0);
+	AndroidBitmap_unlockPixels(pEnv, pBitmap);
+	//return tmp_T;
+
+	return high_thresh;
+}
+
+
+
+
+JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_Under(JNIEnv *pEnv, jobject pObj, jobject pBitmap, jbyteArray pinArray){
+	AndroidBitmapInfo lBitmapInfo;
+	uint32_t* lBitmapContent;
+
+	int lRet;
+
+	int percent=10;
+
+	int histogram[256]={0};
+	int i=0,his_sum=0,his_count=0;
+	int low_thresh=0;
+
+	//	LOGE(1, "**IN JNI bitmap converter IN!");
+	//1. retrieve information about the bitmap
+	if ((lRet = AndroidBitmap_getInfo(pEnv, pBitmap, &lBitmapInfo)) < 0) {
+		LOGE(1, "AndroidBitmap_getInfo failed! error = %d", lRet);
+		return;
+	}
+	if (lBitmapInfo.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
+		LOGE(1, "Bitmap format is not RGBA_8888!");
+		return;
+	}
+	//2. lock the pixel buffer and retrieve a pointer to it
+	if ((lRet = AndroidBitmap_lockPixels(pEnv, pBitmap, (void**)&lBitmapContent)) < 0) {
+		LOGE(1, "AndroidBitmap_lockPixels() failed! error = %d", lRet);
+		return;
+	}
+	jbyte* lSource = (*pEnv)->GetPrimitiveArrayCritical(pEnv, pinArray, 0);
+	if (lSource == NULL) {
+		LOGE(1, "Source is null");
+		return;
+	}
+	//LOGE(1, "**Start JNI bitmap converter ");
+	int32_t lYIndex,lSrcIndex;
+	int32_t lX, lY;
+	int32_t lColorY;
+
+	int tmp_T, T, min_data, max_data;
+
+	//히스토그램
+	for (lY = 0, lSrcIndex=0, lYIndex = 291228; lY < lBitmapInfo.height; ++lY) {
+		for (lX = 0; lX < lBitmapInfo.width; ++lX, ++lYIndex, ++lSrcIndex) {
+			lColorY = max(toInt(lSource[lYIndex]) - 16, 0);
+			histogram[lColorY]++;
+		}
+		lYIndex = lYIndex+824;
+	}
+
+	for(i=0; i<256; i++){
+		his_sum += histogram[i];
+		if( (his_sum*100.0 / (float) (lBitmapInfo.height * lBitmapInfo.width)) >= percent){
+			low_thresh = i; break;
+		}
+	}
+
+	//LOGI(1, "low_thresh = %d", low_thresh);
+	his_sum=0;
+	for(i=0; i<=low_thresh; i++){
+		his_sum += (histogram[i]*i);
+		his_count += histogram[i];
+	}
+
+
+	tmp_T = his_sum/his_count;
+
+	(*pEnv)-> ReleasePrimitiveArrayCritical(pEnv,pinArray,lSource,0);
+	AndroidBitmap_unlockPixels(pEnv, pBitmap);
+	//return tmp_T;
+	return low_thresh;
+}

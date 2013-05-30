@@ -21,6 +21,8 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 	private CameraPreview _MActivity = null;
 	private int ThreshHold = 127;
 	private int ThreshHoldData = 127;
+	private int Upper = 127;
+	private int Under = 127;
 
 	private int data = 0;
 	private boolean flag = true;
@@ -46,7 +48,9 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 
 	private native int NativeProc(Bitmap _outBitmap, byte[] _in, int _ThreshHold);
 	private native int Gonzalez(Bitmap _outBitmap, byte[] _in);
-	//at btn/classes/$ javah -classpath ~/android/adt-bundle-linux-x86-20130219/sdk/platforms/android-16/android.jar: com.androidhuman.example.CameraPreview.ProcessCore
+	private native int Upper(Bitmap _outBitmap, byte[] _in);
+	private native int Under(Bitmap _outBitmap, byte[] _in);
+	//at bin/classes/$ javah -classpath ~/android/adt-bundle-linux-x86-20130219/sdk/platforms/android-16/android.jar: com.androidhuman.example.CameraPreview.ProcessCore
 
 	/*Preview(Context context) {
         super(context);
@@ -112,16 +116,21 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 						//flag_threshold = false;
 						ThreshHoldData = Gonzalez(prBitmap, _data);
 						_MActivity.mDraw.setStringTrashhold(ThreshHoldData);
-						Toast.makeText(_MActivity, "임계값 "+ThreshHoldData+"을 구하였습니다.", Toast.LENGTH_SHORT).show();
+						//Toast.makeText(_MActivity, "임계값 "+ThreshHoldData+"을 구하였습니다.", Toast.LENGTH_SHORT).show();
+						_MActivity.mDraw.setStringMessege("임계값 "+ThreshHoldData+"을 구하였습니다.");
 						flag_focus=false;
 						flag_count=true;
+						Upper = Upper(prBitmap, _data);
+						Under = Under(prBitmap, _data);
+						_MActivity.mDraw.setStringUpper(Upper);
+						_MActivity.mDraw.setStringUnder(Under);
 					}
-					//NativeProc(prBitmap, _data,ThreshHold);
 
-					//data += NativeProc(prBitmap, _data,ThreshHoldData);
+					
 					
 					drop_data[1] = drop_data[0];
-					drop_data[0] = NativeProc(prBitmap, _data,ThreshHoldData);
+					//drop_data[0] = NativeProc(prBitmap, _data,ThreshHoldData);
+					drop_data[0] = NativeProc(prBitmap, _data, Upper);
 					Log.i("mydata", ""+drop_data[0]);
 					
 					if(flag_snap_delay){
@@ -137,7 +146,8 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 					_MActivity.mImageview.setImageBitmap(prBitmap);
 					if(flag_count){
 						if(flag){
-							Toast.makeText(_MActivity, "추적을 시작합니다.", Toast.LENGTH_SHORT).show();
+							//Toast.makeText(_MActivity, "추적을 시작합니다.", Toast.LENGTH_SHORT).show();
+							_MActivity.mDraw.setStringMessege("추적을 시작합니다.");
 							start_time = System.currentTimeMillis();
 							flag=false;
 						}
@@ -167,7 +177,8 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 							result_time = (float) ((end_time - start_time)/1000.0);
 							flag_count = false;
 							_MActivity.mDraw.setStringMessegeInit();
-							Toast.makeText(_MActivity, "걸린시간 : "+result_time+"초", Toast.LENGTH_SHORT).show();
+							//Toast.makeText(_MActivity, "걸린시간 : "+result_time+"초", Toast.LENGTH_SHORT).show();
+							_MActivity.mDraw.setStringMessege("걸린시간 : "+result_time+"초");
 						}
 
 						/*if((flag)&&(data>30)){

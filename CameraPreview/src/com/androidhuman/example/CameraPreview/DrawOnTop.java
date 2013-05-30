@@ -13,9 +13,11 @@ import android.view.View;
 public class DrawOnTop extends View{
 	
 	//private String message = new String("Test text");
-	private String message = new String("Start 버튼을 누르세요");
+	private String message = new String("");
 	private String data = new String("Start 버튼을 누르세요");
 	private String trashhold = new String("");
+	private String upper = new String("");
+	private String under = new String("");
 	
 	
 	
@@ -28,8 +30,8 @@ public class DrawOnTop extends View{
 		trashhold = "";
 	}
 	
-	public void setStringMessege(int data){
-		message = "Messege : "+data;
+	public void setStringMessege(String data){
+		message = data;
 		//return message;
 	}
 	
@@ -40,6 +42,15 @@ public class DrawOnTop extends View{
 	
 	public void setStringData(int input){
 		data = "추적값 : "+input + "개";
+		//return message;
+	}
+	
+	public void setStringUpper(int input){
+		upper = "상위20%임계값  : "+input;
+		//return message;
+	}
+	public void setStringUnder(int input){
+		under = "하위20%임계값 : "+input;
 		//return message;
 	}
 
@@ -66,6 +77,10 @@ public class DrawOnTop extends View{
 		paint.setTextSize(35);
 		canvas.drawText(data, 20, 50, paint);
 		canvas.drawText(trashhold, 20, 90, paint);
+		paint.setColor(Color.RED);
+		canvas.drawText(upper, 20, 340, paint);
+		canvas.drawText(under, 20, 380, paint);
+		canvas.drawText(message, 220, 660, paint);
 		
 		canvas.drawLine(canvas.getWidth()/2, 0, canvas.getWidth()/2, canvas.getHeight(), paint);
 		canvas.drawLine(0, canvas.getHeight()/2, canvas.getWidth(), canvas.getHeight()/2, paint);
