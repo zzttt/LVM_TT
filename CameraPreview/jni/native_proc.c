@@ -247,7 +247,7 @@ JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_G
 
 	tmp_T = all_pixelsum/(lBitmapInfo.height*lBitmapInfo.width);
 
-
+	/*
 	for(i=0;i<256;i++){
 		his_sum += tar_his[i];
 		out_his[i]=his_sum;
@@ -301,6 +301,9 @@ JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_G
 	//		}
 	//	}
 	//	T = (min+max)/2;
+	 *
+	 *
+	 */
 
 
 	LOGE(1, "**Start JNI bitmap converter ");
@@ -309,8 +312,8 @@ JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_G
 	AndroidBitmap_unlockPixels(pEnv, pBitmap);
 	//free(lBitmapContent);
 	//free(hist);
-	return threshold;
-	//return tmp_T;
+	//return threshold;
+	return tmp_T;
 	LOGI(1, "end color conversion2");
 }
 

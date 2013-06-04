@@ -75,8 +75,8 @@ public class DrawOnTop extends View{
 		paint.setStyle(Paint.Style.STROKE);
 		paint.setColor(Color.GREEN);
 		paint.setTextSize(35);
-		canvas.drawText(data, 20, 50, paint);
-		canvas.drawText(trashhold, 20, 90, paint);
+		canvas.drawText(data, 20, 150, paint);
+		canvas.drawText(trashhold, 20, 190, paint);
 		paint.setColor(Color.RED);
 		canvas.drawText(upper, 20, 340, paint);
 		canvas.drawText(under, 20, 380, paint);

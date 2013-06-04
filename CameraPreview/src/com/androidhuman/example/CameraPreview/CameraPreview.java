@@ -69,7 +69,9 @@ public class CameraPreview extends Activity {
 		// http://developer.android.com/reference/android/widget/RelativeLayout.html
 		// http://www.verious.com/qa/programmatically-set-image-button-layout-gravity/
 		params = new FrameLayout.LayoutParams(LayoutParams.FILL_PARENT,LayoutParams.WRAP_CONTENT);
-		params.gravity = Gravity.BOTTOM;
+		//params.gravity = Gravity.BOTTOM;
+		//params.gravity = Gravity.;
+		
 		//params.topMargin = displayMetrics.heightPixels - 100;
 		//params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
 

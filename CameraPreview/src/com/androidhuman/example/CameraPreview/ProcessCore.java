@@ -129,14 +129,14 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 					
 					
 					drop_data[1] = drop_data[0];
-					//drop_data[0] = NativeProc(prBitmap, _data,ThreshHoldData);
-					drop_data[0] = NativeProc(prBitmap, _data, Upper);
+					drop_data[0] = NativeProc(prBitmap, _data,ThreshHoldData);
+					//drop_data[0] = NativeProc(prBitmap, _data, Upper);
 					Log.i("mydata", ""+drop_data[0]);
 					
 					if(flag_snap_delay){
 						snap_delay_filter++;
 					}
-					if(snap_delay_filter>3){ //몇프레임 건너뛸지
+					if(snap_delay_filter>6){ //몇프레임 건너뛸지
 						flag_snap=true;
 						flag_snap_delay=false;
 						snap_delay_filter=0;
@@ -154,7 +154,7 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 						//						drop_data[1] = drop_data[0];
 						//						drop_data[0] = NativeProc(prBitmap, _data,ThreshHoldData);
 
-						if(Math.abs(drop_data[0] - drop_data[1]) > 300){
+						if(Math.abs(drop_data[0] - drop_data[1]) > 450){
 							if(flag_snap)
 							{
 								//if(data<5)	{
