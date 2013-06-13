@@ -23,6 +23,7 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 	private int ThreshHoldData = 127;
 	private int Upper = 127;
 	private int Under = 127;
+	private int resolution = 0;
 
 	private int data = 0;
 	private boolean flag = true;
@@ -46,10 +47,10 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 		System.loadLibrary("myproc");
 	}
 
-	private native int NativeProc(Bitmap _outBitmap, byte[] _in, int _ThreshHold);
-	private native int Gonzalez(Bitmap _outBitmap, byte[] _in);
-	private native int Upper(Bitmap _outBitmap, byte[] _in);
-	private native int Under(Bitmap _outBitmap, byte[] _in);
+	private native int NativeProc(Bitmap _outBitmap, byte[] _in, int _ThreshHold, int resolution);
+	private native int Gonzalez(Bitmap _outBitmap, byte[] _in, int resolution);
+	private native int Upper(Bitmap _outBitmap, byte[] _in, int resolution);
+	private native int Under(Bitmap _outBitmap, byte[] _in, int resolution);
 	//at bin/classes/$ javah -classpath ~/android/adt-bundle-linux-x86-20130219/sdk/platforms/android-16/android.jar: com.androidhuman.example.CameraPreview.ProcessCore
 
 	/*Preview(Context context) {
@@ -82,8 +83,8 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 				public void onPreviewFrame(byte[] _data, Camera _camera) {
 					// TODO Auto-generated method stub
 					Camera.Parameters params = _camera.getParameters();
-					//int w = params.getPreviewSize().width;
-					//int h = params.getPreviewSize().height;
+					int w = params.getPreviewSize().width;
+					int h = params.getPreviewSize().height;
 					//Log.i("mydata", "width:"+w+"/height:"+h);
 
 					/*if(flag_start){
@@ -93,7 +94,7 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 						params.setFlashMode(Parameters.FLASH_MODE_OFF);
 					}
 					_camera.setParameters(params);
-					*/
+					 */
 
 					//prBitmap = Bitmap.createBitmap(w,h,Bitmap.Config.ARGB_8888);
 					prBitmap = Bitmap.createBitmap(200,200,Bitmap.Config.ARGB_8888);
@@ -110,29 +111,39 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 							}
 						});
 					}
-					
+
 					if(flag_focus){
 						data = 0;
+						//w=1024, h=768 //// 1024 x ((768/2)-(200/2)) = 290816
+						// 290816 + 412 ( 1024/2 -100 = 412)
+						// 1024 * 359 ( 768/2 - 25) = 367616 + 412 = 368028
+						// 1024 * 334 ( 768/2 - 50) = 342016 + 412 = 342428
+						//resolution = ((w*(h>>1 -25) + (w>>1-100))<<11) + w;
+						resolution = w*(h/2 -100) + (w/2-100);
+						resolution = (resolution<<11)+w; 
+						Log.i("my_message","Resolution : "+ (resolution>>11));
+						Log.i("my_message","Width : "+ (resolution&0x7FF));
+
 						//flag_threshold = false;
-						ThreshHoldData = Gonzalez(prBitmap, _data);
+						ThreshHoldData = Gonzalez(prBitmap, _data,resolution);
 						_MActivity.mDraw.setStringTrashhold(ThreshHoldData);
 						//Toast.makeText(_MActivity, "임계값 "+ThreshHoldData+"을 구하였습니다.", Toast.LENGTH_SHORT).show();
 						_MActivity.mDraw.setStringMessege("임계값 "+ThreshHoldData+"을 구하였습니다.");
 						flag_focus=false;
 						flag_count=true;
-						Upper = Upper(prBitmap, _data);
-						Under = Under(prBitmap, _data);
+						Upper = Upper(prBitmap, _data,resolution);
+						Under = Under(prBitmap, _data,resolution);
 						_MActivity.mDraw.setStringUpper(Upper);
 						_MActivity.mDraw.setStringUnder(Under);
 					}
 
-					
-					
-					drop_data[1] = drop_data[0];
-					drop_data[0] = NativeProc(prBitmap, _data,ThreshHoldData);
+
+
+					//drop_data[1] = drop_data[0];
+					//drop_data[0] = NativeProc(prBitmap, _data,ThreshHoldData);
 					//drop_data[0] = NativeProc(prBitmap, _data, Upper);
 					Log.i("mydata", ""+drop_data[0]);
-					
+
 					if(flag_snap_delay){
 						snap_delay_filter++;
 					}
@@ -148,13 +159,16 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 						if(flag){
 							//Toast.makeText(_MActivity, "추적을 시작합니다.", Toast.LENGTH_SHORT).show();
 							_MActivity.mDraw.setStringMessege("추적을 시작합니다.");
-							start_time = System.currentTimeMillis();
+							//start_time = System.currentTimeMillis();
 							flag=false;
 						}
-						//						drop_data[1] = drop_data[0];
-						//						drop_data[0] = NativeProc(prBitmap, _data,ThreshHoldData);
+						drop_data[1] = drop_data[0];
+						drop_data[0] = NativeProc(prBitmap, _data,ThreshHoldData,resolution);
+						if(data == 1){
+							start_time = System.currentTimeMillis();
+						}
 
-						if(Math.abs(drop_data[0] - drop_data[1]) > 450){
+						if(Math.abs(drop_data[0] - drop_data[1]) > 500){
 							if(flag_snap)
 							{
 								//if(data<5)	{

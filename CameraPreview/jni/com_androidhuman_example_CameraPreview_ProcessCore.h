@@ -118,34 +118,34 @@ extern "C" {
 /*
  * Class:     com_androidhuman_example_CameraPreview_ProcessCore
  * Method:    NativeProc
- * Signature: (Landroid/graphics/Bitmap;[BI)I
+ * Signature: (Landroid/graphics/Bitmap;[BII)I
  */
 JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_NativeProc
-  (JNIEnv *, jobject, jobject, jbyteArray, jint);
+  (JNIEnv *, jobject, jobject, jbyteArray, jint, jint);
 
 /*
  * Class:     com_androidhuman_example_CameraPreview_ProcessCore
  * Method:    Gonzalez
- * Signature: (Landroid/graphics/Bitmap;[B)I
+ * Signature: (Landroid/graphics/Bitmap;[BI)I
  */
 JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_Gonzalez
-  (JNIEnv *, jobject, jobject, jbyteArray);
+  (JNIEnv *, jobject, jobject, jbyteArray, jint);
 
 /*
  * Class:     com_androidhuman_example_CameraPreview_ProcessCore
  * Method:    Upper
- * Signature: (Landroid/graphics/Bitmap;[B)I
+ * Signature: (Landroid/graphics/Bitmap;[BI)I
  */
 JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_Upper
-  (JNIEnv *, jobject, jobject, jbyteArray);
+  (JNIEnv *, jobject, jobject, jbyteArray, jint);
 
 /*
  * Class:     com_androidhuman_example_CameraPreview_ProcessCore
  * Method:    Under
- * Signature: (Landroid/graphics/Bitmap;[B)I
+ * Signature: (Landroid/graphics/Bitmap;[BI)I
  */
 JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_Under
-  (JNIEnv *, jobject, jobject, jbyteArray);
+  (JNIEnv *, jobject, jobject, jbyteArray, jint);
 
 #ifdef __cplusplus
 }

@@ -50,7 +50,7 @@ inline int32_t color(pColorR, pColorG, pColorB) {
 
 //Java_com_androidhuman_example_CameraPreview_ProcessCore_NativeProc(JNIEnv *pEnv, jobject pObj, jobject pBitmap, jbyteArray pinArray, jint Threshhold);
 //JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_NativeProc(JNIEnv * pEnv, jobject pObj, jobject pBitmap, jbyteArray pinArray) {
-JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_NativeProc(JNIEnv *pEnv, jobject pObj, jobject pBitmap, jbyteArray pinArray, jint Threshhold) {
+JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_NativeProc(JNIEnv *pEnv, jobject pObj, jobject pBitmap, jbyteArray pinArray, jint Threshhold, jint resolution) {
 	AndroidBitmapInfo lBitmapInfo;
 	uint32_t* lBitmapContent;
 	uint32_t All_pixelsum = 0;
@@ -58,6 +58,7 @@ JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_N
 	int All_average=0, Area_average=0;
 	int treshed=0;
 	int lRet;
+	unsigned int width_temp = 0;
 
 	//	LOGE(1, "**IN JNI bitmap converter IN!");
 	//1. retrieve information about the bitmap
@@ -104,7 +105,7 @@ JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_N
 	//			lColorY = max(toInt(lSource[lYIndex]) - 16, 0);
 
 	// Processes each pixel and converts YUV to RGB color.
-	for (lY = 0, lSrcIndex=0, lYIndex = 291228; lY < lBitmapInfo.height; ++lY) {
+	for (lY = 0, lSrcIndex=0, lYIndex = (resolution>>11); lY < lBitmapInfo.height; ++lY) {
 		lColorU = 0; lColorV = 0;
 		// Y is divided by 2 because UVs are subsampled vertically.
 		// This means that two consecutives iterations refer to the
@@ -150,16 +151,21 @@ JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_N
 			else
 				lBitmapContent[lSrcIndex] = 0xFFFFFFFF;
 		}
-		lYIndex = lYIndex+824;
+		lYIndex = lYIndex+((resolution & 0x7FF) - lBitmapInfo.width);
 		//LOGI(1, "Y = %d | Ydata = %d ", lColorY,Ydata);
 	}
 
 
 	//w=1024, h=768 //// 1024 x ((768/2)-(200/2)) = 290816
-	// 290816 + 412 ( 1024/2 -100 = 412)
+	// 290816 + 412 ( 1024/2 -100 = 412) = 291228 = resoultion>>11
 	// 1024 * 359 ( 768/2 - 25) = 367616 + 412 = 368028
 	// 1024 * 334 ( 768/2 - 50) = 342016 + 412 = 342428
-	for (lY = 0, lYIndex = 368028; lY < 50; ++lY) {
+	width_temp = (resolution>>11) - ((resolution & 0x7FF)/2-100);
+	width_temp = width_temp / (resolution & 0x7FF);
+	width_temp += 75;
+	width_temp = (resolution & 0x7FF)*width_temp +((resolution & 0x7FF)/2-100);
+	LOGI(1, "JNI width_temp : %d",width_temp);
+	for (lY = 0, lYIndex = width_temp; lY < 50; ++lY) {
 		for (lX = 0; lX < lBitmapInfo.width; ++lX, ++lYIndex) {
 			lColorY = max(toInt(lSource[lYIndex]) - 16, 0);
 			Area_pixelsum += lColorY;
@@ -168,7 +174,7 @@ JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_N
 				treshed++;
 			}
 		}
-		lYIndex = lYIndex+824; //1024-200
+		lYIndex = lYIndex+((resolution & 0x7FF) - lBitmapInfo.width); //1024-200
 	}
 
 	//Area_average = Area_pixelsum/(lBitmapInfo.width*30);
@@ -195,7 +201,7 @@ JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_N
 }
 
 
-JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_Gonzalez(JNIEnv *pEnv, jobject pObj, jobject pBitmap, jbyteArray pinArray){
+JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_Gonzalez(JNIEnv *pEnv, jobject pObj, jobject pBitmap, jbyteArray pinArray, jint resolution){
 	AndroidBitmapInfo lBitmapInfo;
 	uint32_t* lBitmapContent;
 	uint32_t all_pixelsum = 0;
@@ -236,14 +242,16 @@ JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_G
 	int tmp_T, T, min_data, max_data;
 
 	//히스토그램
-	for (lY = 0, lSrcIndex=0, lYIndex = 291228; lY < lBitmapInfo.height; ++lY) {
+	LOGI(1, "JNI Resolution : %d",(resolution>>11));
+	for (lY = 0, lSrcIndex=0, lYIndex = (resolution>>11); lY < lBitmapInfo.height; ++lY) {
 		for (lX = 0; lX < lBitmapInfo.width; ++lX, ++lYIndex, ++lSrcIndex) {
 			lColorY = max(toInt(lSource[lYIndex]) - 16, 0);
 			all_pixelsum += lColorY;
 			tar_his[lColorY]++;
 		}
-		lYIndex = lYIndex+824;
+		lYIndex = lYIndex+((resolution & 0x7FF) - lBitmapInfo.width);
 	}
+	LOGI(1, "JNI Pass : %d",((resolution & 0x7FF) - lBitmapInfo.width));
 
 	tmp_T = all_pixelsum/(lBitmapInfo.height*lBitmapInfo.width);
 
@@ -320,7 +328,7 @@ JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_G
 
 
 
-JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_Upper(JNIEnv *pEnv, jobject pObj, jobject pBitmap, jbyteArray pinArray){
+JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_Upper(JNIEnv *pEnv, jobject pObj, jobject pBitmap, jbyteArray pinArray, jint resolution){
 	AndroidBitmapInfo lBitmapInfo;
 	uint32_t* lBitmapContent;
 
@@ -360,12 +368,12 @@ JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_U
 	int tmp_T, T, min_data, max_data;
 
 	//히스토그램
-	for (lY = 0, lSrcIndex=0, lYIndex = 291228; lY < lBitmapInfo.height; ++lY) {
+	for (lY = 0, lSrcIndex=0, lYIndex = (resolution>>11); lY < lBitmapInfo.height; ++lY) {
 		for (lX = 0; lX < lBitmapInfo.width; ++lX, ++lYIndex, ++lSrcIndex) {
 			lColorY = max(toInt(lSource[lYIndex]) - 16, 0);
 			histogram[lColorY]++;
 		}
-		lYIndex = lYIndex+824;
+		lYIndex = lYIndex+((resolution & 0x7FF) - lBitmapInfo.width);
 	}
 
 	for(i=255; i>0; i--){
@@ -395,7 +403,7 @@ JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_U
 
 
 
-JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_Under(JNIEnv *pEnv, jobject pObj, jobject pBitmap, jbyteArray pinArray){
+JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_Under(JNIEnv *pEnv, jobject pObj, jobject pBitmap, jbyteArray pinArray, jint resolution){
 	AndroidBitmapInfo lBitmapInfo;
 	uint32_t* lBitmapContent;
 
@@ -435,13 +443,16 @@ JNIEXPORT jint JNICALL Java_com_androidhuman_example_CameraPreview_ProcessCore_U
 	int tmp_T, T, min_data, max_data;
 
 	//히스토그램
-	for (lY = 0, lSrcIndex=0, lYIndex = 291228; lY < lBitmapInfo.height; ++lY) {
+	LOGI(1, "JNI Resolution : %d",(resolution>>11));
+	for (lY = 0, lSrcIndex=0, lYIndex = (resolution>>11); lY < lBitmapInfo.height; ++lY) {
 		for (lX = 0; lX < lBitmapInfo.width; ++lX, ++lYIndex, ++lSrcIndex) {
 			lColorY = max(toInt(lSource[lYIndex]) - 16, 0);
 			histogram[lColorY]++;
 		}
-		lYIndex = lYIndex+824;
+		lYIndex = lYIndex+((resolution & 0x7FF) - lBitmapInfo.width);
 	}
+
+	LOGI(1, "JNI Pass : %d",((resolution & 0x7FF) - lBitmapInfo.width));
 
 	for(i=0; i<256; i++){
 		his_sum += histogram[i];
