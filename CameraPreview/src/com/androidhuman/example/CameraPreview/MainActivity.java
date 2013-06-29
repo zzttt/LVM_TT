@@ -24,7 +24,10 @@ public class MainActivity extends Activity {
 		
 		setContentView(R.layout.splash);
 		
+		//CameraPreview를 호출해 오기위한 Intent
 		final Intent indent = new Intent(this,CameraPreview.class);
+		
+		//핸들러 등록
 		Handler handler = new Handler () {
 			@Override
 			public void handleMessage(Message msg) {
@@ -33,11 +36,7 @@ public class MainActivity extends Activity {
 			}
 		};
 
+		//0.5초후 MainActivity를 종료시키고 CameraPreview Activity를 호출해온다.
 		handler.sendEmptyMessageDelayed(0, 500);
-		
-		
-		//startActivity(new Intent(this,CameraPreview.class));
-				
-		//startActivity(new Intent(this,SplashActivity.class));
 	}
 }

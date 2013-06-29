@@ -44,43 +44,49 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 	private float result_time=0;
 
 
+	//TODO : native 함수 등록
 	static {
 		System.loadLibrary("myproc");
 	}
-
+	/*
+	 * NativeProc : 이진화 된 값의 개수를 구하는 함수
+	 * Gonzalez : 반복적 이진화를 통한 임계값을 구하는 함수
+	 * Upper : 상위 n%의 임계값을 구하는 함수
+	 * Under : 하위 n%의 임계값을 구하는 함수
+	 * 
+	 * 즉, Gnzalez, Upper, Under등을 통해 임계값을 구하게 되고 구해진 임계값을
+	 * NativeProc에 넣어서 이진화 되는 양을 측정하게 된다.
+	 */
 	private native int NativeProc(Bitmap _outBitmap, byte[] _in, int _ThreshHold, int resolution);
 	private native int Gonzalez(Bitmap _outBitmap, byte[] _in, int resolution);
 	private native int Upper(Bitmap _outBitmap, byte[] _in, int resolution);
 	private native int Under(Bitmap _outBitmap, byte[] _in, int resolution);
 	//at bin/classes/$ javah -classpath ~/android/adt-bundle-linux-x86-20130219/sdk/platforms/android-16/android.jar: com.androidhuman.example.CameraPreview.ProcessCore
 
-	/*Preview(Context context) {
-        super(context);
-
-        mHolder = getHolder();
-        mHolder.addCallback(this);
-        mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-    }*/
-
 	ProcessCore(CameraPreview aaa) {
 		super(aaa);
 		_MActivity = aaa;
 		mHolder = getHolder();
 		mHolder.addCallback(this);
+		//푸쉬버퍼는 아이스크림샌드위치(ICS)이후로 사용되지 않습니다.
 		//mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
 		mHolder.setType(SurfaceHolder.SURFACE_TYPE_GPU);
 	}
+	
+	//각종 flag의 상태를 정의하기위한 method
 	public void SetState(boolean state){
 		flag_start = state;
 		flag_threshold = state;
 		flag = state;
 	}
 
+	//surfaceCreated - 서피스뷰가 생성되었을때 실행되는 메소드
 	public void surfaceCreated(SurfaceHolder holder) {
 		mCamera = Camera.open();
 		try {
 			mCamera.setPreviewDisplay(holder);
 			mCamera.setPreviewCallback(new Camera.PreviewCallback() {
+				//서피스뷰 콜백함수 등록
 				public void onPreviewFrame(byte[] _data, Camera _camera) {
 					// TODO Auto-generated method stub
 					Camera.Parameters params = _camera.getParameters();
@@ -88,6 +94,7 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 					int h = params.getPreviewSize().height;
 					//Log.i("mydata", "width:"+w+"/height:"+h);
 
+					//아래 주석을 해제시키면 시작시에 플래시가 작동됩니다.
 					/*if(flag_start){
 						params.setFlashMode(Parameters.FLASH_MODE_TORCH);
 					}
@@ -97,9 +104,13 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 					_camera.setParameters(params);
 					 */
 
+					
 					//prBitmap = Bitmap.createBitmap(w,h,Bitmap.Config.ARGB_8888);
+					//생성되는 이진화된 네모박스의 크기를 정의하고 있습니다.
 					prBitmap = Bitmap.createBitmap(200,200,Bitmap.Config.ARGB_8888);
 
+					
+					// 처리 시작을 위한 flag. 처리가 시작되면 포커싱을 맞추게 됩니다.
 					//if(flag_threshold && flag_start){
 					if(flag_start){
 						mCamera.autoFocus (new Camera.AutoFocusCallback() {
@@ -109,12 +120,16 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 									flag_focus=true;
 									flag_start=false;
 								}
+								else{} //여기에 flag_focue=false를 넣어야 할 것같으나 안넣어도 잘 되어서 일단 보류
 							}
 						});
 					}
 
+					//포커싱을 맞추는데 성공했으면 실질적인 측정에 들어갑니다.
 					if(flag_focus){
 						data = 0;
+						
+						//화면 해상도를 보정하기 위한 수식입니다.
 						//w=1024, h=768 //// 1024 x ((768/2)-(200/2)) = 290816
 						// 290816 + 412 ( 1024/2 -100 = 412)
 						// 1024 * 359 ( 768/2 - 25) = 367616 + 412 = 368028
@@ -124,7 +139,15 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 						resolution = (resolution<<11)+w; 
 						Log.i("my_message","Resolution : "+ (resolution>>11));
 						Log.i("my_message","Width : "+ (resolution&0x7FF));
+						/*int형 데이터(32비트)에 하위 11비트구간에는 가로길이를 넣습니다.
+						 * 나머지 상위 21비트 구간에는 해상도를 보정하기 위한 값을 넣습니다.
+						 *  
+						 *  Native함수를 호출할때 데이터복사를 최소화하기 위함...이라기보다
+						 *  사실은 함수 다시짜기 귀찮아서 이랬습니다...ㅠㅠ
+						 */
+						
 
+						//TODO : Gonzalez 를 통해 임계값 추출
 						//flag_threshold = false;
 						ThreshHoldData = Gonzalez(prBitmap, _data,resolution);
 						_MActivity.mDraw.setStringTrashhold(ThreshHoldData);
@@ -139,12 +162,13 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 					}
 
 
-
+					//아래 부분 주석을 해제하되면 처리중인 영상이 항상 보이게 됩니다. 디버깅용
 					//drop_data[1] = drop_data[0];
 					//drop_data[0] = NativeProc(prBitmap, _data,ThreshHoldData);
 					//drop_data[0] = NativeProc(prBitmap, _data, Upper);
 					Log.i("mydata", ""+drop_data[0]);
 
+					//임계값을 검출후 n개의 프레임을 건너뛰기 위한 flag 값들입니다.
 					if(flag_snap_delay){
 						snap_delay_filter++;
 					}
@@ -154,22 +178,32 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 						snap_delay_filter=0;
 					}
 
-
+					//처리된 이미지를 prBitmap에 뿌려준다.
 					_MActivity.mImageview.setImageBitmap(prBitmap);
+					
+					
+					//임계값이 검출되면 시작하기휘한 flag_count입니다.
 					if(flag_count){
+						//그냥 시작메세지를 한번 띄워주기 위한 flag
 						if(flag){
 							//Toast.makeText(_MActivity, "추적을 시작합니다.", Toast.LENGTH_SHORT).show();
 							_MActivity.mDraw.setStringMessege("추적을 시작합니다.");
 							//start_time = System.currentTimeMillis();
 							flag=false;
 						}
+						//미분을 위한 2개의 데이터 저장
 						drop_data[1] = drop_data[0];
 						drop_data[0] = NativeProc(prBitmap, _data,ThreshHoldData,resolution);
+						
+						//검출된 물방울이 1개가 될 때 시간을 측정하기 시작합니다. 
 						if(data == 1){
 							start_time = System.currentTimeMillis();
 						}
 
+						//TODO : 검출을 판단하는 부분
+						// 미분값이 500이상일때 (이전 영상과 현재 영상의 이진화된 개수의 차가 500이상)
 						if(Math.abs(drop_data[0] - drop_data[1]) > 500){
+							//충분히 프레임을 건너 뛰었으면
 							if(flag_snap)
 							{
 								//if(data<5)	{
@@ -181,12 +215,14 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 							}
 						}
 
+						//data++뒤로 옮겨와 호출 횟수가 적어져 좋을꺼같으나 일단 보류
 						_MActivity.mDraw.setStringData(data);
 						//_MActivity.mDraw.setStringTrashhold(ThreshHoldData);
 						//_MActivity.mDraw.invalidate();
 						//_MActivity.mImageview.setImageBitmap(prBitmap);	
 						//_MActivity.mImageview.invalidate();
 
+						//검출된 물방울의 개수가 5개가 되면 측정을 종료한다.
 						if(data>4){
 							end_time =  System.currentTimeMillis();
 							result_time = (float) ((end_time - start_time)/1000.0);
@@ -204,6 +240,7 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 				}
 			});
 		} catch (IOException exception) {
+			//이 예외처리를 안해두면 뒤로가기를 눌렀을때 카메라 release가 안되어 에러메세지가 호출된다.
 			mCamera.stopPreview();
 			mCamera.setPreviewCallback(null);
 			mCamera.release();
@@ -212,6 +249,7 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 		}
 	}
 
+	// surface가 종료되었을때 실행되는 메소드
 	public void surfaceDestroyed(SurfaceHolder holder) {
 		mCamera.stopPreview();
 		mCamera.setPreviewCallback(null);
@@ -219,12 +257,21 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 		mCamera = null;
 	}
 
+	
+	// surface가 변경되었을떄 실행되는 메소드. surfaceCreated 다음에 바로 실행된다.
 	//@SuppressLint("NewApi")
 	@SuppressLint("InlinedApi")
 	public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
+		//카메라 파라메터를 정의
 		Camera.Parameters parameters = mCamera.getParameters();
+		
+		//지원되는 카메라 해상도를 받아온다.
 		List<Camera.Size> previewSizes = parameters.getSupportedPreviewSizes();
+		
+		//0부터 n개의 해상도중 하나를 선택 할 수 있으며 일단은 1번째의 해상도를 선택
 		Camera.Size previewSize = previewSizes.get(1);
+		
+		//정의된 해상도로 Preview를 띄운다.
 		parameters.setPreviewSize(previewSize.height, previewSize.width);
 		parameters.setRotation(90);
 		//parameters.setPreviewFpsRange(28000, 35000);
