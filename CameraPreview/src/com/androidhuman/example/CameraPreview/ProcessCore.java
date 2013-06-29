@@ -1,6 +1,7 @@
 package com.androidhuman.example.CameraPreview;
 
 import java.io.IOException;
+import java.util.List;
 
 import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
@@ -222,12 +223,14 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 	@SuppressLint("InlinedApi")
 	public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
 		Camera.Parameters parameters = mCamera.getParameters();
-		parameters.setPreviewSize(h, w);
+		List<Camera.Size> previewSizes = parameters.getSupportedPreviewSizes();
+		Camera.Size previewSize = previewSizes.get(1);
+		parameters.setPreviewSize(previewSize.height, previewSize.width);
 		parameters.setRotation(90);
 		//parameters.setPreviewFpsRange(28000, 35000);
 		//parameters.setFocusMode(Camera.Parameters.FLASH_MODE_TORCH);
 		//parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
-		parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
+		//parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
 		//parameters.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
 		Log.i("mymode", "surCh width:"+w+"/height:"+h);
 
