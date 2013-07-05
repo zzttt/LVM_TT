@@ -1,36 +1,61 @@
 package com.androidhuman.example.CameraPreview;
 
+
 import android.app.Activity;
+import android.content.Context;
+import android.graphics.Color;
 import android.graphics.Matrix;
+import android.media.AudioManager;
+import android.media.SoundPool;
+import android.media.SoundPool.OnLoadCompleteListener;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
+import android.widget.TextView;
 import android.widget.Toast;
 
 
-public class CameraPreview extends Activity {    
+
+
+public class CameraPreview extends Activity{    
 	private ProcessCore mPreview;
 	public ImageView mImageview;
 	public ImageView[] snapImageview = new ImageView[5];
 	public DrawOnTop mDraw;
+	public DebugText mDebugText;
 
-	private Button mButton;
-	private FrameLayout.LayoutParams params;
 
+	//private ImageButton mButton;
+	private TextView mButton;
+	private CheckBox mCheckbox;
+	private FrameLayout.LayoutParams btn_params;
+	private FrameLayout.LayoutParams chk_params;
+
+	boolean loaded = false;
+	
 	private int pxWidth;
 	private int pxHeight;
-	
+
 	private Pop pop;
+	int id;
+	SoundPool beepsound;
+	Vibrator vibrator; 
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -40,45 +65,81 @@ public class CameraPreview extends Activity {
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-		//ê¸°ë³¸ì ì¸ í™”ë©´ì„ êµ¬ì„±í•˜ê³ ìˆëŠ” View ë“¤
+		this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
+		vibrator = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
+		this.beepsound = new SoundPool(1, AudioManager.STREAM_MUSIC,0);
+		beepsound.setOnLoadCompleteListener(new OnLoadCompleteListener() {
+            @Override
+            public void onLoadComplete(SoundPool soundPool, int sampleId,
+                    int status) {
+                loaded = true;
+            }
+        });
+        id = beepsound.load(this, R.raw.water, 1);
+
+		//±âº»ÀûÀÎ È­¸éÀ» ±¸¼ºÇÏ°íÀÖ´Â View µé
 		mDraw = new DrawOnTop(this);
 		// Create our Preview view and set it as the content of our activity.
 		mPreview = new ProcessCore(this);
 		mImageview = new ImageView(this);
-		
-		//ì°í˜€ì§„ í”„ë ˆì„ì„ ì €ì¥í•˜ì—¬ ë³´ì—¬ì£¼ê¸° ìœ„í•œ Image Viewë“¤
+		mDebugText = new DebugText(this);
+
+		//ÂïÇôÁø ÇÁ·¹ÀÓÀ» ÀúÀåÇÏ¿© º¸¿©ÁÖ±â À§ÇÑ Image Viewµé
 		snapImageview[0] = new ImageView(this);
 		snapImageview[1] = new ImageView(this);
 		snapImageview[2] = new ImageView(this);
 		snapImageview[3] = new ImageView(this);
 		snapImageview[4] = new ImageView(this);
-
-		// ë²„íŠ¼ì„ ì¶”ê°€í•©ë‹ˆë‹¤.
-		mButton = new Button(this);
+		
+		// ¹öÆ°À» Ãß°¡ÇÕ´Ï´Ù.
+		mButton = new TextView(this);
 		mButton.setText("Start");
+		mButton.setTextColor(Color.BLACK);
+		mButton.setBackgroundResource(R.drawable.slelector);
+		mButton.setGravity(Gravity.CENTER);
+		
+
+		//mButton.setBackgroundColor(R.drawable.slelector);
 		//mButton.setGravity(Gravity.BOTTOM);
 		mButton.setOnClickListener(new Button.OnClickListener(){
 			@Override
 			public void onClick(View arg0) {
 				// TODO Auto-generated method stub
-				Toast.makeText(getApplicationContext(), "ë°˜ë³µì  ì´ì§„í™”ë¥¼ í†µí•œ ì„ê³„ê°’ ì¶”ì ì„ ì‹œì‘í•©ë‹ˆë‹¤.", Toast.LENGTH_SHORT).show();
+				//beepsound.play(id,1.0f,1.0f,0,0,1.0f);
+				Toast.makeText(getApplicationContext(), "¹İº¹Àû ÀÌÁøÈ­¸¦ ÅëÇÑ ÀÓ°è°ª ÃßÀûÀ» ½ÃÀÛÇÕ´Ï´Ù.", Toast.LENGTH_SHORT).show();
 				mPreview.SetState(true);
 			}
 		});
 		
+		/*
+		mButton.setOnTouchListener(new View.OnTouchListener() {
+			
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				// TODO Auto-generated method stub
+				return false;
+			}
+		})*/;
+
+
 		// http://developer.android.com/reference/android/widget/RelativeLayout.html
 		// http://www.verious.com/qa/programmatically-set-image-button-layout-gravity/
-		params = new FrameLayout.LayoutParams(LayoutParams.FILL_PARENT,LayoutParams.WRAP_CONTENT);
-		
-		//ì•„ë˜ ë‚´ìš©ì˜ ì£¼ì„ì„ í•´ì œí•˜ë©´ ë²„íŠ¼ì´ ì•„ë˜ë¡œ ë‚´ë ¤ê°‘ë‹ˆë‹¤.
-		//params.gravity = Gravity.BOTTOM;
-		//params.gravity = Gravity.;
-		
+		btn_params = new FrameLayout.LayoutParams(LayoutParams.FILL_PARENT,LayoutParams.WRAP_CONTENT);
+		chk_params = new FrameLayout.LayoutParams(LayoutParams.FILL_PARENT,LayoutParams.WRAP_CONTENT);
+
+
+		//¾Æ·¡ ³»¿ëÀÇ ÁÖ¼®À» ÇØÁ¦ÇÏ¸é ¹öÆ°ÀÌ ¾Æ·¡·Î ³»·Á°©´Ï´Ù.
+		btn_params.gravity = Gravity.BOTTOM;
+		//btn_params.gravity = Gravity.;
+
+
 		//params.topMargin = displayMetrics.heightPixels - 100;
 		//params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
 
 
-		//mImageviewë¥¼ ê°€ìš´ë°ë¡œ ìœ„ì¹˜ì‹œí‚¤ê³  90ë„ íšŒì „í•˜ê¸° ìœ„í•˜ì—¬ ì‚¬ìš©í•œ matrix ì…ë‹ˆë‹¤.
+
+
+		//mImageview¸¦ °¡¿îµ¥·Î À§Ä¡½ÃÅ°°í 90µµ È¸ÀüÇÏ±â À§ÇÏ¿© »ç¿ëÇÑ matrix ÀÔ´Ï´Ù.
 		DisplayMetrics displayMetrics = new DisplayMetrics();
 		getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
 		pxWidth  = displayMetrics.widthPixels/2;
@@ -86,43 +147,89 @@ public class CameraPreview extends Activity {
 		Matrix m = new Matrix();
 		m.setRotate(90);
 		m.postTranslate((pxWidth-100), (pxHeight-100));
-		
+
+
 		mImageview.setScaleType(ScaleType.MATRIX);
 		mImageview.setImageMatrix(m);
-		
-		
-		//í”„ë ˆì„ì„ ë³´ì—¬ì£¼ê¸° ìœ„í•œ Imageviewë„  90ë„ íšŒì „ ë° ìœ„ì¹˜ì„¤ì •ì„ í•©ë‹ˆë‹¤.
+
+
+
+
+		//ÇÁ·¹ÀÓÀ» º¸¿©ÁÖ±â À§ÇÑ Imageviewµµ  90µµ È¸Àü ¹× À§Ä¡¼³Á¤À» ÇÕ´Ï´Ù.
 		Matrix snap_m = new Matrix();
 		snap_m.setRotate(90);
-		snap_m.postTranslate(displayMetrics.widthPixels, 0);
+		snap_m.postScale(0.5f, 0.5f);
+		//snap_m.postTranslate(displayMetrics.widthPixels, 0);
+		snap_m.postTranslate(360, 0);
 		//m.postTranslate((displayMetrics.widthPixels-200), (0));
 		snapImageview[0].setScaleType(ScaleType.MATRIX);
 		snapImageview[0].setImageMatrix(snap_m);
-		
-		snap_m.postTranslate(0, (202));
+
+
+		//snap_m.postTranslate(0, (202));
+		snap_m.postTranslate((102), 0);
 		snapImageview[1].setScaleType(ScaleType.MATRIX);
 		snapImageview[1].setImageMatrix(snap_m);
-		
-		snap_m.postTranslate(0, (202));
+
+
+		snap_m.postTranslate((102), 0);
 		snapImageview[2].setScaleType(ScaleType.MATRIX);
 		snapImageview[2].setImageMatrix(snap_m);
-		
-		snap_m.postTranslate(0, (202));
+
+
+		snap_m.postTranslate((102), 0);
 		snapImageview[3].setScaleType(ScaleType.MATRIX);
 		snapImageview[3].setImageMatrix(snap_m);
-		
-		snap_m.postTranslate(0, (202));
+
+
+		snap_m.postTranslate((102), 0);
 		snapImageview[4].setScaleType(ScaleType.MATRIX);
 		snapImageview[4].setImageMatrix(snap_m);
-		
-		
-		//ì§€ê¸ˆê¹Œì§€ ì •ì˜í–ˆë˜ ëª¨ë“  Viewë“¤ì„ í™”ë©´ì— ì¶”ê°€í•©ë‹ˆë‹¤.
+
+
+		//Ã¼Å©¹Ú½º
+		mCheckbox = new CheckBox(this);
+		mCheckbox.setText("Debug Mode");
+		mCheckbox.setChecked(true);
+		mCheckbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){
+			@Override
+			public void onCheckedChanged(CompoundButton buttonView,
+					boolean isChecked) {
+				// TODO Auto-generated method stub
+				if(isChecked){
+					mImageview.setVisibility(View.VISIBLE);
+					mDebugText.setVisibility(View.VISIBLE);
+					snapImageview[0].setVisibility(View.VISIBLE);
+					snapImageview[1].setVisibility(View.VISIBLE);
+					snapImageview[2].setVisibility(View.VISIBLE);
+					snapImageview[3].setVisibility(View.VISIBLE);
+					snapImageview[4].setVisibility(View.VISIBLE);
+				}
+				else{
+					mImageview.setVisibility(View.INVISIBLE);
+					mDebugText.setVisibility(View.INVISIBLE);
+					snapImageview[0].setVisibility(View.INVISIBLE);
+					snapImageview[1].setVisibility(View.INVISIBLE);
+					snapImageview[2].setVisibility(View.INVISIBLE);
+					snapImageview[3].setVisibility(View.INVISIBLE);
+					snapImageview[4].setVisibility(View.INVISIBLE);
+				}
+			}	
+		});
+
+
+		//Áö±İ±îÁö Á¤ÀÇÇß´ø ¸ğµç ViewµéÀ» È­¸é¿¡ Ãß°¡ÇÕ´Ï´Ù.
 		setContentView(mPreview);
 		addContentView(mDraw,new LayoutParams(LayoutParams.WRAP_CONTENT,LayoutParams.WRAP_CONTENT));
+		addContentView(mDebugText,new LayoutParams(LayoutParams.WRAP_CONTENT,LayoutParams.WRAP_CONTENT));
+
+
 		
+		addContentView(mButton,btn_params);
+		
+		addContentView(mCheckbox, chk_params);
+
 		addContentView(mImageview,new LayoutParams(LayoutParams.FILL_PARENT,LayoutParams.FILL_PARENT));
-		addContentView(mButton,params);
-		
 		addContentView(snapImageview[0],new LayoutParams(LayoutParams.FILL_PARENT,LayoutParams.FILL_PARENT));
 		addContentView(snapImageview[1],new LayoutParams(LayoutParams.FILL_PARENT,LayoutParams.FILL_PARENT));
 		addContentView(snapImageview[2],new LayoutParams(LayoutParams.FILL_PARENT,LayoutParams.FILL_PARENT));
@@ -130,7 +237,8 @@ public class CameraPreview extends Activity {
 		addContentView(snapImageview[4],new LayoutParams(LayoutParams.FILL_PARENT,LayoutParams.FILL_PARENT));
 	}
 
-	//ë’¤ë¡œê°€ê¸° ë²„íŠ¼ì„ ëˆŒë €ì„ë–„ ë°”ë¡œ êº¼ì§€ëŠ”ê²ƒì„ ë§‰ê¸°ìœ„í•œ ì†ŒìŠ¤ì˜€ì§€ë§Œ ì§€ê¸ˆì€ ì‚¬ìš©í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.
+
+	//µÚ·Î°¡±â ¹öÆ°À» ´­·¶À»‹š ¹Ù·Î ²¨Áö´Â°ÍÀ» ¸·±âÀ§ÇÑ ¼Ò½º¿´Áö¸¸ Áö±İÀº »ç¿ëÇÏÁö ¾Ê½À´Ï´Ù.
 	@Override 
 	public void onBackPressed() {
 		/*long tempTime        = System.currentTimeMillis();
@@ -140,19 +248,22 @@ public class CameraPreview extends Activity {
 		} 
 		else { 
 			backPressedTime = tempTime; 
-			Toast.makeText(getApplicationContext(),"'ë’¤ë¡œ'ë²„íŠ¼ì„í•œë²ˆë”ëˆ„ë¥´ì‹œë©´ì¢…ë£Œë©ë‹ˆë‹¤.",Toast.LENGTH_SHORT).show(); 
+			Toast.makeText(getApplicationContext(),"'µÚ·Î'¹öÆ°À»ÇÑ¹ø´õ´©¸£½Ã¸éÁ¾·áµË´Ï´Ù.",Toast.LENGTH_SHORT).show(); 
 		}*/
+
 
 		finish();
 	}
 
-	//ë©”ë‰´ ë‚´ìš©
+
+	//¸Ş´º ³»¿ë
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		menu.add(0,0,0,"ì‚¬ìš© ì„¤ëª…ì„œ");
+		menu.add(0,0,0,"»ç¿ë ¼³¸í¼­");
 		menu.add(0,1,0,"About");
 		return super.onCreateOptionsMenu(menu);
 	}
+
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
@@ -168,3 +279,4 @@ public class CameraPreview extends Activity {
 		return super.onOptionsItemSelected(item);
 	}
 }
+

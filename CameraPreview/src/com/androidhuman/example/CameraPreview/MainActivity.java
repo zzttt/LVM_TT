@@ -1,5 +1,6 @@
 package com.androidhuman.example.CameraPreview;
 
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
@@ -11,23 +12,29 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 
 
+
+
 @SuppressLint("HandlerLeak")
 public class MainActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+
 
 		super.onCreate(savedInstanceState);
 		// Hide the window title.
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-		
+
+
 		setContentView(R.layout.splash);
-		
-		//CameraPreviewë¥¼ í˜¸ì¶œí•´ ì˜¤ê¸°ìœ„í•œ Intent
+
+
+		//CameraPreview¸¦ È£ÃâÇØ ¿À±âÀ§ÇÑ Intent
 		final Intent indent = new Intent(this,CameraPreview.class);
-		
-		//í•¸ë“¤ëŸ¬ ë“±ë¡
+
+
+		//ÇÚµé·¯ µî·Ï
 		Handler handler = new Handler () {
 			@Override
 			public void handleMessage(Message msg) {
@@ -36,7 +43,9 @@ public class MainActivity extends Activity {
 			}
 		};
 
-		//0.5ì´ˆí›„ MainActivityë¥¼ ì¢…ë£Œì‹œí‚¤ê³  CameraPreview Activityë¥¼ í˜¸ì¶œí•´ì˜¨ë‹¤.
+
+		//0.5ÃÊÈÄ MainActivity¸¦ Á¾·á½ÃÅ°°í CameraPreview Activity¸¦ È£ÃâÇØ¿Â´Ù.
 		handler.sendEmptyMessageDelayed(0, 500);
 	}
 }
+

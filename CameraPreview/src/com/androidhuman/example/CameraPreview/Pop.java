@@ -1,5 +1,6 @@
 package com.androidhuman.example.CameraPreview;
 
+
 import android.content.Context;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -8,32 +9,38 @@ import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.Button;
 
+
 public class Pop extends PopView{
 	   private final Context context;
 	   private final LayoutInflater inflater;
 	   private final View root;
 	   private ViewGroup mTrack;
-	   
+
+
 	   private Button mButton_left;
 	   private Button mButton_right;
-	 
+
+
 	   public Pop(View anchor) {
 	      super(anchor);  
 	      context  = anchor.getContext();
 	      inflater  = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 	      root  = (ViewGroup) inflater.inflate(R.layout.popview, null);
 	      setContentView(root);
-	      mTrack    = (ViewGroup) root.findViewById(R.id.viewRow); //íŒì—… Viewì˜ ë‚´ìš©ì„ ì¶”ê°€í•œ LinearLayout
-	      
+	      mTrack    = (ViewGroup) root.findViewById(R.id.viewRow); //ÆË¾÷ ViewÀÇ ³»¿ëÀ» Ãß°¡ÇÑ LinearLayout
+
+
 //	      mButton_left = (Button)findViewById(//R.id.)
-	      
+
+
 	   }
 	   public void show () {
-	      preShow(); //ìƒì†ë°›ì€ PopViewì˜ ë©”ì„œë“œ
+	      preShow(); //»ó¼Ó¹ŞÀº PopViewÀÇ ¸Ş¼­µå
 	      int[] location   = new int[2];
 	      anchor.getLocationOnScreen(location);
 	      root.setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
 	      root.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-	      window.showAtLocation(this.anchor, Gravity.CENTER, 0, 0); //ê°€ìš´ë° ì •ë ¬ í•˜ì—¬ ë³´ì„
+	      window.showAtLocation(this.anchor, Gravity.CENTER, 0, 0); //°¡¿îµ¥ Á¤·Ä ÇÏ¿© º¸ÀÓ
 	   }
 	}
+

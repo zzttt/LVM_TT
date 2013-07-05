@@ -1,22 +1,29 @@
 package com.androidhuman.example.CameraPreview;
 
+
 import java.io.IOException;
 import java.util.List;
+
 
 import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
+import android.media.AudioManager;
+import android.media.SoundPool;
+import android.os.Vibrator;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.widget.ImageView.ScaleType;
 import android.widget.Toast;
 
+
 public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 	SurfaceHolder mHolder;
 	Camera mCamera;
+	
 	boolean mPreviewState;
 	private Bitmap prBitmap;
 	private CameraPreview _MActivity = null;
@@ -25,11 +32,15 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 	private int Upper = 127;
 	private int Under = 127;
 	private int resolution = 0;
+	private int diff = 0;
+	private int post_diff = 0;
+
 
 	private int data = 0;
 	private boolean flag = true;
-	private int[] drop_data = new int[2];
+	private int[] drop_data = new int[100];
 	protected boolean toggle=false;
+
 
 	private boolean flag_start=false;
 	private boolean flag_threshold=true;
@@ -39,23 +50,26 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 	private boolean flag_count=false;
 	private char snap_delay_filter=0;
 
+
 	private long start_time=0;
 	private long end_time=0;
 	private float result_time=0;
 
 
-	//TODO : native í•¨ìˆ˜ ë“±ë¡
+
+
+	//TODO : native ÇÔ¼ö µî·Ï
 	static {
 		System.loadLibrary("myproc");
 	}
 	/*
-	 * NativeProc : ì´ì§„í™” ëœ ê°’ì˜ ê°œìˆ˜ë¥¼ êµ¬í•˜ëŠ” í•¨ìˆ˜
-	 * Gonzalez : ë°˜ë³µì  ì´ì§„í™”ë¥¼ í†µí•œ ì„ê³„ê°’ì„ êµ¬í•˜ëŠ” í•¨ìˆ˜
-	 * Upper : ìƒìœ„ n%ì˜ ì„ê³„ê°’ì„ êµ¬í•˜ëŠ” í•¨ìˆ˜
-	 * Under : í•˜ìœ„ n%ì˜ ì„ê³„ê°’ì„ êµ¬í•˜ëŠ” í•¨ìˆ˜
+	 * NativeProc : ÀÌÁøÈ­ µÈ °ªÀÇ °³¼ö¸¦ ±¸ÇÏ´Â ÇÔ¼ö
+	 * Gonzalez : ¹İº¹Àû ÀÌÁøÈ­¸¦ ÅëÇÑ ÀÓ°è°ªÀ» ±¸ÇÏ´Â ÇÔ¼ö
+	 * Upper : »óÀ§ n%ÀÇ ÀÓ°è°ªÀ» ±¸ÇÏ´Â ÇÔ¼ö
+	 * Under : ÇÏÀ§ n%ÀÇ ÀÓ°è°ªÀ» ±¸ÇÏ´Â ÇÔ¼ö
 	 * 
-	 * ì¦‰, Gnzalez, Upper, Underë“±ì„ í†µí•´ ì„ê³„ê°’ì„ êµ¬í•˜ê²Œ ë˜ê³  êµ¬í•´ì§„ ì„ê³„ê°’ì„
-	 * NativeProcì— ë„£ì–´ì„œ ì´ì§„í™” ë˜ëŠ” ì–‘ì„ ì¸¡ì •í•˜ê²Œ ëœë‹¤.
+	 * Áï, Gnzalez, Upper, UnderµîÀ» ÅëÇØ ÀÓ°è°ªÀ» ±¸ÇÏ°Ô µÇ°í ±¸ÇØÁø ÀÓ°è°ªÀ»
+	 * NativeProc¿¡ ³Ö¾î¼­ ÀÌÁøÈ­ µÇ´Â ¾çÀ» ÃøÁ¤ÇÏ°Ô µÈ´Ù.
 	 */
 	private native int NativeProc(Bitmap _outBitmap, byte[] _in, int _ThreshHold, int resolution);
 	private native int Gonzalez(Bitmap _outBitmap, byte[] _in, int resolution);
@@ -63,30 +77,33 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 	private native int Under(Bitmap _outBitmap, byte[] _in, int resolution);
 	//at bin/classes/$ javah -classpath ~/android/adt-bundle-linux-x86-20130219/sdk/platforms/android-16/android.jar: com.androidhuman.example.CameraPreview.ProcessCore
 
+
 	ProcessCore(CameraPreview aaa) {
 		super(aaa);
 		_MActivity = aaa;
 		mHolder = getHolder();
 		mHolder.addCallback(this);
-		//í‘¸ì‰¬ë²„í¼ëŠ” ì•„ì´ìŠ¤í¬ë¦¼ìƒŒë“œìœ„ì¹˜(ICS)ì´í›„ë¡œ ì‚¬ìš©ë˜ì§€ ì•ŠìŠµë‹ˆë‹¤.
+		//Çª½¬¹öÆÛ´Â ¾ÆÀÌ½ºÅ©¸²»÷µåÀ§Ä¡(ICS)ÀÌÈÄ·Î »ç¿ëµÇÁö ¾Ê½À´Ï´Ù.
 		//mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
 		mHolder.setType(SurfaceHolder.SURFACE_TYPE_GPU);
 	}
-	
-	//ê°ì¢… flagì˜ ìƒíƒœë¥¼ ì •ì˜í•˜ê¸°ìœ„í•œ method
+
+
+	//°¢Á¾ flagÀÇ »óÅÂ¸¦ Á¤ÀÇÇÏ±âÀ§ÇÑ method
 	public void SetState(boolean state){
 		flag_start = state;
 		flag_threshold = state;
 		flag = state;
 	}
 
-	//surfaceCreated - ì„œí”¼ìŠ¤ë·°ê°€ ìƒì„±ë˜ì—ˆì„ë•Œ ì‹¤í–‰ë˜ëŠ” ë©”ì†Œë“œ
+
+	//surfaceCreated - ¼­ÇÇ½ººä°¡ »ı¼ºµÇ¾úÀ»¶§ ½ÇÇàµÇ´Â ¸Ş¼Òµå
 	public void surfaceCreated(SurfaceHolder holder) {
 		mCamera = Camera.open();
 		try {
 			mCamera.setPreviewDisplay(holder);
 			mCamera.setPreviewCallback(new Camera.PreviewCallback() {
-				//ì„œí”¼ìŠ¤ë·° ì½œë°±í•¨ìˆ˜ ë“±ë¡
+				//¼­ÇÇ½ººä Äİ¹éÇÔ¼ö µî·Ï
 				public void onPreviewFrame(byte[] _data, Camera _camera) {
 					// TODO Auto-generated method stub
 					Camera.Parameters params = _camera.getParameters();
@@ -94,7 +111,8 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 					int h = params.getPreviewSize().height;
 					//Log.i("mydata", "width:"+w+"/height:"+h);
 
-					//ì•„ë˜ ì£¼ì„ì„ í•´ì œì‹œí‚¤ë©´ ì‹œì‘ì‹œì— í”Œë˜ì‹œê°€ ì‘ë™ë©ë‹ˆë‹¤.
+
+					//¾Æ·¡ ÁÖ¼®À» ÇØÁ¦½ÃÅ°¸é ½ÃÀÛ½Ã¿¡ ÇÃ·¡½Ã°¡ ÀÛµ¿µË´Ï´Ù.
 					/*if(flag_start){
 						params.setFlashMode(Parameters.FLASH_MODE_TORCH);
 					}
@@ -104,13 +122,17 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 					_camera.setParameters(params);
 					 */
 
-					
+
+
+
 					//prBitmap = Bitmap.createBitmap(w,h,Bitmap.Config.ARGB_8888);
-					//ìƒì„±ë˜ëŠ” ì´ì§„í™”ëœ ë„¤ëª¨ë°•ìŠ¤ì˜ í¬ê¸°ë¥¼ ì •ì˜í•˜ê³  ìˆìŠµë‹ˆë‹¤.
+					//»ı¼ºµÇ´Â ÀÌÁøÈ­µÈ ³×¸ğ¹Ú½ºÀÇ Å©±â¸¦ Á¤ÀÇÇÏ°í ÀÖ½À´Ï´Ù.
 					prBitmap = Bitmap.createBitmap(200,200,Bitmap.Config.ARGB_8888);
 
-					
-					// ì²˜ë¦¬ ì‹œì‘ì„ ìœ„í•œ flag. ì²˜ë¦¬ê°€ ì‹œì‘ë˜ë©´ í¬ì»¤ì‹±ì„ ë§ì¶”ê²Œ ë©ë‹ˆë‹¤.
+
+
+
+					// Ã³¸® ½ÃÀÛÀ» À§ÇÑ flag. Ã³¸®°¡ ½ÃÀÛµÇ¸é Æ÷Ä¿½ÌÀ» ¸ÂÃß°Ô µË´Ï´Ù.
 					//if(flag_threshold && flag_start){
 					if(flag_start){
 						mCamera.autoFocus (new Camera.AutoFocusCallback() {
@@ -119,17 +141,22 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 									// do something
 									flag_focus=true;
 									flag_start=false;
+									data=0;
 								}
-								else{} //ì—¬ê¸°ì— flag_focue=falseë¥¼ ë„£ì–´ì•¼ í•  ê²ƒê°™ìœ¼ë‚˜ ì•ˆë„£ì–´ë„ ì˜ ë˜ì–´ì„œ ì¼ë‹¨ ë³´ë¥˜
+								else{
+									flag_focus=false;
+								} //¿©±â¿¡ flag_focue=false¸¦ ³Ö¾î¾ß ÇÒ °Í°°À¸³ª ¾È³Ö¾îµµ Àß µÇ¾î¼­ ÀÏ´Ü º¸·ù
 							}
 						});
 					}
 
-					//í¬ì»¤ì‹±ì„ ë§ì¶”ëŠ”ë° ì„±ê³µí–ˆìœ¼ë©´ ì‹¤ì§ˆì ì¸ ì¸¡ì •ì— ë“¤ì–´ê°‘ë‹ˆë‹¤.
+
+					//Æ÷Ä¿½ÌÀ» ¸ÂÃß´Âµ¥ ¼º°øÇßÀ¸¸é ½ÇÁúÀûÀÎ ÃøÁ¤¿¡ µé¾î°©´Ï´Ù.
 					if(flag_focus){
 						data = 0;
-						
-						//í™”ë©´ í•´ìƒë„ë¥¼ ë³´ì •í•˜ê¸° ìœ„í•œ ìˆ˜ì‹ì…ë‹ˆë‹¤.
+
+
+						//È­¸é ÇØ»óµµ¸¦ º¸Á¤ÇÏ±â À§ÇÑ ¼ö½ÄÀÔ´Ï´Ù.
 						//w=1024, h=768 //// 1024 x ((768/2)-(200/2)) = 290816
 						// 290816 + 412 ( 1024/2 -100 = 412)
 						// 1024 * 359 ( 768/2 - 25) = 367616 + 412 = 368028
@@ -139,98 +166,118 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 						resolution = (resolution<<11)+w; 
 						Log.i("my_message","Resolution : "+ (resolution>>11));
 						Log.i("my_message","Width : "+ (resolution&0x7FF));
-						/*intí˜• ë°ì´í„°(32ë¹„íŠ¸)ì— í•˜ìœ„ 11ë¹„íŠ¸êµ¬ê°„ì—ëŠ” ê°€ë¡œê¸¸ì´ë¥¼ ë„£ìŠµë‹ˆë‹¤.
-						 * ë‚˜ë¨¸ì§€ ìƒìœ„ 21ë¹„íŠ¸ êµ¬ê°„ì—ëŠ” í•´ìƒë„ë¥¼ ë³´ì •í•˜ê¸° ìœ„í•œ ê°’ì„ ë„£ìŠµë‹ˆë‹¤.
+						/*intÇü µ¥ÀÌÅÍ(32ºñÆ®)¿¡ ÇÏÀ§ 11ºñÆ®±¸°£¿¡´Â °¡·Î±æÀÌ¸¦ ³Ö½À´Ï´Ù.
+						 * ³ª¸ÓÁö »óÀ§ 21ºñÆ® ±¸°£¿¡´Â ÇØ»óµµ¸¦ º¸Á¤ÇÏ±â À§ÇÑ °ªÀ» ³Ö½À´Ï´Ù.
 						 *  
-						 *  Nativeí•¨ìˆ˜ë¥¼ í˜¸ì¶œí• ë•Œ ë°ì´í„°ë³µì‚¬ë¥¼ ìµœì†Œí™”í•˜ê¸° ìœ„í•¨...ì´ë¼ê¸°ë³´ë‹¤
-						 *  ì‚¬ì‹¤ì€ í•¨ìˆ˜ ë‹¤ì‹œì§œê¸° ê·€ì°®ì•„ì„œ ì´ë¬ìŠµë‹ˆë‹¤...ã… ã… 
+						 *  NativeÇÔ¼ö¸¦ È£ÃâÇÒ¶§ µ¥ÀÌÅÍº¹»ç¸¦ ÃÖ¼ÒÈ­ÇÏ±â À§ÇÔ...ÀÌ¶ó±âº¸´Ù
+						 *  »ç½ÇÀº ÇÔ¼ö ´Ù½ÃÂ¥±â ±ÍÂú¾Æ¼­ ÀÌ·¨½À´Ï´Ù...¤Ğ¤Ğ
 						 */
-						
 
-						//TODO : Gonzalez ë¥¼ í†µí•´ ì„ê³„ê°’ ì¶”ì¶œ
+
+						//TODO : Gonzalez ¸¦ ÅëÇØ ÀÓ°è°ª ÃßÃâ
 						//flag_threshold = false;
 						ThreshHoldData = Gonzalez(prBitmap, _data,resolution);
-						_MActivity.mDraw.setStringTrashhold(ThreshHoldData);
-						//Toast.makeText(_MActivity, "ì„ê³„ê°’ "+ThreshHoldData+"ì„ êµ¬í•˜ì˜€ìŠµë‹ˆë‹¤.", Toast.LENGTH_SHORT).show();
-						_MActivity.mDraw.setStringMessege("ì„ê³„ê°’ "+ThreshHoldData+"ì„ êµ¬í•˜ì˜€ìŠµë‹ˆë‹¤.");
+						_MActivity.mDebugText.setStringTrashhold(ThreshHoldData);
+						//Toast.makeText(_MActivity, "ÀÓ°è°ª "+ThreshHoldData+"À» ±¸ÇÏ¿´½À´Ï´Ù.", Toast.LENGTH_SHORT).show();
+						_MActivity.mDebugText.setStringMessege("ÀÓ°è°ª "+ThreshHoldData+"À» ±¸ÇÏ¿´½À´Ï´Ù.");
 						flag_focus=false;
 						flag_count=true;
 						Upper = Upper(prBitmap, _data,resolution);
 						Under = Under(prBitmap, _data,resolution);
-						_MActivity.mDraw.setStringUpper(Upper);
-						_MActivity.mDraw.setStringUnder(Under);
+						_MActivity.mDebugText.setStringUpper(Upper);
+						_MActivity.mDebugText.setStringUnder(Under);
 					}
 
 
-					//ì•„ë˜ ë¶€ë¶„ ì£¼ì„ì„ í•´ì œí•˜ë˜ë©´ ì²˜ë¦¬ì¤‘ì¸ ì˜ìƒì´ í•­ìƒ ë³´ì´ê²Œ ë©ë‹ˆë‹¤. ë””ë²„ê¹…ìš©
+
+
+					//¾Æ·¡ ºÎºĞ ÁÖ¼®À» ÇØÁ¦ÇÏµÇ¸é Ã³¸®ÁßÀÎ ¿µ»óÀÌ Ç×»ó º¸ÀÌ°Ô µË´Ï´Ù. µğ¹ö±ë¿ë
 					//drop_data[1] = drop_data[0];
 					//drop_data[0] = NativeProc(prBitmap, _data,ThreshHoldData);
 					//drop_data[0] = NativeProc(prBitmap, _data, Upper);
 					Log.i("mydata", ""+drop_data[0]);
 
-					//ì„ê³„ê°’ì„ ê²€ì¶œí›„ nê°œì˜ í”„ë ˆì„ì„ ê±´ë„ˆë›°ê¸° ìœ„í•œ flag ê°’ë“¤ì…ë‹ˆë‹¤.
+
+					//ÀÓ°è°ªÀ» °ËÃâÈÄ n°³ÀÇ ÇÁ·¹ÀÓÀ» °Ç³Ê¶Ù±â À§ÇÑ flag °ªµéÀÔ´Ï´Ù.
 					if(flag_snap_delay){
 						snap_delay_filter++;
 					}
-					if(snap_delay_filter>6){ //ëª‡í”„ë ˆì„ ê±´ë„ˆë›¸ì§€
+					if(snap_delay_filter>6){ //¸îÇÁ·¹ÀÓ °Ç³Ê¶ÛÁö
 						flag_snap=true;
 						flag_snap_delay=false;
 						snap_delay_filter=0;
 					}
 
-					//ì²˜ë¦¬ëœ ì´ë¯¸ì§€ë¥¼ prBitmapì— ë¿Œë ¤ì¤€ë‹¤.
-					_MActivity.mImageview.setImageBitmap(prBitmap);
-					
-					
-					//ì„ê³„ê°’ì´ ê²€ì¶œë˜ë©´ ì‹œì‘í•˜ê¸°íœ˜í•œ flag_countì…ë‹ˆë‹¤.
+
+					//ÀÓ°è°ªÀÌ °ËÃâµÇ¸é ½ÃÀÛÇÏ±âÈÖÇÑ flag_countÀÔ´Ï´Ù.
 					if(flag_count){
-						//ê·¸ëƒ¥ ì‹œì‘ë©”ì„¸ì§€ë¥¼ í•œë²ˆ ë„ì›Œì£¼ê¸° ìœ„í•œ flag
+						//Ã³¸®µÈ ÀÌ¹ÌÁö¸¦ prBitmap¿¡ »Ñ·ÁÁØ´Ù.
+						_MActivity.mImageview.setImageBitmap(prBitmap);
+						//±×³É ½ÃÀÛ¸Ş¼¼Áö¸¦ ÇÑ¹ø ¶ç¿öÁÖ±â À§ÇÑ flag
 						if(flag){
-							//Toast.makeText(_MActivity, "ì¶”ì ì„ ì‹œì‘í•©ë‹ˆë‹¤.", Toast.LENGTH_SHORT).show();
-							_MActivity.mDraw.setStringMessege("ì¶”ì ì„ ì‹œì‘í•©ë‹ˆë‹¤.");
+							//Toast.makeText(_MActivity, "ÃßÀûÀ» ½ÃÀÛÇÕ´Ï´Ù.", Toast.LENGTH_SHORT).show();
+							_MActivity.mDebugText.setStringMessege("ÃßÀûÀ» ½ÃÀÛÇÕ´Ï´Ù.");
 							//start_time = System.currentTimeMillis();
 							flag=false;
 						}
-						//ë¯¸ë¶„ì„ ìœ„í•œ 2ê°œì˜ ë°ì´í„° ì €ì¥
+						//¹ÌºĞÀ» À§ÇÑ 2°³ÀÇ µ¥ÀÌÅÍ ÀúÀå
+						drop_data[2] = drop_data[1];
 						drop_data[1] = drop_data[0];
 						drop_data[0] = NativeProc(prBitmap, _data,ThreshHoldData,resolution);
-						
-						//ê²€ì¶œëœ ë¬¼ë°©ìš¸ì´ 1ê°œê°€ ë  ë•Œ ì‹œê°„ì„ ì¸¡ì •í•˜ê¸° ì‹œì‘í•©ë‹ˆë‹¤. 
-						if(data == 1){
-							start_time = System.currentTimeMillis();
-						}
 
-						//TODO : ê²€ì¶œì„ íŒë‹¨í•˜ëŠ” ë¶€ë¶„
-						// ë¯¸ë¶„ê°’ì´ 500ì´ìƒì¼ë•Œ (ì´ì „ ì˜ìƒê³¼ í˜„ì¬ ì˜ìƒì˜ ì´ì§„í™”ëœ ê°œìˆ˜ì˜ ì°¨ê°€ 500ì´ìƒ)
-						if(Math.abs(drop_data[0] - drop_data[1]) > 500){
-							//ì¶©ë¶„íˆ í”„ë ˆì„ì„ ê±´ë„ˆ ë›°ì—ˆìœ¼ë©´
-							if(flag_snap)
-							{
-								//if(data<5)	{
-								_MActivity.snapImageview[data].setImageBitmap(prBitmap);
-								//}
-								data++;
-								flag_snap=false;
-								flag_snap_delay=true;
+						//TODO : °ËÃâÀ» ÆÇ´ÜÇÏ´Â ºÎºĞ
+						// ¹ÌºĞ°ªÀÌ 500ÀÌ»óÀÏ¶§ (ÀÌÀü ¿µ»ó°ú ÇöÀç ¿µ»óÀÇ ÀÌÁøÈ­µÈ °³¼öÀÇ Â÷°¡ 500ÀÌ»ó)
+						//differentiation = Math.abs(drop_data[0] - drop_data[1]);
+						//differentiation = Math.abs(drop_data[2] - drop_data[0]);
+						diff = Math.abs(drop_data[2] - drop_data[1]) + Math.abs(drop_data[1] - drop_data[0]);
+						post_diff = Math.abs(drop_data[1] - drop_data[0]);
+						Log.i("myddata",""+diff);
+						if(post_diff<2000){
+							_MActivity.mDraw.SetCircle(true);
+							_MActivity.mDraw.invalidate();
+							if(diff > 600){
+								//ÃæºĞÈ÷ ÇÁ·¹ÀÓÀ» °Ç³Ê ¶Ù¾úÀ¸¸é
+								if(flag_snap)
+								{
+									//if(data<5)	{
+									_MActivity.snapImageview[data].setImageBitmap(prBitmap);
+									//}
+									data++;
+									flag_snap=false;
+									flag_snap_delay=true;
+									//°ËÃâµÈ ¹°¹æ¿ïÀÌ 1°³°¡ µÉ ¶§ ½Ã°£À» ÃøÁ¤ÇÏ±â ½ÃÀÛÇÕ´Ï´Ù. 
+									if(data == 2){
+										start_time = System.currentTimeMillis();
+									}
+									//data++µÚ·Î ¿Å°Ü¿Í È£Ãâ È½¼ö°¡ Àû¾îÁ® ÁÁÀ»²¨°°À¸³ª ÀÏ´Ü º¸·ù
+									_MActivity.mDebugText.setStringData(data);
+									_MActivity.beepsound.play(_MActivity.id, 1.0f, 1.0f, 0, 0, 1.0f);
+									_MActivity.vibrator.vibrate(70);
+									
+								}
 							}
 						}
+						else{
+							_MActivity.mDraw.SetCircle(false);
+							_MActivity.mDraw.invalidate();
+							flag_count = false;
+							_MActivity.mDebugText.setStringMessegeInit();
+							_MActivity.mDebugText.setStringMessege("´ë»óÀ» ³õÃÆ½À´Ï´Ù. ´Ù½Ã ½ÃÀÛÇÏ¼¼¿ä");
+							Toast.makeText(_MActivity, "´ë»óÀ» ³õÃÆ½À´Ï´Ù. ´Ù½Ã ½ÃÀÛÇÏ¼¼¿ä", Toast.LENGTH_SHORT).show();
+						}
 
-						//data++ë’¤ë¡œ ì˜®ê²¨ì™€ í˜¸ì¶œ íšŸìˆ˜ê°€ ì ì–´ì ¸ ì¢‹ì„êº¼ê°™ìœ¼ë‚˜ ì¼ë‹¨ ë³´ë¥˜
-						_MActivity.mDraw.setStringData(data);
-						//_MActivity.mDraw.setStringTrashhold(ThreshHoldData);
-						//_MActivity.mDraw.invalidate();
-						//_MActivity.mImageview.setImageBitmap(prBitmap);	
-						//_MActivity.mImageview.invalidate();
-
-						//ê²€ì¶œëœ ë¬¼ë°©ìš¸ì˜ ê°œìˆ˜ê°€ 5ê°œê°€ ë˜ë©´ ì¸¡ì •ì„ ì¢…ë£Œí•œë‹¤.
-						if(data>4){
+						//°ËÃâµÈ ¹°¹æ¿ïÀÇ °³¼ö°¡ 5°³°¡ µÇ¸é ÃøÁ¤À» Á¾·áÇÑ´Ù.
+						if(data==5){
 							end_time =  System.currentTimeMillis();
 							result_time = (float) ((end_time - start_time)/1000.0);
 							flag_count = false;
-							_MActivity.mDraw.setStringMessegeInit();
-							//Toast.makeText(_MActivity, "ê±¸ë¦°ì‹œê°„ : "+result_time+"ì´ˆ", Toast.LENGTH_SHORT).show();
-							_MActivity.mDraw.setStringMessege("ê±¸ë¦°ì‹œê°„ : "+result_time+"ì´ˆ");
+							_MActivity.mDebugText.setStringMessegeInit();
+							//Toast.makeText(_MActivity, "°É¸°½Ã°£ : "+result_time+"ÃÊ", Toast.LENGTH_SHORT).show();
+							_MActivity.mDebugText.setStringMessege("°É¸°½Ã°£ : "+result_time+"ÃÊ");
+							_MActivity.mDraw.SetCircle(false);
+							_MActivity.mDraw.invalidate();
 						}
+
 
 						/*if((flag)&&(data>30)){
 							Toast.makeText(_MActivity, ""+data, Toast.LENGTH_SHORT).show();
@@ -240,7 +287,7 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 				}
 			});
 		} catch (IOException exception) {
-			//ì´ ì˜ˆì™¸ì²˜ë¦¬ë¥¼ ì•ˆí•´ë‘ë©´ ë’¤ë¡œê°€ê¸°ë¥¼ ëˆŒë €ì„ë•Œ ì¹´ë©”ë¼ releaseê°€ ì•ˆë˜ì–´ ì—ëŸ¬ë©”ì„¸ì§€ê°€ í˜¸ì¶œëœë‹¤.
+			//ÀÌ ¿¹¿ÜÃ³¸®¸¦ ¾ÈÇØµÎ¸é µÚ·Î°¡±â¸¦ ´­·¶À»¶§ Ä«¸Ş¶ó release°¡ ¾ÈµÇ¾î ¿¡·¯¸Ş¼¼Áö°¡ È£ÃâµÈ´Ù.
 			mCamera.stopPreview();
 			mCamera.setPreviewCallback(null);
 			mCamera.release();
@@ -249,7 +296,8 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 		}
 	}
 
-	// surfaceê°€ ì¢…ë£Œë˜ì—ˆì„ë•Œ ì‹¤í–‰ë˜ëŠ” ë©”ì†Œë“œ
+
+	// surface°¡ Á¾·áµÇ¾úÀ»¶§ ½ÇÇàµÇ´Â ¸Ş¼Òµå
 	public void surfaceDestroyed(SurfaceHolder holder) {
 		mCamera.stopPreview();
 		mCamera.setPreviewCallback(null);
@@ -257,21 +305,26 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 		mCamera = null;
 	}
 
-	
-	// surfaceê°€ ë³€ê²½ë˜ì—ˆì„ë–„ ì‹¤í–‰ë˜ëŠ” ë©”ì†Œë“œ. surfaceCreated ë‹¤ìŒì— ë°”ë¡œ ì‹¤í–‰ëœë‹¤.
+
+
+
+	// surface°¡ º¯°æµÇ¾úÀ»‹š ½ÇÇàµÇ´Â ¸Ş¼Òµå. surfaceCreated ´ÙÀ½¿¡ ¹Ù·Î ½ÇÇàµÈ´Ù.
 	//@SuppressLint("NewApi")
 	@SuppressLint("InlinedApi")
 	public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
-		//ì¹´ë©”ë¼ íŒŒë¼ë©”í„°ë¥¼ ì •ì˜
+		//Ä«¸Ş¶ó ÆÄ¶ó¸ŞÅÍ¸¦ Á¤ÀÇ
 		Camera.Parameters parameters = mCamera.getParameters();
-		
-		//ì§€ì›ë˜ëŠ” ì¹´ë©”ë¼ í•´ìƒë„ë¥¼ ë°›ì•„ì˜¨ë‹¤.
+
+
+		//Áö¿øµÇ´Â Ä«¸Ş¶ó ÇØ»óµµ¸¦ ¹Ş¾Æ¿Â´Ù.
 		List<Camera.Size> previewSizes = parameters.getSupportedPreviewSizes();
-		
-		//0ë¶€í„° nê°œì˜ í•´ìƒë„ì¤‘ í•˜ë‚˜ë¥¼ ì„ íƒ í•  ìˆ˜ ìˆìœ¼ë©° ì¼ë‹¨ì€ 1ë²ˆì§¸ì˜ í•´ìƒë„ë¥¼ ì„ íƒ
+
+
+		//0ºÎÅÍ n°³ÀÇ ÇØ»óµµÁß ÇÏ³ª¸¦ ¼±ÅÃ ÇÒ ¼ö ÀÖÀ¸¸ç ÀÏ´ÜÀº 1¹øÂ°ÀÇ ÇØ»óµµ¸¦ ¼±ÅÃ
 		Camera.Size previewSize = previewSizes.get(1);
-		
-		//ì •ì˜ëœ í•´ìƒë„ë¡œ Previewë¥¼ ë„ìš´ë‹¤.
+
+
+		//Á¤ÀÇµÈ ÇØ»óµµ·Î Preview¸¦ ¶ç¿î´Ù.
 		parameters.setPreviewSize(previewSize.height, previewSize.width);
 		parameters.setRotation(90);
 		//parameters.setPreviewFpsRange(28000, 35000);
@@ -280,6 +333,7 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 		//parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
 		//parameters.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
 		Log.i("mymode", "surCh width:"+w+"/height:"+h);
+
 
 		mCamera.setParameters(parameters);
 		mCamera.setDisplayOrientation(90);
@@ -293,3 +347,4 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 		Log.i("mymode", "startPreview()");
 	}
 }
+
