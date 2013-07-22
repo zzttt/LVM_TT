@@ -164,8 +164,8 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 						//resolution = ((w*(h>>1 -25) + (w>>1-100))<<11) + w;
 						resolution = w*(h/2 -100) + (w/2-100);
 						resolution = (resolution<<11)+w; 
-						Log.i("my_message","Resolution : "+ (resolution>>11));
-						Log.i("my_message","Width : "+ (resolution&0x7FF));
+						//Log.i("my_message","Resolution : "+ (resolution>>11));
+						//Log.i("my_message","Width : "+ (resolution&0x7FF));
 						/*int형 데이터(32비트)에 하위 11비트구간에는 가로길이를 넣습니다.
 						 * 나머지 상위 21비트 구간에는 해상도를 보정하기 위한 값을 넣습니다.
 						 *  
@@ -193,7 +193,7 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 
 					//아래 부분 주석을 해제하되면 처리중인 영상이 항상 보이게 됩니다. 디버깅용
 					//drop_data[1] = drop_data[0];
-					//drop_data[0] = NativeProc(prBitmap, _data,ThreshHoldData);
+					drop_data[0] = NativeProc(prBitmap, _data,Upper,resolution);
 					//drop_data[0] = NativeProc(prBitmap, _data, Upper);
 					Log.i("mydata", ""+drop_data[0]);
 
@@ -221,6 +221,12 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 							flag=false;
 						}
 						//미분을 위한 2개의 데이터 저장
+						drop_data[8] = drop_data[7];
+						drop_data[7] = drop_data[6];
+						drop_data[6] = drop_data[5];
+						drop_data[5] = drop_data[4];
+						drop_data[4] = drop_data[3];
+						drop_data[3] = drop_data[2];
 						drop_data[2] = drop_data[1];
 						drop_data[1] = drop_data[0];
 						drop_data[0] = NativeProc(prBitmap, _data,ThreshHoldData,resolution);
@@ -231,7 +237,9 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 						//differentiation = Math.abs(drop_data[2] - drop_data[0]);
 						diff = Math.abs(drop_data[2] - drop_data[1]) + Math.abs(drop_data[1] - drop_data[0]);
 						post_diff = Math.abs(drop_data[1] - drop_data[0]);
-						Log.i("myddata",""+diff);
+						//Log.i("myddata",""+diff);
+						//Log.i("myedata",""+post_diff);
+						//Log.i("mycdata",""+post_diff);
 						if(post_diff<2000){
 							_MActivity.mDraw.SetCircle(true);
 							_MActivity.mDraw.invalidate();
@@ -334,6 +342,8 @@ public class ProcessCore extends SurfaceView implements SurfaceHolder.Callback {
 		//parameters.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
 		Log.i("mymode", "surCh width:"+w+"/height:"+h);
 
+		resolution = w*(h/2 -100) + (w/2-100);
+		resolution = (resolution<<11)+w; 
 
 		mCamera.setParameters(parameters);
 		mCamera.setDisplayOrientation(90);
