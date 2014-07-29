@@ -86,7 +86,7 @@ import android.widget.Spinner;
 import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
-
+// git test //
 public class MainActivity extends Activity implements OnClickListener {
 	private ViewPager mPager;
 	private ArrayList<String> mGroupList = null;
