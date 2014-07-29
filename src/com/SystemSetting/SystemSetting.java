@@ -93,8 +93,6 @@ public class SystemSetting {
 
 	}
 
-	
-	
 	public void set_permission(){					// 파일 수정 / 복구 할때 set_permission 해줘야됨 //
 		
 		Process chperm;
