@@ -17,6 +17,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.SortedMap;
@@ -37,6 +38,7 @@ import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -140,11 +142,9 @@ public class MainActivity extends Activity implements OnClickListener {
 
 		wifi = manager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 		
-
 		// Handler 세팅
 		handler = new opHandler(MainActivity.this);
 	
-
 		/* SnapShot Service 시작 */
 		Intent i = new Intent(this, SnapshotService.class);
 		startService(i);
@@ -189,6 +189,13 @@ public class MainActivity extends Activity implements OnClickListener {
 		mPager = (ViewPager) findViewById(R.id.pager);
 
 		mPager.setAdapter(pac);
+		
+		// notification cancle //
+		NotificationManager nm1 = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+		NotificationManager nm2 = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+		nm1.cancel(1111);
+		nm2.cancel(2222);
+
 	}
 
 	@Override
@@ -487,12 +494,10 @@ public class MainActivity extends Activity implements OnClickListener {
 							
 						case 2: // scheduled snapshot
 							// Alarm Manager
-
-							setVal0 = true;
-							Toast.makeText(getApplicationContext(),
-									"자동 스냅샷이 설정되었습니다.", Toast.LENGTH_SHORT)
-									.show();
-
+							SnapshotSetup test = new SnapshotSetup(getApplicationContext());
+							Calendar cal1 = new GregorianCalendar();	// 현재시간정보 받아오기
+							test.setup_time(setVal0, setVal2, cal1);	// snapshot setup
+							
 							break;
 						}
 						return false;
