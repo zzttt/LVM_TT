@@ -13,9 +13,7 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.content.IntentSender.SendIntentException;
 import android.text.BoringLayout;
 import android.util.Log;
 import android.widget.Toast;
@@ -140,9 +138,7 @@ public class AlarmBroadcast extends BroadcastReceiver{
 			alarm.set(AlarmManager.RTC_WAKEUP, cal_broad.getTimeInMillis(), pintent);
 			
 			// command sending..to Service..... //
-			/* Snapshot 생성하라는 Intent를 broadcast한다. SnapshotService에서 받을 것임 */
-			Intent i = new Intent(SnapshotReceiver.SNAPSHOT_SERVICE_SS_GENERATE_START);
-			context.sendBroadcast(i);
+		
 		}
 		
 	}
