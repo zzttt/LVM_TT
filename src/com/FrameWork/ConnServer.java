@@ -222,6 +222,22 @@ public class ConnServer extends Thread {
 				oos.writeObject(pl); // payload 전송
 				
 				
+				// 현재 클릭한 스냅샷에 대한 정보를 통해 사용자 데이터를 구축
+				Snapshot ssData = new Snapshot(authCode);
+				
+				//ssData.setDate(date);
+				//ssData.setId(id);
+				//ssData.setPath(path);
+				//ssData.setState(state);
+				//ssData.setType(type);
+								
+				// Snapshot 데이터 변경정보 입력
+				
+				oos.writeObject(ssData);			
+				
+				
+				
+				
 				// 스냅샷 이미지
 				SnapshotImageMaker sim = new SnapshotImageMaker(this.itemName ,oos);
 				sim.start();
