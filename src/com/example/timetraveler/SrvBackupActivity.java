@@ -207,31 +207,13 @@ public class SrvBackupActivity extends Activity {
 								pd.setProgressStyle(ProgressDialog.STYLE_SPINNER);
 								pd.setCancelable(true);
 								pd.show();
-								
-								// 현재 클릭한 스냅샷에 대한 정보를 통해 사용자 데이터를 구축
-								
-								
-								Snapshot ssData = new Snapshot(userCode);
-								
-								//ssData.setDate(date);
-								//ssData.setId(id);
-								//ssData.setPath(path);
-								//ssData.setState(state);
-								//ssData.setType(type);
-								
-								
-								// Snapshot 데이터 변경정보 입력
-								
+							
 								
 								
 								// 서버에 전송이 시작된다는 것을 알려야지	
 								ConnServer conn = new ConnServer(MainActivity.srvIp, 12345, 6, userCode , ssName , pd);
 								conn.start();		
-								
 
-								/*SnapshotImageMaker sim = new SnapshotImageMaker("ssName");
-								sim.start();*/
-								
 								
 								// Snapshot Imaging
 								// Snapshot Send to Server
