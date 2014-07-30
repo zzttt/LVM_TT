@@ -44,6 +44,7 @@ public class InstalledAppInfo {
      private ArrayList<InstalledAppInfo> getInstalledApps(boolean getSysPackages) {
      	
          ArrayList<InstalledAppInfo> res = new ArrayList<InstalledAppInfo>(); 
+         
          /* 여기 ArrayList에 Packagename, appname 등의 데이터를 담는다.*/
          List<PackageInfo> packs = context.getPackageManager().getInstalledPackages(0);
 
