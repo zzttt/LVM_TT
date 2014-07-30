@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="hello">Hello World, CameraPreview!</string>
-    <string name="app_name">CameraPreview</string>
-    <string name="help_messege">테스트용 메세지입니다.\n카메라의 중앙에 링거를 넣고\n스타트버튼을 누르시면\n자동으로 시작됩니다.\n테스트\n테스트\n테스트\n테스트\n테스트\n테스트\n테스트\n테스트\n테스트\n테스트</string>
-</resources>
