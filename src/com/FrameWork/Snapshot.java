@@ -3,19 +3,13 @@ package com.FrameWork;
 import java.io.File;
 import java.io.Serializable;
 
-/*
- * 작성일 : 14.06.24 
- * 작성자 : 조영민
- * 
- */
-
 public class Snapshot extends UserData implements Serializable{
 	private String id; // Snapshot Identifier
-	private int ssTotal;  // Snapshot 이 분할 압축시 분할된 개수
+	private int ssTotal;  // Snapshot 
 	private int state; // Snapshot state
 	private int date;
 	private int type;
-	private String path; // Snapshot이 존재하는 경로
+	private String path; // Snapshot
 
 	public Snapshot(String userCode){
 		super(userCode);
@@ -36,9 +30,9 @@ public class Snapshot extends UserData implements Serializable{
 	 * @param id
 	 * @param ssNumber
 	 * @param state 
-	 * @param date 스냅샷 생성 날짜
+	 * @param date 
 	 * @param type 
-	 * @param path 스냅샷이 존재하는 디렉토리 경로
+	 * @param path 
 	 */
 	public Snapshot(String userCode,  String id, int state, int date, int type, String path){
 		super(userCode);
@@ -50,7 +44,7 @@ public class Snapshot extends UserData implements Serializable{
 		this.path = path;
 		
 		File f = new File(path);
-		this.ssTotal =  f.list().length; // 전체 snapshot 분할사이즈 초기화
+		this.ssTotal =  f.list().length; // 
 		
 	}
 	
