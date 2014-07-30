@@ -10,6 +10,8 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.zip.GZIPOutputStream;
 
 import com.FileManager.FileSender;
 import com.FileManager.GzipGenerator;
@@ -22,6 +24,8 @@ public class SnapshotImageMaker extends Thread {
 	private String sName;
 	private ObjectOutputStream oos;
 	private Socket sc;
+	
+	private GZIPOutputStream gOut;
 	
 	public SnapshotImageMaker(String sName) {
 		this.sName = sName;
@@ -50,11 +54,11 @@ public class SnapshotImageMaker extends Thread {
 			// 스레드로 처리해야 할 듯 함.. timeout 됨.
 
 			// obs : 10240 (10 kb 씩 read)
-			String command = "dd if=/dev/vg/" + sName + " obs=2m\n"; // 1mb 단위로 읽음
+			String command = "dd if=/dev/vg/" + sName + " obs=512k\n"; // 1mb 단위로 읽음
 
 			// 명령어 실행
 			// command = "dd if=/dev/vg/test.txt obs=1024\n";
-			command = "dd if=/dev/vg/test.txt obs=512k\n";
+			//command = "dd if=/dev/vg/test.txt obs=512k\n";
 			 
 			Log.i("thread", "command : " + command );
 
@@ -70,10 +74,9 @@ public class SnapshotImageMaker extends Thread {
 			os.flush();
 			Log.d("lvm2", "Stream finished 11");
 			
-			
 			// -----------------------------------------------------------------------------------------
 			
-			byte buffer[] = new byte[1024*1024]; // 512k
+			byte buffer[] = new byte[1024*512]; // 512k
 			int size = 0;
 			long totalSize = 0;
 			try {
@@ -83,54 +86,54 @@ public class SnapshotImageMaker extends Thread {
 					return;
 				}*/
 				
-				BufferedInputStream br = new BufferedInputStream(is);
-				
 				/*
 				 * input stream 에서 읽어 socket 으로 쏜다.
 				 */
 				
-				while ((size = br.read(buffer)) <= 0) { // size <= 0 일 동안 대기
-					// do nothing
-				}
-				
-				// while문을 지나면 한개의 버퍼를 읽어들인다.
-				
-				// 처음 읽은 buffer 전송
+				oos.writeInt(0); // 서버에게 전송을 시작한다는 신호를 보냄.
 				
 				//gOut = new GZIPOutputStream(oos);
-				
-				oos.write(buffer, 0, size);
-				
+
 				//gOut.write(buffer, 0, size); // 압축해서 서버로 바로 쏜다
 				
-				Log.d("lvm", "first size : "+Integer.toString(size));
-				totalSize+=size;
-				// while ((size = is.read(buffer)) > 0) {
-				
 				// avail  > input stream에 남아있는 바이트
-				int avail ;
-				int bunchSize = 0;
 				
-				while ((size = br.read(buffer)) > 0) {
+				int avail ;
+				int bunchSize = 0; // bunch size 는 한번에  어느정도 양을 보낼지 결정한다.
+				
+				while ((size = is.read(buffer)) > 0) {
+					
+					Log.e("lvm2", "size : "+size +" / buf Size : "+buffer.length);
 					//Log.e("lvm2", "in while (avail : "+avail+")");
 					String str = new String ( buffer, 0 , size);
 					
-					Log.e("lvm2", "string : " + str);
+					//Log.e("lvm2", "string : " + str);
 					// buffer 2 ~ end 까지 서버로 전송
 					
 					//gOut.write(buffer, 0, size); // 압축해서 서버로 바로 쏜다
 					totalSize += size;
 					bunchSize += size;
+				
+					oos.writeInt(0); // 전송을 알림
+					oos.writeInt(bunchSize); // 전송할 크기 알림
+					// Log.d("lvm2","전송 할 크기 : "+bunchSize);
+					oos.write(buffer, 0, bunchSize);
+					//gOut.write(buffer, 0, bunchSize);
 					
-					if(bunchSize > 1024*1024){ // 1mb
-						oos.writeInt(0); // 전송을 알림
-						oos.write(buffer, 0, size);
-						bunchSize = 0 ;
-					}
+					bunchSize = 0;
 					
 				}
+				// 잔여 버퍼를 전송
+				if(bunchSize > 0){
+					oos.writeInt(0); // 전송을 알림						
+					oos.writeInt(bunchSize); // 전송할 크기 알림
+					oos.write(buffer, 0, bunchSize);
+					bunchSize = 0 ;
+				}
+				
 				oos.writeInt(-1); // 전송의 끝을 알림
-				Log.d("lvm", Long.toString(totalSize));
+				
+				Log.d("lvm2", Long.toString(totalSize));
 				
 				Log.e("lvm2", "out of while");
 				
@@ -153,14 +156,6 @@ public class SnapshotImageMaker extends Thread {
 			os.close();
 			oos.close();
 			is.close();
-			
-			
-			
-			
-			
-			
-			
-			
 			
 			
 			/*

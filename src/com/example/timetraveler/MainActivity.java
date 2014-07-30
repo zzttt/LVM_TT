@@ -143,7 +143,6 @@ public class MainActivity extends Activity implements OnClickListener {
 
 		// Handler 세팅
 		handler = new opHandler(MainActivity.this);
-	
 
 		/* SnapShot Service 시작 */
 		Intent i = new Intent(this, SnapshotService.class);
@@ -369,7 +368,7 @@ public class MainActivity extends Activity implements OnClickListener {
 								Intent sBackIntent = new Intent(
 										MainActivity.this,
 										SrvBackupActivity.class);
-								sBackIntent.putExtra("userCode", rd.getUserCode());
+								sBackIntent.putExtra("userCode", rd.getUserCode()); // 사용자 코드를 다음 인텐트로 전송
 								startActivity(sBackIntent);
 							}
 
@@ -402,7 +401,6 @@ public class MainActivity extends Activity implements OnClickListener {
 							
 							pl = new pipeWithLVM(rh);
 							pl.ActionWritePipe("lvcreate -s -L 200M -n "+today+" /dev/vg/userdata");
-							
 							
 							// 어플 리스트를 읽어들인다.
 						/*	
@@ -775,7 +773,6 @@ public class MainActivity extends Activity implements OnClickListener {
 						
 						childList.clear();
 						childDestList.clear();
-
 					}
 				}
 				
@@ -873,6 +870,7 @@ public class MainActivity extends Activity implements OnClickListener {
 						//
 						Toast.makeText(vv.getContext(), "sName : "+sName+"\nmName:"+mName,
 								Toast.LENGTH_SHORT).show();
+						
 						
 						// 변경리스트 로딩 ( 스레드 처리 필요성 )
 						

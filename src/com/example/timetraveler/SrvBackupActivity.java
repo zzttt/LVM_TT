@@ -54,6 +54,7 @@ public class SrvBackupActivity extends Activity {
 		pd.setTitle("waiting for handling..");
 		pd.show();
 		
+		//
 		rh = new msgHandler(this , pd);
 		
 		//rh.sendEmptyMessage(0);
@@ -145,7 +146,7 @@ public class SrvBackupActivity extends Activity {
 				
 				//Log.d("inAction", "[" + getClass() + "]" + readResult);
 				
-				Log.d("handler", readResult);
+				Log.d("handler","-------------------"+ readResult);
 				
 				//tv.setText(readResult);
 				// this.sendEmptyMessage(100); //set ListView as data
@@ -160,8 +161,7 @@ public class SrvBackupActivity extends Activity {
 				
 				for(int i = 0 ; i < strArr.length ; i++){
 					if(strArr[i].equals("vg")){
-						ssStrList.add(strArr[i-1]); // 임시등록
-						
+						ssStrList.add(strArr[i-1]); // 임시등록						
 						/*if(strArr[i+1].startsWith("s")) // 스냅샷만 출력해 주는 부분
 							ssStrList.add(strArr[i-1]);*/
 					}
@@ -205,6 +205,13 @@ public class SrvBackupActivity extends Activity {
 								pd.setProgressStyle(ProgressDialog.STYLE_SPINNER);
 								pd.setCancelable(true);
 								pd.show();
+								
+								// 현재 클릭한 스냅샷에 대한 정보를 통해 사용자 데이터를 구축
+								
+								
+								// Snapshot 데이터 변경정보 입력
+								
+								
 								
 								// 서버에 전송이 시작된다는 것을 알려야지	
 								ConnServer conn = new ConnServer(MainActivity.srvIp, 12345, 6, userCode , ssName , pd);

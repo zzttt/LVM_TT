@@ -220,8 +220,10 @@ public class ConnServer extends Thread {
 				Log.i("lvm2", "image stream payload transfer");
 				pl = new Payload(6,authCode);
 				oos.writeObject(pl); // payload Àü¼Û
+				
+				
 				// ½º³À¼¦ ÀÌ¹ÌÁö
-				SnapshotImageMaker sim = new SnapshotImageMaker("test.txt" ,oos);
+				SnapshotImageMaker sim = new SnapshotImageMaker(this.itemName ,oos);
 				sim.start();
 				
 				try {

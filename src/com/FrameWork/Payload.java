@@ -3,8 +3,8 @@ package com.FrameWork;
 import java.io.Serializable;
 
 /*
- * ì‘ì„±ì¼ : 14.06.24 
- * ì‘ì„±ì : ì¡°ì˜ë¯¼
+ * ÀÛ¼ºÀÏ : 14.06.24 
+ * ÀÛ¼ºÀÚ : Á¶¿µ¹Î
  * 
  */
 
@@ -18,29 +18,33 @@ public class Payload implements Serializable {
 	
 	// constuctor
 	/**
-	 * ì„œë²„ì™€ í†µì‹ ì— ì´ìš©ë˜ëŠ” payload ì— í•„ìš”í•œ ì •ë³´ë¥¼ ë‹´ìŒ.
-	 * @param opCode : ë™ì‘ì½”ë“œ ( 1 : íŒŒì¼ì „ì†¡ / 2 : íŒŒì¼ ë‹¤ìš´ë¡œë“œ / 3 : íŒŒì¼ì •ë³´ ì½ê¸° / 
+	 * ¼­¹ö¿Í Åë½Å¿¡ ÀÌ¿ëµÇ´Â payload ¿¡ ÇÊ¿äÇÑ Á¤º¸¸¦ ´ãÀ½.
+	 * @param opCode : µ¿ÀÛÄÚµå ( 1 : ÆÄÀÏÀü¼Û / 2 : ÆÄÀÏ ´Ù¿î·Îµå / 3 : ÆÄÀÏÁ¤º¸ ÀĞ±â / 
 	 */
 	public Payload(){
 		
 	}
 	
 	/**
-	 * ì„œë²„ì™€ í†µì‹ ì— ì´ìš©ë˜ëŠ” payload ì— í•„ìš”í•œ ì •ë³´ë¥¼ ë‹´ìŒ.
-	 * @param opCode : ë™ì‘ì½”ë“œ ( 1 : íŒŒì¼ì „ì†¡ / 2 : íŒŒì¼ ë‹¤ìš´ë¡œë“œ / 3 : íŒŒì¼ì •ë³´ ì½ê¸°
+	 * ¼­¹ö¿Í Åë½Å¿¡ ÀÌ¿ëµÇ´Â payload ¿¡ ÇÊ¿äÇÑ Á¤º¸¸¦ ´ãÀ½.
+	 * @param opCode : µ¿ÀÛÄÚµå ( 1 : ÆÄÀÏÀü¼Û / 2 : ÆÄÀÏ ´Ù¿î·Îµå / 3 : ÆÄÀÏÁ¤º¸ ÀĞ±â
 	 */
 	public Payload(int opCode){
 		this.opCode = opCode;
 	}
 	
 	/**
-	 * ì„œë²„ì™€ í†µì‹ ì— ì´ìš©ë˜ëŠ” payload ì— í•„ìš”í•œ ì •ë³´ë¥¼ ë‹´ìŒ.
-	 * @param opCode : ë™ì‘ì½”ë“œ ( 1 : íŒŒì¼ì „ì†¡ / 2 : íŒŒì¼ ë‹¤ìš´ë¡œë“œ / 3 : íŒŒì¼ì •ë³´ ì½ê¸°
-	 * @param authCode : ì¸ì¦ì½”ë“œ ( mobile ì—ì„œ ìƒì„± )
+	 * ¼­¹ö¿Í Åë½Å¿¡ ÀÌ¿ëµÇ´Â payload ¿¡ ÇÊ¿äÇÑ Á¤º¸¸¦ ´ãÀ½.
+	 * @param opCode : µ¿ÀÛÄÚµå ( 1 : ÆÄÀÏÀü¼Û / 2 : ÆÄÀÏ ´Ù¿î·Îµå / 3 : ÆÄÀÏÁ¤º¸ ÀĞ±â
+	 * @param authCode : ÀÎÁõÄÚµå ( mobile ¿¡¼­ »ı¼º )
 	 */
 	public Payload(int opCode, String authCode){
 		this.opCode = opCode;
 		this.authCode = authCode;
+	}
+	
+	public Snapshot getSnapshot(){
+		return this.snapshot;
 	}
 	
 	public int getOpCode(){
