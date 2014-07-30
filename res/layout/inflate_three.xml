@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <ScrollView
+        android:id="@+id/elv_list3"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:background="#F4FA58"
+        android:fillViewport="true" >
+
+        <LinearLayout
+            android:id="@+id/ll_three"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:background="#000000"
+            android:orientation="vertical" >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="15dp"
+                android:shadowColor="#848484"
+                android:shadowDx="2"
+                android:shadowDy="2"
+                android:shadowRadius="0.01"
+                android:text="백업 용량"
+                android:textColor="#ECF8E0"
+                android:textSize="40sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                android:layout_marginLeft="25dp"
+                android:layout_marginTop="15dp"
+                android:shadowColor="#848484"
+                android:shadowDx="2"
+                android:shadowDy="2"
+                android:shadowRadius="0.01"
+                android:text="저장공간 부족 시 행동을 설정 합니다."
+                android:textColor="#ECF8E0"
+                android:textSize="30sp" />
+
+            <CheckBox
+                android:id="@+id/checkbox_upToSrv"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:layout_marginLeft="10dp"
+                android:paddingLeft="10dp"
+                android:shadowColor="#848484"
+                android:shadowDx="2"
+                android:shadowDy="2"
+                android:shadowRadius="0.01"
+                android:text="서버에 업로드"
+                android:textColor="#ECF8E0"
+                android:textSize="22sp" />
+
+            <CheckBox
+                android:id="@+id/checkbox_delSnapshot"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:layout_marginLeft="10dp"
+                android:paddingLeft="10dp"
+                android:shadowColor="#848484"
+                android:shadowDx="2"
+                android:shadowDy="2"
+                android:shadowRadius="0.01"
+                android:text="가장 오래된 스냅 샷 삭제\n(삭제 할 스냅샷이 없는 경우 사용자에게 알림)"
+                android:textColor="#ECF8E0"
+                android:textSize="22sp" />
+
+            <CheckBox
+                android:id="@+id/checkbox_delBackup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:layout_marginLeft="10dp"
+                android:paddingLeft="10dp"
+                android:shadowColor="#848484"
+                android:shadowDx="2"
+                android:shadowDy="2"
+                android:shadowRadius="0.01"
+                android:text="백업파일 삭제"
+                android:textColor="#ECF8E0"
+                android:textSize="22sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="15dp"
+                android:shadowColor="#848484"
+                android:shadowDx="2"
+                android:shadowDy="2"
+                android:shadowRadius="0.01"
+                android:text="자동백업"
+                android:textColor="#ECF8E0"
+                android:textSize="40sp" />
+
+            <RelativeLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center" >
+
+                <Spinner
+                    android:id="@+id/dateSpinner"
+                    android:layout_width="wrap_content"
+                    android:layout_height="50dip"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="15dp"
+                    android:layout_marginTop="20dp"
+                    android:drawSelectorOnTop="true"
+                    android:gravity="center_vertical"
+                    android:shadowColor="#848484"
+                    android:shadowDx="2"
+                    android:shadowDy="2"
+                    android:shadowRadius="0.01"
+                    android:textColor="#ECF8E0" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="50dip"
+                    android:layout_centerVertical="true"
+                    android:layout_toRightOf="@id/dateSpinner"
+                    android:gravity="center_vertical"
+                    android:shadowColor="#848484"
+                    android:shadowDx="2"
+                    android:shadowDy="2"
+                    android:shadowRadius="0.01"
+                    android:text=" 일에 한번 시점을 생성합니다."
+                    android:textColor="#ECF8E0"
+                    android:textSize="20sp" />
+            </RelativeLayout>
+        </LinearLayout>
+    </ScrollView>
+
+</RelativeLayout>
