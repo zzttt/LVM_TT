@@ -61,7 +61,6 @@ public class readHandler extends Handler {
 			//this.sendEmptyMessage(100); //set ListView as data
 			
 			
-			
 			//( msg 0 으로 들어오면 , readResult 를 저장하고 case 100 수행) 
 			
 			break;
