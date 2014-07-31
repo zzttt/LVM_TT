@@ -118,14 +118,20 @@ public class ConnServer extends Thread {
 					ois = new ObjectInputStream(sc.getInputStream());
 
 					// 스냅샷 파일 리스트
-					int len = ois.readInt();
+					int len = ois.readInt(); // 파일 갯수를 넘겨받음.
+					
 					snapshotList = new File[len];
-
+					Log.e("eee", Integer.toString(len));
 					for (int i = 0; i < len; i++) {
 						snapshotList[i] = (File) ois.readObject();
 					}
 					MainActivity.snapshotListInSrv = snapshotList.clone();
+					
+					
 					Snapshot ss = (Snapshot) ois.readObject(); // 스냅샷 읽기
+					
+					
+					
 				} catch (ClassNotFoundException e) {
 					// TODO Auto-generated catch block
 					Log.e("eee", "Loading error");
@@ -221,9 +227,15 @@ public class ConnServer extends Thread {
 				pl = new Payload(6,authCode);
 				oos.writeObject(pl); // payload 전송
 				
-				
 				// 현재 클릭한 스냅샷에 대한 정보를 통해 사용자 데이터를 구축
 				Snapshot ssData = new Snapshot(authCode);
+				
+				// this.itemName : 스냅샷 이름
+				
+				SnapshotInfoReader sir = new SnapshotInfoReader(this.itemName);  // 해당 이름의 스냅샷 데이터를 읽음
+							
+				sir.getSnapshotInfo();
+				
 				
 				//ssData.setDate(date);
 				//ssData.setId(id);
@@ -234,10 +246,10 @@ public class ConnServer extends Thread {
 				// Snapshot 정보 전송
 				//oos.writeObject(ssData);			
 				
-				
 				// 스냅샷 이미지
 				SnapshotImageMaker sim = new SnapshotImageMaker(this.itemName ,oos);
 				sim.start();
+				
 				
 				try {
 					sim.join(); // 스레드 대기

@@ -209,8 +209,8 @@ public class SrvBackupActivity extends Activity {
 								pd.show();
 							
 								
-								
-								// 서버에 전송이 시작된다는 것을 알려야지	
+								// 서버에 전송이 시작된다는 것을 알려야지( 전송목록 : 스냅샷 이미지 데이터 + 스냅샷 정보 )
+								// ssName 은 스냅샷 이름
 								ConnServer conn = new ConnServer(MainActivity.srvIp, 12345, 6, userCode , ssName , pd);
 								conn.start();		
 
