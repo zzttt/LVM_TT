@@ -17,7 +17,6 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.SortedMap;
@@ -38,7 +37,6 @@ import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -60,7 +58,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Parcelable;
-import android.preference.Preference;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.SimpleCursorAdapter;
@@ -117,12 +114,11 @@ public class MainActivity extends Activity implements OnClickListener {
 	
 	public static String srvIp = "211.189.19.45";
 	public static int srvPort = 12345 ;
-	//public static String homePath = "/dev/vg/";
-	public static String homePath = "/data/data/com.example.timetraveler/database/";
+	public static String homePath = "/dev/vg/";
 	private PagerAdapterClass pac;
 	private RegistrationDevice rd;
-	
-	public static boolean setVal0 = false;		 // ( 자동 스냅샷?mode on / off )
+
+	public static boolean setVal0 = false; // auto snapshot On // Off
 	public static int setVal1 = 0; // 백업 용량 세팅 값 1
 	public static int setVal2 = 1; // 백업 용량 세팅 값 2
 
@@ -132,22 +128,22 @@ public class MainActivity extends Activity implements OnClickListener {
 	readHandler rh;
 	pipeWithLVM pl;
 	String readResult;
-
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		WifiManager mng = (WifiManager) getSystemService(WIFI_SERVICE);
 		
-		SharedPreferences pref = getApplicationContext().getSharedPreferences("SaveState", getApplicationContext().MODE_PRIVATE);
-	
 		manager = (ConnectivityManager) getApplicationContext()
 				.getSystemService(Context.CONNECTIVITY_SERVICE);
 
 		wifi = manager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 		
+
 		// Handler 세팅
 		handler = new opHandler(MainActivity.this);
+
 		/* SnapShot Service 시작 */
 		Intent i = new Intent(this, SnapshotService.class);
 		startService(i);
@@ -166,7 +162,6 @@ public class MainActivity extends Activity implements OnClickListener {
 		 rd = new RegistrationDevice(mng,handler);
 		
 		if(!rd.chkUserOnSrv()){ // 기기 등록여부 확인
-			
 			//등록이 안되어 있으면 일단은 자동생성.
 			// 사용자에게 물어볼 수도 있는거고..
 			rd.createUser(); // 기기에 사용자 생성.
@@ -192,13 +187,6 @@ public class MainActivity extends Activity implements OnClickListener {
 		mPager = (ViewPager) findViewById(R.id.pager);
 
 		mPager.setAdapter(pac);
-		
-		// notification cancle //
-		NotificationManager nm1 = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-		NotificationManager nm2 = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-		nm1.cancel(1111);
-		nm2.cancel(2222);
-
 	}
 
 	@Override
@@ -296,7 +284,6 @@ public class MainActivity extends Activity implements OnClickListener {
 		@Override
 		public Object instantiateItem(ViewGroup pager, int position) {
 			View v = null;
-
 			if (position == 0) { // Back up 페이지
 				SimpleCursorAdapter mAdapter;
 				v = mInflater.inflate(R.layout.inflate_one, null);
@@ -315,11 +302,13 @@ public class MainActivity extends Activity implements OnClickListener {
 				ArrayList<String> child1 = new ArrayList<String>();
 				ArrayList<String> child2 = new ArrayList<String>();
 				ArrayList<String> child3 = new ArrayList<String>();
-			
+
 				child1.add("서버 백업");
+
 				child2.add("백업 시작");
+
 				child3.add("자동 스냅샷 사용");
-					
+
 				mChildListContent.add(child1);
 				mChildListContent.add(child2);
 				mChildListContent.add(child3);
@@ -495,10 +484,12 @@ public class MainActivity extends Activity implements OnClickListener {
 							
 						case 2: // scheduled snapshot
 							// Alarm Manager
-							SnapshotSetup test = new SnapshotSetup(getApplicationContext());
-							Calendar cal1 = new GregorianCalendar();	// 현재시간정보 받아오기
-							test.setup_time(setVal0, setVal2, cal1);	// snapshot setup
-							
+
+							setVal0 = true;
+							Toast.makeText(getApplicationContext(),
+									"자동 스냅샷이 설정되었습니다.", Toast.LENGTH_SHORT)
+									.show();
+
 							break;
 						}
 						return false;
@@ -646,10 +637,10 @@ public class MainActivity extends Activity implements OnClickListener {
 								
 								setVal2 = Integer.parseInt(arg0
 										.getItemAtPosition(arg2).toString());
-								//Log.i("eee", Integer.toString(setVal2));
+								Log.i("eee", Integer.toString(setVal2));
 
 								int selectedPosition = dateSpinner.getSelectedItemPosition();
-								//Log.i("position", "position : " + (Integer.toString(selectedPosition+1)));
+								Log.i("position", "position : " + (Integer.toString(selectedPosition+1)));
 								edit.putInt("spinnerSelection",selectedPosition);
 								edit.commit();
 							}
@@ -698,7 +689,7 @@ public class MainActivity extends Activity implements OnClickListener {
 			return views.get(position);
 		}
 
-		public void removeView(int postion) {	
+		public void removeView(int postion) {
 			views.remove(postion);
 		}
 
@@ -787,6 +778,7 @@ public class MainActivity extends Activity implements OnClickListener {
 				if(MainActivity.snapshotListInDev != null){
 					for (int i = 0; i < MainActivity.snapshotListInDev.length; i++) {
 						mGroupList.add(MainActivity.snapshotListInDev[i].getName()+" [Device]");
+						
 						
 						childList.add("어플리케이션");
 						childDestList.add(("d"));
@@ -878,7 +870,7 @@ public class MainActivity extends Activity implements OnClickListener {
 						Toast.makeText(vv.getContext(), "sName : "+sName+"\nmName:"+mName,
 								Toast.LENGTH_SHORT).show();
 						
-
+						
 						// 변경리스트 로딩 ( 스레드 처리 필요성 )
 						
 						try {
@@ -944,6 +936,7 @@ public class MainActivity extends Activity implements OnClickListener {
 									}
 									
 								}
+								
 								if(fileType == 'd' || fileType == 'b' || fileType == 'c' ||fileType == 'p' || fileType == 'l' || fileType == 's' ){ // special files
 									// b(Block file(b) , Character device file(c) , Named pipe file or just a pipe file(p)
 									// Symbolic link file(l), Socket file(s)

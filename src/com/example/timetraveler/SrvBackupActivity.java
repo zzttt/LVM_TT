@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import com.FrameWork.ConnServer;
+import com.FrameWork.Snapshot;
 
 import net.kkangsworld.lvmexec.pipeWithLVM;
 import net.kkangsworld.lvmexec.readHandler;
@@ -166,6 +167,7 @@ public class SrvBackupActivity extends Activity {
 							ssStrList.add(strArr[i-1]);*/
 					}
 				}
+				
 				//Toast.makeText(context, readResult, Toast.LENGTH_SHORT).show();
 				
 				//dd if="filePath" obs="bytes"
@@ -205,6 +207,8 @@ public class SrvBackupActivity extends Activity {
 								pd.setProgressStyle(ProgressDialog.STYLE_SPINNER);
 								pd.setCancelable(true);
 								pd.show();
+							
+								
 								
 								// 현재 클릭한 스냅샷에 대한 정보를 통해 사용자 데이터를 구축
 								
@@ -216,11 +220,7 @@ public class SrvBackupActivity extends Activity {
 								// 서버에 전송이 시작된다는 것을 알려야지	
 								ConnServer conn = new ConnServer(MainActivity.srvIp, 12345, 6, userCode , ssName , pd);
 								conn.start();		
-								
 
-								/*SnapshotImageMaker sim = new SnapshotImageMaker("ssName");
-								sim.start();*/
-								
 								
 								// Snapshot Imaging
 								// Snapshot Send to Server

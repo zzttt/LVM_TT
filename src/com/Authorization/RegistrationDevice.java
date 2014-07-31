@@ -12,6 +12,7 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.widget.Toast;
 
 public class RegistrationDevice {
@@ -51,13 +52,14 @@ public class RegistrationDevice {
 		// 사용자 확인 . opcode 3
 		ConnServer conn = new ConnServer(MainActivity.srvIp, 12345, 3, userCode , handler);
 		conn.start();
+		
 
 		try {
 			conn.join();
 			ObjectInputStream ois = new ObjectInputStream(conn.getSocket().getInputStream());
 			
 			if(ois.readBoolean()){ // true 면 등록된 기기를 의미함
-				System.out.println("등록된 기기");
+				Log.e("boolean", "이미 등록된 기기");
 				ois.close();
 				return true;
 				

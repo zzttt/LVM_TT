@@ -2,10 +2,11 @@ package com.FrameWork;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 
 
-public class UserData {
+public class UserData implements Serializable{
 
 	private String userCode; // authCode 와 동일
 	private ArrayList<Snapshot> sList ; // Snapshot 리스트를 저장한다.

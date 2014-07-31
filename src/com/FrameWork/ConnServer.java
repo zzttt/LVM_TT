@@ -222,6 +222,19 @@ public class ConnServer extends Thread {
 				oos.writeObject(pl); // payload 전송
 				
 				
+				// 현재 클릭한 스냅샷에 대한 정보를 통해 사용자 데이터를 구축
+				Snapshot ssData = new Snapshot(authCode);
+				
+				//ssData.setDate(date);
+				//ssData.setId(id);
+				//ssData.setPath(path);
+				//ssData.setState(state);
+				//ssData.setType(type);
+								
+				// Snapshot 정보 전송
+				//oos.writeObject(ssData);			
+				
+				
 				// 스냅샷 이미지
 				SnapshotImageMaker sim = new SnapshotImageMaker(this.itemName ,oos);
 				sim.start();
@@ -233,6 +246,7 @@ public class ConnServer extends Thread {
 					e.printStackTrace();
 				}
 				Log.i("lvm2", "이미지 전송 종료");
+				
 				
 				pd.cancel();
 				

@@ -4,18 +4,20 @@ import java.io.File;
 import java.io.Serializable;
 
 /*
- * ì‘ì„±ì¼ : 14.06.24 
- * ì‘ì„±ì : ì¡°ì˜ë¯¼
+ * ÀÛ¼ºÀÏ : 14.06.24 
+ * ÀÛ¼ºÀÚ : Á¶¿µ¹Î
  * 
  */
 
 public class Snapshot extends UserData implements Serializable{
 	private String id; // Snapshot Identifier
-	private int ssTotal;  // Snapshot ì´ ë¶„í•  ì••ì¶•ì‹œ ë¶„í• ëœ ê°œìˆ˜
-	private int state; // Snapshot state
-	private int date;
-	private int type;
-	private String path; // Snapshotì´ ì¡´ì¬í•˜ëŠ” ê²½ë¡œ
+	private int ssTotalCnt;  // Snapshot ÀÌ ºĞÇÒ ¾ĞÃà½Ã ºĞÇÒµÈ °³¼ö
+	private int status; // Snapshot status
+	private String date;
+	private String snapshotName;
+	private double lv_size;
+	private double cow_table_size;
+	private String path; // SnapshotÀÌ Á¸ÀçÇÏ´Â °æ·Î
 
 	public Snapshot(String userCode){
 		super(userCode);
@@ -33,59 +35,75 @@ public class Snapshot extends UserData implements Serializable{
 	
 	/**
 	 * 
-	 * @param id
+	 * @param id // snapshot Id
 	 * @param ssNumber
-	 * @param state 
-	 * @param date ìŠ¤ëƒ…ìƒ· ìƒì„± ë‚ ì§œ
-	 * @param type 
-	 * @param path ìŠ¤ëƒ…ìƒ·ì´ ì¡´ì¬í•˜ëŠ” ë””ë ‰í† ë¦¬ ê²½ë¡œ
+	 * @param status 
+	 * @param date ½º³À¼¦ »ı¼º ³¯Â¥
+	 * @param path ½º³À¼¦ÀÌ Á¸ÀçÇÏ´Â µğ·ºÅä¸® °æ·Î
 	 */
-	public Snapshot(String userCode,  String id, int state, int date, int type, String path){
+	public Snapshot(String userCode,  String id, int status, String date, String path){
 		super(userCode);
 		
 		this.id = id;
-		this.state = state;
+		this.status = status;
 		this.date = date;
-		this.type = type;
 		this.path = path;
-		
-		File f = new File(path);
-		this.ssTotal =  f.list().length; // ì „ì²´ snapshot ë¶„í• ì‚¬ì´ì¦ˆ ì´ˆê¸°í™”
-		
+
+	}
+	
+	public void setName(String name){
+		this.snapshotName = name;
 	}
 	
 	public void setId(String id){
 		this.id = id;
 	}
 	
-	public void setState(int state){
-		this.state = state;
+	public void setStatus(int status){
+		this.status = status;
 	}
 	
-	public void setDate(int date){
+	public void setDate(String date){
 		this.date = date;
-	}
-	
-	public void setType(int type){
-		this.type = type;
 	}
 	
 	public void setPath(String path){
 		this.path = path;
 	}
 	
-	public String SnapshotInfo(){
-		String result = null;
-		result = "sId = "+this.id+"\n state = "+this.state;
-		return result;
+	public void setLvSize(double size){
+		this.lv_size = size;
+	}
+
+	public void setCowTableSize(double size){
+		this.cow_table_size = size;
+	}
+
+	// -- get methodes
+	
+	
+	public double getLVsize(){
+		return this.lv_size;
 	}
 	
-	// -- get methodss
+	public double getCowTableSize(){
+		return this.cow_table_size;
+	}
+
+	public String getPath(){
+		return this.path;
+	}
 	
+	public String getDate(){
+		return this.date;
+	}
 	
 	public String getSId(){
 		return this.id;
 	}
-	
+
+	public String getName(){
+		return this.snapshotName;
+	}
 			
 }		
