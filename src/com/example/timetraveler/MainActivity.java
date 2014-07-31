@@ -162,7 +162,6 @@ public class MainActivity extends Activity implements OnClickListener {
 		 rd = new RegistrationDevice(mng,handler);
 		
 		if(!rd.chkUserOnSrv()){ // 기기 등록여부 확인
-			
 			//등록이 안되어 있으면 일단은 자동생성.
 			// 사용자에게 물어볼 수도 있는거고..
 			rd.createUser(); // 기기에 사용자 생성.

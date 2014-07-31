@@ -231,11 +231,8 @@ public class ConnServer extends Thread {
 				//ssData.setState(state);
 				//ssData.setType(type);
 								
-				// Snapshot 데이터 변경정보 입력
-				
-				oos.writeObject(ssData);			
-				
-				
+				// Snapshot 정보 전송
+				//oos.writeObject(ssData);			
 				
 				
 				// 스냅샷 이미지
@@ -249,6 +246,7 @@ public class ConnServer extends Thread {
 					e.printStackTrace();
 				}
 				Log.i("lvm2", "이미지 전송 종료");
+				
 				
 				pd.cancel();
 				

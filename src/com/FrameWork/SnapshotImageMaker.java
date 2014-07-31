@@ -54,7 +54,7 @@ public class SnapshotImageMaker extends Thread {
 			// 스레드로 처리해야 할 듯 함.. timeout 됨.
 
 			// obs : 10240 (10 kb 씩 read)
-			String command = "dd if=/dev/vg/" + sName + " obs=512k\n"; // 1mb 단위로 읽음
+			String command = "dd if=/dev/vg/" + sName + " obs=1M\n"; // 1mb 단위로 읽음
 
 			// 명령어 실행
 			// command = "dd if=/dev/vg/test.txt obs=1024\n";

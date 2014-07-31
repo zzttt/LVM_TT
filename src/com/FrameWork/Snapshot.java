@@ -14,6 +14,7 @@ public class Snapshot extends UserData implements Serializable{
 	private int ssTotalCnt;  // Snapshot 이 분할 압축시 분할된 개수
 	private int status; // Snapshot status
 	private String date;
+	private String snapshotName;
 	private double lv_size;
 	private double cow_table_size;
 	private String path; // Snapshot이 존재하는 경로
@@ -48,6 +49,10 @@ public class Snapshot extends UserData implements Serializable{
 		this.date = date;
 		this.path = path;
 
+	}
+	
+	public void setName(String name){
+		this.snapshotName = name;
 	}
 	
 	public void setId(String id){
@@ -96,6 +101,9 @@ public class Snapshot extends UserData implements Serializable{
 	public String getSId(){
 		return this.id;
 	}
-	
+
+	public String getName(){
+		return this.snapshotName;
+	}
 			
 }		
