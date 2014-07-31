@@ -22,7 +22,8 @@ public class SnapshotInfoReader {
 		try {
 			p = new ProcessBuilder("su").start();
 
-			String command = "lvm lvdisplay /dev/vg/"+this.sName+"\n";
+			//String command = "lvm lvdisplay /dev/vg/"+this.sName+"\n";
+			String command = "lvm lvdisplay /dev/vg/201407311809\n";
 			p.getOutputStream().write(command.getBytes());
 			p.getOutputStream().write("exit\n".getBytes());
 			
@@ -36,12 +37,22 @@ public class SnapshotInfoReader {
 			StringBuffer sb = new StringBuffer();
 			
 			while(( s = br.readLine() ) != null ){
-				Log.i("lvdisplay", s);
+			//	Log.i("lvdisplay", s);
 				sb.append(s+"\n");
-				
 			}
 			
-			Log.i("lvdisplay", sb.toString());
+			String arr[] = sb.toString().split("\n");
+			
+			
+			
+			String lv_path, lv_name, vg_name, lv_uuid, lv_wa, lv_time, lv_satus, lv_size, lv_cow_table_size;
+			for(String a : arr){
+				Log.i("lvdisplay", a.replace("LV Path", ""));
+			}
+			
+			
+			
+			//Log.i("lvdisplay", sb.toString());
 			
 			
 			// sil = new SnapshotInfoLists(); // 데이터 초기화
