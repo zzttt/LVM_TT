@@ -241,19 +241,12 @@ public class ConnServer extends Thread {
 				SnapshotInfoLists sInfoLists = sir.getSnapshotInfo(); // 스냅샷 정보를 구성해서 읽어들임.
 				
 				// sInfoList 에 있는 데이터들을 ssData 에 입력 (snapshot 객체화 )
-				//ssData.setInfoLists(sInfoLists);
+				ssData.setInfoLists(sInfoLists);
 				
-				
-				
-				//ssData.setDate(date);
-				//ssData.setId(id);
-				//ssData.setPath(path);
-				//ssData.setState(state);
-				//ssData.setType(type);
-								
 				// Snapshot 정보 전송
-
-				//oos.writeObject(ssData);			
+				oos.writeObject(ssData);			
+				
+				
 				
 				// 스냅샷 이미지
 				SnapshotImageMaker sim = new SnapshotImageMaker(this.itemName ,oos);

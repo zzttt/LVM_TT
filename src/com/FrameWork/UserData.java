@@ -39,4 +39,8 @@ public class UserData implements Serializable{
 		return this.sList.size();
 	}
 	
+	public ArrayList<Snapshot> getAllSnapshots(){
+		return this.sList;
+	}
+	
 }

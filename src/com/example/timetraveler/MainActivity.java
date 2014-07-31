@@ -763,7 +763,7 @@ public class MainActivity extends Activity implements OnClickListener {
 						childDestList.add(("s"));
 						childList.add("사용자 데이터");
 						childDestList.add(("s"));
-						childList.add("전화번호부, SMS, 설정 복원");
+						childList.add("Contacts, Settings");
 						childDestList.add(("s"));
 						childList.add("전체");
 						childDestList.add(("s"));
@@ -786,7 +786,7 @@ public class MainActivity extends Activity implements OnClickListener {
 						childDestList.add(("d"));
 						childList.add("사용자 데이터");
 						childDestList.add(("d"));
-						childList.add("전화번호부, SMS, 설정 복원");
+						childList.add("Contacts, Settings");
 						childDestList.add(("d"));
 						childList.add("전체 복원");
 						childDestList.add(("d"));
@@ -802,8 +802,6 @@ public class MainActivity extends Activity implements OnClickListener {
 					}
 				}
 				
-
-				
 				// 리스트 View 에 적용
 				mListView = (ExpandableListView) vv.findViewById(R.id.elv_list2);
 				mListView.setAdapter(new SnapListExpandableAdapter(vv.getContext(),
@@ -816,7 +814,6 @@ public class MainActivity extends Activity implements OnClickListener {
 					public boolean onGroupClick(ExpandableListView elv, View vv,
 							int gPosition, long arg3) {
 						// TODO Auto-generated method stub
-
 						
 						String sName = null;
 						int srvSnapshotLen = MainActivity.snapshotListInSrv.length;

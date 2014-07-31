@@ -1,6 +1,8 @@
 package com.FrameWork;
 
-public class SnapshotInfoLists {
+import java.io.Serializable;
+
+public class SnapshotInfoLists  implements Serializable{
 	private String id; // Snapshot Identifier
 	private String status; // Snapshot status
 	private String date;

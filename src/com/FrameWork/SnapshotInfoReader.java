@@ -23,7 +23,7 @@ public class SnapshotInfoReader {
 			p = new ProcessBuilder("su").start();
 
 			//String command = "lvm lvdisplay /dev/vg/"+this.sName+"\n";
-			String command = "lvm lvdisplay /dev/vg/201407311809\n";
+			String command = "lvm lvdisplay /dev/vg/"+this.sName+"\n";
 			p.getOutputStream().write(command.getBytes());
 			p.getOutputStream().write("exit\n".getBytes());
 			

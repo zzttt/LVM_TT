@@ -10,6 +10,7 @@ import java.io.Serializable;
  */
 
 public class Snapshot extends UserData implements Serializable{
+	
 	private String id; // Snapshot Identifier
 	private int ssTotalCnt;  // Snapshot 이 분할 압축시 분할된 개수
 	private String status; // Snapshot status
