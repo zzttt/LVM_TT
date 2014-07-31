@@ -18,13 +18,14 @@ import android.widget.Toast;
 public class SnapshotSetup {
 
 	Context context;
+	static boolean main_mode;
 	public SnapshotSetup(Context context) {
 		// TODO Auto-generated constructor stub
 		this.context = context;
 	}
 	
 	public void setup_time(boolean mode, int interval, Calendar current_time){
-	
+		
 		StringBuilder time = new StringBuilder();
 		Calendar calendar = new GregorianCalendar();
 	
@@ -40,6 +41,9 @@ public class SnapshotSetup {
 		interval = pref.getInt("spinnerSelection",0);
 		interval++;
 		Log.i("interval", Integer.toString(interval));
+		
+//		main_mode = mode;
+//		Log.i("main_mode", Boolean.toString(main_mode));
 		
 		if(mode == false){
 			

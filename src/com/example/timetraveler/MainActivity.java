@@ -60,6 +60,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Parcelable;
+import android.preference.Preference;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.SimpleCursorAdapter;
@@ -88,7 +89,7 @@ import android.widget.Spinner;
 import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
-// git test //
+
 public class MainActivity extends Activity implements OnClickListener {
 	private ViewPager mPager;
 	private ArrayList<String> mGroupList = null;
@@ -116,11 +117,12 @@ public class MainActivity extends Activity implements OnClickListener {
 	
 	public static String srvIp = "211.189.19.45";
 	public static int srvPort = 12345 ;
-	public static String homePath = "/dev/vg/";
+	//public static String homePath = "/dev/vg/";
+	public static String homePath = "/data/data/com.example.timetraveler/database/";
 	private PagerAdapterClass pac;
 	private RegistrationDevice rd;
-
-	public static boolean setVal0 = false; // auto snapshot On // Off
+	
+	public static boolean setVal0 = false;		 // ( 자동 스냅샷?mode on / off )
 	public static int setVal1 = 0; // 백업 용량 세팅 값 1
 	public static int setVal2 = 1; // 백업 용량 세팅 값 2
 
@@ -130,13 +132,15 @@ public class MainActivity extends Activity implements OnClickListener {
 	readHandler rh;
 	pipeWithLVM pl;
 	String readResult;
-	
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		WifiManager mng = (WifiManager) getSystemService(WIFI_SERVICE);
 		
+		SharedPreferences pref = getApplicationContext().getSharedPreferences("SaveState", getApplicationContext().MODE_PRIVATE);
+	
 		manager = (ConnectivityManager) getApplicationContext()
 				.getSystemService(Context.CONNECTIVITY_SERVICE);
 
@@ -293,6 +297,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		@Override
 		public Object instantiateItem(ViewGroup pager, int position) {
 			View v = null;
+
 			if (position == 0) { // Back up 페이지
 				SimpleCursorAdapter mAdapter;
 				v = mInflater.inflate(R.layout.inflate_one, null);
@@ -311,13 +316,11 @@ public class MainActivity extends Activity implements OnClickListener {
 				ArrayList<String> child1 = new ArrayList<String>();
 				ArrayList<String> child2 = new ArrayList<String>();
 				ArrayList<String> child3 = new ArrayList<String>();
-
+			
 				child1.add("서버 백업");
-
 				child2.add("백업 시작");
-
 				child3.add("자동 스냅샷 사용");
-
+					
 				mChildListContent.add(child1);
 				mChildListContent.add(child2);
 				mChildListContent.add(child3);
@@ -645,10 +648,10 @@ public class MainActivity extends Activity implements OnClickListener {
 								
 								setVal2 = Integer.parseInt(arg0
 										.getItemAtPosition(arg2).toString());
-								Log.i("eee", Integer.toString(setVal2));
+								//Log.i("eee", Integer.toString(setVal2));
 
 								int selectedPosition = dateSpinner.getSelectedItemPosition();
-								Log.i("position", "position : " + (Integer.toString(selectedPosition+1)));
+								//Log.i("position", "position : " + (Integer.toString(selectedPosition+1)));
 								edit.putInt("spinnerSelection",selectedPosition);
 								edit.commit();
 							}
@@ -697,7 +700,7 @@ public class MainActivity extends Activity implements OnClickListener {
 			return views.get(position);
 		}
 
-		public void removeView(int postion) {
+		public void removeView(int postion) {	
 			views.remove(postion);
 		}
 
@@ -780,14 +783,12 @@ public class MainActivity extends Activity implements OnClickListener {
 						
 						childList.clear();
 						childDestList.clear();
-
 					}
 				}
 				
 				if(MainActivity.snapshotListInDev != null){
 					for (int i = 0; i < MainActivity.snapshotListInDev.length; i++) {
 						mGroupList.add(MainActivity.snapshotListInDev[i].getName()+" [Device]");
-						
 						
 						childList.add("어플리케이션");
 						childDestList.add(("d"));
@@ -879,6 +880,8 @@ public class MainActivity extends Activity implements OnClickListener {
 						Toast.makeText(vv.getContext(), "sName : "+sName+"\nmName:"+mName,
 								Toast.LENGTH_SHORT).show();
 						
+						
+						
 						// 변경리스트 로딩 ( 스레드 처리 필요성 )
 						
 						try {
@@ -944,7 +947,6 @@ public class MainActivity extends Activity implements OnClickListener {
 									}
 									
 								}
-								
 								if(fileType == 'd' || fileType == 'b' || fileType == 'c' ||fileType == 'p' || fileType == 'l' || fileType == 's' ){ // special files
 									// b(Block file(b) , Character device file(c) , Named pipe file or just a pipe file(p)
 									// Symbolic link file(l), Socket file(s)
