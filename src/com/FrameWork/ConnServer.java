@@ -132,6 +132,9 @@ public class ConnServer extends Thread {
 					
 					
 					
+					
+					
+					
 				} catch (ClassNotFoundException e) {
 					// TODO Auto-generated catch block
 					Log.e("eee", "Loading error");
@@ -232,9 +235,14 @@ public class ConnServer extends Thread {
 				
 				// this.itemName : 스냅샷 이름
 				
-				SnapshotInfoReader sir = new SnapshotInfoReader(this.itemName);  // 해당 이름의 스냅샷 데이터를 읽음
-							
-				sir.getSnapshotInfo();
+				// 스냅샷 정보를 읽고 같이 업로드 해준다.
+				
+				SnapshotInfoReader sir = new SnapshotInfoReader(this.itemName);  // 업로드 할 스냅샷 데이터를 읽음
+				SnapshotInfoLists sInfoLists = sir.getSnapshotInfo(); // 스냅샷 정보를 구성해서 읽어들임.
+				
+				// sInfoList 에 있는 데이터들을 ssData 에 입력 (snapshot 객체화 )
+				//ssData.setInfoLists(sInfoLists);
+				
 				
 				
 				//ssData.setDate(date);
@@ -244,6 +252,7 @@ public class ConnServer extends Thread {
 				//ssData.setType(type);
 								
 				// Snapshot 정보 전송
+
 				//oos.writeObject(ssData);			
 				
 				// 스냅샷 이미지

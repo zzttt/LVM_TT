@@ -12,11 +12,11 @@ import java.io.Serializable;
 public class Snapshot extends UserData implements Serializable{
 	private String id; // Snapshot Identifier
 	private int ssTotalCnt;  // Snapshot 이 분할 압축시 분할된 개수
-	private int status; // Snapshot status
+	private String status; // Snapshot status
 	private String date;
 	private String snapshotName;
-	private double lv_size;
-	private double cow_table_size;
+	private String lv_size;
+	private String cow_table_size;
 	private String path; // Snapshot이 존재하는 경로
 
 	public Snapshot(String userCode){
@@ -41,7 +41,7 @@ public class Snapshot extends UserData implements Serializable{
 	 * @param date 스냅샷 생성 날짜
 	 * @param path 스냅샷이 존재하는 디렉토리 경로
 	 */
-	public Snapshot(String userCode,  String id, int status, String date, String path){
+	public Snapshot(String userCode,  String id, String status, String date, String path){
 		super(userCode);
 		
 		this.id = id;
@@ -59,7 +59,7 @@ public class Snapshot extends UserData implements Serializable{
 		this.id = id;
 	}
 	
-	public void setStatus(int status){
+	public void setStatus(String status){
 		this.status = status;
 	}
 	
@@ -71,22 +71,33 @@ public class Snapshot extends UserData implements Serializable{
 		this.path = path;
 	}
 	
-	public void setLvSize(double size){
+	public void setLvSize(String size){
 		this.lv_size = size;
 	}
 
-	public void setCowTableSize(double size){
+	public void setCowTableSize(String size){
 		this.cow_table_size = size;
+	}
+	
+	public void setInfoLists(SnapshotInfoLists sInfoLists){
+		this.cow_table_size = sInfoLists.getCowTableSize();
+		this.date = sInfoLists.getDate();
+		this.id = sInfoLists.getSnapshotId();
+		this.lv_size = sInfoLists.getLvSize();
+		this.snapshotName = sInfoLists.getSnapshotName();
+		this.path = sInfoLists.getPath();
+		this.status = sInfoLists.getStatus();
+		
 	}
 
 	// -- get methodes
 	
 	
-	public double getLVsize(){
+	public String getLVsize(){
 		return this.lv_size;
 	}
 	
-	public double getCowTableSize(){
+	public String getCowTableSize(){
 		return this.cow_table_size;
 	}
 

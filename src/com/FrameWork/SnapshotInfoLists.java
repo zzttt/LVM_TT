@@ -5,14 +5,14 @@ public class SnapshotInfoLists {
 	private String status; // Snapshot status
 	private String date;
 	private String snapshotName;
-	private double lv_size;
-	private double cow_table_size;
+	private String lv_size;
+	private String cow_table_size;
 	private String path; // Snapshot이 존재하는 경로
 	
-	public SnapshotInfoLists(String uid, String status, String data, String snapshotName , double lv_size , double cow_table_size , String path){
+	public SnapshotInfoLists(String uid, String status, String date, String snapshotName , String lv_size , String cow_table_size , String path){
 		this.id = uid;
 		this.status = status;
-		this.date = data;
+		this.date = date;
 		this.snapshotName = snapshotName;
 		this.lv_size = lv_size;
 		this.cow_table_size = cow_table_size;
@@ -26,10 +26,10 @@ public class SnapshotInfoLists {
 	
 	
 	public String getStatus(){
-		return this.getStatus();
+		return this.status;
 	}
 	
-	public String getData(){
+	public String getDate(){
 		return this.date;
 	}
 	
@@ -37,11 +37,11 @@ public class SnapshotInfoLists {
 		return this.snapshotName;
 	}
 	
-	public double getLvSize(){
+	public String getLvSize(){
 		return this.lv_size;
 	}
 	
-	public double getCowTableSize(){
+	public String getCowTableSize(){
 		return this.cow_table_size;
 	}
 	

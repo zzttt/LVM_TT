@@ -45,17 +45,61 @@ public class SnapshotInfoReader {
 			
 			
 			
-			String lv_path, lv_name, vg_name, lv_uuid, lv_wa, lv_time, lv_satus, lv_size, lv_cow_table_size;
+			String lv_path = null, lv_name = null, lv_uuid = null, lv_wa = null, lv_time = null, lv_satus = null, lv_size = null, lv_cow_table_size = null;
+			
 			for(String a : arr){
-				Log.i("lvdisplay", a.replace("LV Path", ""));
+				if(a.contains("LV Path")){
+					a = a.replace("LV Path", "");
+					a = a.replace("\t", "");
+					a = a.trim();
+					lv_path = a.trim();
+				}else if(a.contains("LV Name")){
+					a = a.replace("LV Name", "");
+					a = a.replace("\t", "");
+					a = a.trim();
+					lv_name = a.trim();
+				}else if(a.contains("LV UUID")){
+					a = a.replace("LV UUID", "");
+					a = a.replace("\t", "");
+					a = a.trim();
+					lv_uuid = a.trim();
+				}else if(a.contains("LV Creation host, time")){
+					a = a.replace("LV Creation host, time", "");
+					a = a.replace("\t", "");
+					a = a.trim();
+					lv_time = a.trim();
+				}else if(a.contains("LV Status")){
+					a = a.replace("LV Status", "");
+					a = a.replace("\t", "");
+					a = a.trim();
+					lv_satus = a.trim();
+				}else if(a.contains("LV Size")){ // gb or mb 데이터를 알맞게 변경한다.
+					a = a.replace("LV Size", "");
+					a = a.replace("\t", "");
+					a = a.trim();
+					lv_size = a.trim();
+				}else if(a.contains("COW-table size")){ 
+					a = a.replace("COW-table size", "");
+					a = a.replace("\t", "");
+					a = a.trim();
+					lv_cow_table_size = a.trim();
+				}else if(a.contains("LV Write Access")){
+					a = a.replace("LV Write Access", "");
+					a = a.replace("\t", "");
+					a = a.trim();
+					lv_wa = a.trim();
+				}
+				Log.i("lvdisplay", a);
+				//Log.i("lvdisplay", a.replace("LV Path", ""));
 			}
 			
 			
 			
 			//Log.i("lvdisplay", sb.toString());
 			
+			//String uid, String status, String data, String snapshotName , double lv_size , double cow_table_size , String path){
 			
-			// sil = new SnapshotInfoLists(); // 데이터 초기화
+			sil = new SnapshotInfoLists(lv_uuid, lv_satus,lv_time, lv_name, lv_size, lv_cow_table_size , lv_path); // 데이터 초기화
 			
 			
 			p.destroy(); //end process
