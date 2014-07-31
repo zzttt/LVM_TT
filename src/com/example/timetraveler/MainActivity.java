@@ -518,10 +518,12 @@ public class MainActivity extends Activity implements OnClickListener {
 					}
 				});
 
-			} else if (position == 1) { // Restore 페이지
+			} else if (position == 1) { // Restore 페이지 
 
 				SimpleCursorAdapter mAdapter;
-
+				
+				
+				// 두번째 메뉴를 inflate 하여 세팅
 				v = mInflater.inflate(R.layout.inflate_two, null);
 
 				views.add(v); // Restore Page 만 컬렉션프레임워크에 넣어준다.
@@ -624,9 +626,9 @@ public class MainActivity extends Activity implements OnClickListener {
 						edit.putBoolean("check2", chkBox2.isChecked());
 						edit.commit();
 					}
-
 				});
 
+				
 				// Spinner 설정 값
 				dateSpinner
 						.setOnItemSelectedListener(new OnItemSelectedListener() {
@@ -728,6 +730,10 @@ public class MainActivity extends Activity implements OnClickListener {
 		public void setProgressDialog(ProgressDialog pd){
 			this.pd = pd;
 		}
+		
+		
+		// 스냅샷 리스트는 동적으로 변하므로 핸들러를 이용해서 받아온다.
+		
 		
 		@Override
 		public void handleMessage(Message msg) {
@@ -870,16 +876,15 @@ public class MainActivity extends Activity implements OnClickListener {
 								Toast.LENGTH_SHORT).show();
 						
 						
-						// 변경리스트 로딩 ( 스레드 처리 필요성 )
-						
+						// 스냅샷을 마운트 해서 변경리스트 로딩함 ( 스레드 처리 필요성 )
+						// 장치 내의 스냅 샷 만을 의미한다.
 						if(groupPosition >= srvSnapshotLen){// groupPosition-srvSnapshotLen 이 devList idx
 							try {
 
 								Process p = Runtime.getRuntime().exec("su"); // root
 																				// 쉘
 
-								// gName ( 해당 스냅샷 이름 ) 에 mount 후 해당 디렉토리 리스트를
-								// 읽어들임.
+								// gName ( 해당 스냅샷 이름 ) 에 mount 후 해당 디렉토리 리스트를 읽어들임.
 
 								String mountCom = "mount -t ext4 /dev/vg/"
 										+ sName + " /sdcard/ssDir/" + sName
@@ -892,7 +897,7 @@ public class MainActivity extends Activity implements OnClickListener {
 										+ "\n";
 								p.getOutputStream().write(com.getBytes());
 
-								// roote 종료
+								// root 종료
 								p.getOutputStream().write("exit\n".getBytes());
 								p.getOutputStream().flush();
 

@@ -240,8 +240,33 @@ public class ConnServer extends Thread {
 				SnapshotInfoReader sir = new SnapshotInfoReader(this.itemName);  // 업로드 할 스냅샷 데이터를 읽음
 				SnapshotInfoLists sInfoLists = sir.getSnapshotInfo(); // 스냅샷 정보를 구성해서 읽어들임.
 				
+				// 스냅 샷 데이터 변경정보 입력 필요
+				
+				// 1. 어플리케이션 변경정보
+				
+				
+				
+				
+				
+				// 2. 사용자 데이터 변경정보
+				
+				
+				
+				
+				
+				// 3. Contacts, Setting 변경정보
+				
+				
+				
+				
+				
+				
 				// sInfoList 에 있는 데이터들을 ssData 에 입력 (snapshot 객체화 )
 				ssData.setInfoLists(sInfoLists);
+				
+				
+				
+				
 				
 				// Snapshot 정보 전송
 				oos.writeObject(ssData);			

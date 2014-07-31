@@ -19,6 +19,10 @@ public class Snapshot extends UserData implements Serializable{
 	private String lv_size;
 	private String cow_table_size;
 	private String path; // Snapshot이 존재하는 경로
+	
+	private String appChanged; // 어플 변경내역
+	private String userDataChanged; // 사용자 데이터 변경내역 
+	private String setValChanged; // 설정 값 변경내역
 
 	public Snapshot(String userCode){
 		super(userCode);
