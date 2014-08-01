@@ -22,6 +22,7 @@ import java.util.Set;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
@@ -46,7 +47,7 @@ public class InstalledAppInfo implements Serializable {
     	this.context = context;
     }
     
-    public void ReadAppInfo(String SnapshotDate) {
+    public synchronized ArrayList<InstalledAppInfo> ReadAppInfo(String SnapshotDate) {
     	HashMap<String, ArrayList> readAppMap = null;
     	Log.d(LOGTAG, "DeserialiZ AppInfo");
     	try {
@@ -54,9 +55,6 @@ public class InstalledAppInfo implements Serializable {
     		FileInputStream fis = new FileInputStream(AppListFile);
     		ObjectInputStream ois = new ObjectInputStream(fis);
     			
-    		
-    		//new HashMap<String, ArrayList>();
-    		
     		try {
 				readAppMap = (HashMap<String, ArrayList>) ois.readObject();
     			ois.close();
@@ -88,11 +86,13 @@ public class InstalledAppInfo implements Serializable {
     		break;
     	}
     	Log.d(LOGTAG, "read al size : "+readAppInfoList.size());
-    	for(int i=0;i<readAppInfoList.size();i++)
-    		readAppInfoList.get(i).resultPrint();
+    	/*for(int i=0;i<readAppInfoList.size();i++)
+    		readAppInfoList.get(i).resultPrint();*/
+    	
+    	return readAppInfoList;
     }
 
-    public void resultToSaveFile(String todayIsName) {
+    public synchronized void resultToSaveFile(String todayIsName) {
          //Hashmap¿¡ app list (getPackages())ÀúÀå
     	 HashMap<String, ArrayList> AppMap = new HashMap<String, ArrayList>();
     	 AppMap.put(todayIsName, getPackages());
@@ -132,6 +132,10 @@ public class InstalledAppInfo implements Serializable {
     	 Log.v(LOGTAG, "App :: "+appname + "   " + pname + "   " + versionName + "   " + versionCode);
      }
      
+     public String resultOfAppNamePrint() {
+    	 return appname;
+     }
+     
      private ArrayList<InstalledAppInfo> getPackages() {
          ArrayList<InstalledAppInfo> apps = getInstalledApps(false); /* false = no system packages */
          final int max = apps.size();
@@ -152,9 +156,11 @@ public class InstalledAppInfo implements Serializable {
 
          for(int i=0;i<packs.size();i++) {
              PackageInfo p = packs.get(i);
-             if ((!getSysPackages) && (p.versionName == null)) {
+             /*if ((!getSysPackages) && (p.versionName == null)) {
                  continue ;
-             }
+             }*/
+             if((packs.get(i).applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 1)
+            	 continue;
             
              InstalledAppInfo newInfo = new InstalledAppInfo();
              newInfo.appname = p.applicationInfo.loadLabel(context.getPackageManager()).toString();

@@ -115,7 +115,8 @@ public class MainActivity extends Activity implements OnClickListener {
 	
 	public static String srvIp = "211.189.19.45";
 	public static int srvPort = 12345 ;
-	public static String homePath = "/dev/vg/";
+	public static String homePath = "/data/data/com.example.timetraveler/";
+	//public static String homePath = "/dev/vg/";
 	private PagerAdapterClass pac;
 	private RegistrationDevice rd;
 
@@ -129,6 +130,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	readHandler rh;
 	pipeWithLVM pl;
 	String readResult;
+	InstalledAppInfo mInsAppInfo;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -148,6 +150,9 @@ public class MainActivity extends Activity implements OnClickListener {
 		/* SnapShot Service 시작 */
 		Intent i = new Intent(this, SnapshotService.class);
 		startService(i);
+		
+		/* Install App Loader Inatanced */
+		mInsAppInfo = new InstalledAppInfo(getApplicationContext());
 		
 		pd = new ProgressDialog(this);
 		pd.setCanceledOnTouchOutside(false);
@@ -400,8 +405,8 @@ public class MainActivity extends Activity implements OnClickListener {
 							String today = (new SimpleDateFormat("yyyyMMddHHmm").format(cal
 									.getTime()));
 							
-							pl = new pipeWithLVM(rh);
-							pl.ActionWritePipe("lvcreate -s -L 200M -n "+today+" /dev/vg/userdata");
+							//pl = new pipeWithLVM(rh);
+							//pl.ActionWritePipe("lvcreate -s -L 200M -n "+today+" /dev/vg/userdata");
 							try {
 								Thread.sleep(300);
 							} catch (InterruptedException e) {
@@ -417,9 +422,8 @@ public class MainActivity extends Activity implements OnClickListener {
 							/* 어플 리스트를 읽어 들여서 SharedPrefs 또는 특정 파일에에 
 							 * HashMap형태로 저장한다. 
 							 * today를 key로 저장 */
-							InstalledAppInfo mInsAppInfo = new InstalledAppInfo(getApplicationContext());
-							mInsAppInfo.resultToSaveFile(today);
-							mInsAppInfo.ReadAppInfo(today);
+							mInsAppInfo.resultToSaveFile("ABC");
+							//mInsAppInfo.ReadAppInfo(today);
 						case 2: // scheduled snapshot
 							// Alarm Manager
 
@@ -976,19 +980,23 @@ public class MainActivity extends Activity implements OnClickListener {
 							ab.setTitle("Recently changed items  ["+mName+"]");
 							
 							// 최근 변경사항을 Message에 띄움.
-							
-							// 변경사항 Read 
+							/**
+							 * 스냅샷 백업 시점에 설치되어 있던 어플리케이션 현황 출력
+							 */
+							// 변경사항 Read
 							ArrayList<String> changedList = new ArrayList<String>();
+							//스냅샷 시점의 설치된 어플 arylist 불러옴
+							//테스트를 위한 하드코딩 -- ABC로 저장
+							ArrayList<InstalledAppInfo> InSsApp = mInsAppInfo.ReadAppInfo("ABC");
 							StringBuffer sbMessage = new StringBuffer();
 							int vListSize = 0;
 							
-							for(int i = 0 ; i < fiList.size() && vListSize < 3 ; i++){
-								changedList.add(fiList.get(i).getName());
-								
-								if(!fiList.get(i).getType().equals("d")){
-									vListSize++;
-									sbMessage.append(vListSize+") "+fiList.get(i).getName()+" ( 수정 시간 : "+fiList.get(i).getDate()+" "+fiList.get(i).getTime()+")"+"\n\n");	
-								}
+							//어플리스트 출력
+							for(int i=0;i<InSsApp.size();i++) {
+								changedList.add(InSsApp.get(i).resultOfAppNamePrint());
+								vListSize++;
+								sbMessage.append(vListSize+") "+InSsApp.get(i).resultOfAppNamePrint()+"\n");
+								Log.d("AppName", "aa"+InSsApp.get(i).resultOfAppNamePrint());
 							}
 							
 							ab.setMessage(sbMessage); 
