@@ -6,8 +6,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Reader;
+import java.io.StreamCorruptedException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.text.Collator;
@@ -940,56 +942,158 @@ public class MainActivity extends Activity implements OnClickListener {
 						pd.dismiss();
 						
 						// 변경 리스트 로딩 끝
-						
-						if(mName.equals("[ 복원 대상 ]")){
-							// nothing to do
-						}else{
-							// scroll View changed List
-							
-							//final ScrollView linear = (ScrollView)View.inflate(context, R.layout.scrolldialog, null);
-							
-							// Dialog as user want to see
-							AlertDialog.Builder ab = new AlertDialog.Builder(context);
-							
-							ab.setTitle("Recently changed items  ["+mName+"]");
-							
-							// 최근 변경사항을 Message에 띄움.
-							
-							// 변경사항 Read 
-							ArrayList<String> changedList = new ArrayList<String>();
-							StringBuffer sbMessage = new StringBuffer();
-							int vListSize = 0;
-							
-							for(int i = 0 ; i < fiList.size() && vListSize < 3 ; i++){
-								changedList.add(fiList.get(i).getName());
-								
-								if(!fiList.get(i).getType().equals("d")){
-									vListSize++;
-									sbMessage.append(vListSize+") "+fiList.get(i).getName()+" ( 수정 시간 : "+fiList.get(i).getDate()+" "+fiList.get(i).getTime()+")"+"\n\n");	
+						if(groupPosition >= srvSnapshotLen){ // 장치내에 존재하는 스냅샷의 변경 내역을 읽는다.
+							if (mName.equals("[ 복원 대상 ]")) {
+								// nothing to do
+							} else {
+								// scroll View changed List
+
+								// final ScrollView linear =
+								// (ScrollView)View.inflate(context,
+								// R.layout.scrolldialog, null);
+
+								// Dialog as user want to see
+								AlertDialog.Builder ab = new AlertDialog.Builder(
+										context);
+
+								ab.setTitle("Recently changed items  [" + mName
+										+ "]");
+
+								// 최근 변경사항을 Message에 띄움.
+
+								// 변경사항 Read
+								ArrayList<String> changedList = new ArrayList<String>();
+								StringBuffer sbMessage = new StringBuffer();
+								int vListSize = 0;
+
+								for (int i = 0; i < fiList.size()
+										&& vListSize < 3; i++) {
+									changedList.add(fiList.get(i).getName());
+
+									if (!fiList.get(i).getType().equals("d")) {
+										vListSize++;
+										sbMessage.append(vListSize + ") "
+												+ fiList.get(i).getName()
+												+ " ( 수정 시간 : "
+												+ fiList.get(i).getDate() + " "
+												+ fiList.get(i).getTime() + ")"
+												+ "\n\n");
+									}
 								}
+
+								ab.setMessage(sbMessage);
+
+								ab.setCancelable(false); // Cancelable
+
+								// custom view 필요
+								final String f_sName = sName;
+								final String f_mName = mName;
+
+								ab.setPositiveButton(mName + " 복원",
+										new DialogInterface.OnClickListener() {
+											@Override
+											public void onClick(
+													DialogInterface arg0,
+													int arg1) {
+												setDismiss(mDialog);
+
+												// NextActivity > Recv Activity
+												// 메뉴로 이동
+												Intent recvIntent = new Intent(
+														context,
+														RecvActivity.class)
+														.putExtra("sName",
+																f_sName)
+														.putExtra("mName",
+																f_mName);
+												context.startActivity(recvIntent);
+
+											}
+
+										});
+
+								ab.setNegativeButton("이전으로",
+										new DialogInterface.OnClickListener() {
+											@Override
+											public void onClick(
+													DialogInterface arg0,
+													int arg1) {
+												setDismiss(mDialog);
+											}
+										});
+								mDialog = ab.create();
+
+								mDialog.show();
+							}
+						}else{ // 서버에 있는 스냅샷의 변경 리스트를 읽는다.
+							
+							// scroll View changed List
+
+							// final ScrollView linear =
+							// (ScrollView)View.inflate(context,
+							// R.layout.scrolldialog, null);
+
+							// Dialog as user want to see
+							AlertDialog.Builder ab = new AlertDialog.Builder(
+									context);
+
+							ab.setTitle("Recently changed items  [" + mName
+									+ "]");
+
+							// 최근 변경사항을 Message에 띄움.
+
+							// 변경사항 Read
+							
+							ConnServer cs = new ConnServer( srvIp , 12345 , 5 ,  rd.getUserCode() , sName, pd); // 사용자 정보 조회
+							cs.start();
+							
+							try {
+								cs.join(); // waiting thread
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
 							}
 							
-							ab.setMessage(sbMessage); 
 							
+							try {
+								Socket sc = new Socket(srvIp , 12345);
+								//socket 연결 후  데이터 대기
+								ObjectInputStream sOIS = new ObjectInputStream(sc.getInputStream()); 
+								
+								
+								
+							} catch (StreamCorruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							
+							
+							ab.setMessage("서버에서 데이터를 가져옵니다");
+
 							ab.setCancelable(false); // Cancelable
 
-						
-							
 							// custom view 필요
 							final String f_sName = sName;
 							final String f_mName = mName;
-							
-							ab.setPositiveButton(mName+" 복원",
+
+							ab.setPositiveButton(mName + " 복원",
 									new DialogInterface.OnClickListener() {
 										@Override
-										public void onClick(DialogInterface arg0,
-												int arg1) {
+										public void onClick(
+												DialogInterface arg0, int arg1) {
 											setDismiss(mDialog);
-											
-											// NextActivity > Recv Activity 메뉴로 이동 
-											Intent recvIntent = new Intent( context , RecvActivity.class).putExtra("sName", f_sName).putExtra("mName", f_mName);
+
+											// NextActivity > Recv Activity 메뉴로
+											// 이동
+											Intent recvIntent = new Intent(
+													context, RecvActivity.class)
+													.putExtra("sName", f_sName)
+													.putExtra("mName", f_mName);
 											context.startActivity(recvIntent);
-											
+
 										}
 
 									});
@@ -997,15 +1101,16 @@ public class MainActivity extends Activity implements OnClickListener {
 							ab.setNegativeButton("이전으로",
 									new DialogInterface.OnClickListener() {
 										@Override
-										public void onClick(DialogInterface arg0,
-												int arg1) {
+										public void onClick(
+												DialogInterface arg0, int arg1) {
 											setDismiss(mDialog);
 										}
 									});
 							mDialog = ab.create();
-							
+
 							mDialog.show();
 						}
+						
 						
 						
 						return false;

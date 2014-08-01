@@ -16,6 +16,41 @@ public class SnapshotAlteration {
 	public SnapshotAlteration() {
 
 	}
+	
+	public String getSettingStrAlteration(String sName) {
+		fiList = getAppAlteration(sName);
+		StringBuffer result = null;
+
+		
+		for( int i = 0 ; i < 3 ; i++)
+			result.append(fiList.get(i).getName()+"\n");
+		
+		return result.toString();
+	}
+	
+	
+	
+	public String getUserDataStrAlteration(String sName) {
+		fiList = getAppAlteration(sName);
+		StringBuffer result = null;
+
+		
+		for( int i = 0 ; i < 3 ; i++)
+			result.append(fiList.get(i).getName()+"\n");
+		
+		return result.toString();
+	}
+	
+	public String getStrAppAlteration(String sName) {
+		fiList = getAppAlteration(sName);
+		StringBuffer result = null;
+
+		
+		for( int i = 0 ; i < 3 ; i++)
+			result.append(fiList.get(i).getName()+"\n");
+		
+		return result.toString();
+	}
 
 	/**
 	 * sName에 해당하는 FileInfoList를 얻는다.

@@ -22,7 +22,7 @@ public class Snapshot extends UserData implements Serializable{
 	
 	private String appChanged; // 어플 변경내역
 	private String userDataChanged; // 사용자 데이터 변경내역 
-	private String setValChanged; // 설정 값 변경내역
+	private String settingValChanged; // 설정 값 변경내역
 
 	public Snapshot(String userCode){
 		super(userCode);
@@ -54,6 +54,22 @@ public class Snapshot extends UserData implements Serializable{
 		this.date = date;
 		this.path = path;
 
+	}
+	
+	/**
+	 * 
+	 * @param changedItem : 변경된 항목을 업데이트
+	 */
+	public void setAppChanged(String changedItem){ 
+		this.appChanged = changedItem;
+	}
+	
+	public void setUserDataChanged(String changedItem){ 
+		this.userDataChanged = changedItem;
+	}
+	
+	public void setSettingValChanged(String changedItem){ 
+		this.settingValChanged = changedItem;
 	}
 	
 	public void setName(String name){
@@ -120,6 +136,18 @@ public class Snapshot extends UserData implements Serializable{
 
 	public String getName(){
 		return this.snapshotName;
+	}
+	
+	public String getAppAlteration(){
+		return this.appChanged;
+	}
+	
+	public String getUserDataAlteration(){
+		return this.userDataChanged;
+	}
+	
+	public String getSettingValAlteration(){
+		return this.settingValChanged;
 	}
 			
 }		

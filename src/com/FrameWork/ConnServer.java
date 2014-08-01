@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Writer;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
@@ -13,6 +14,7 @@ import java.util.Date;
 import android.app.ProgressDialog;
 import android.os.Handler;
 import android.os.Message;
+import android.util.JsonWriter;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -26,6 +28,7 @@ public class ConnServer extends Thread {
 
 	private String srvIp;
 	private String itemName;
+	private String SnapshotName;
 	
 	
 	private int port;
@@ -42,7 +45,6 @@ public class ConnServer extends Thread {
 		this.srvIp = srvIp;
 		this.port = port;
 	}
-
 	/**
 	 * 
 	 * @param srvIp
@@ -56,6 +58,7 @@ public class ConnServer extends Thread {
 		this.opCode = opCode;
 		this.authCode = userCode;
 	}
+	
 
 	public ConnServer(String srvIp, int port, int opCode, String userCode,  String itemName, ProgressDialog pd) {
 		this.srvIp = srvIp;
@@ -92,7 +95,8 @@ public class ConnServer extends Thread {
 					sc.getOutputStream());
 
 
-			Log.i("eee", "opCode :" + Integer.toString(opCode));
+			//Log.i("eee", "opCode :" + Integer.toString(opCode));
+			
 			switch (this.opCode) {
 			case 0: // 기기 code 에 따라 스냅샷 정보 조회
 				// Snapshot 정보조회
@@ -112,7 +116,6 @@ public class ConnServer extends Thread {
 
 				// Date 전송
 				oos.writeObject(today);
-				
 
 				try {
 					ois = new ObjectInputStream(sc.getInputStream());
@@ -121,23 +124,18 @@ public class ConnServer extends Thread {
 					int len = ois.readInt(); // 파일 갯수를 넘겨받음.
 					
 					snapshotList = new File[len];
-					Log.e("eee", Integer.toString(len));
+					//Log.e("eee", Integer.toString(len));
+					
 					for (int i = 0; i < len; i++) {
 						snapshotList[i] = (File) ois.readObject();
 					}
 					MainActivity.snapshotListInSrv = snapshotList.clone();
 					
-					
 					Snapshot ss = (Snapshot) ois.readObject(); // 스냅샷 읽기
-					
-					
-					
-					
-					
 					
 				} catch (ClassNotFoundException e) {
 					// TODO Auto-generated catch block
-					Log.e("eee", "Loading error");
+					//Log.e("eee", "Loading error");
 					e.printStackTrace();
 				} finally {
 
@@ -181,7 +179,7 @@ public class ConnServer extends Thread {
 						FileCount++;
 					}
 				}
-				Log.i("eee", Integer.toString(FileCount));
+				//Log.i("eee", Integer.toString(FileCount));
 				oos.writeObject(FileCount); // 파일 갯수
 
 				// 4. HomeDir내의 파일 정보들을 모두 전송
@@ -223,6 +221,8 @@ public class ConnServer extends Thread {
 			case 5: // get user Information ( 사용자 정보 조회 )
 				
 				pl = new Payload(5,authCode);
+				oos.writeObject(pl);
+				
 				break;
 				
 			case 6: // 이미지 스트림 업로드
@@ -242,35 +242,30 @@ public class ConnServer extends Thread {
 				
 				// 스냅 샷 데이터 변경정보 입력 필요
 				
+				//JsonWriter jw = new JsonWriter(new Writer());
+				
 				// 1. 어플리케이션 변경정보
+				String changedItem1 = null ,changedItem2 = null, changedItem3 = null;
+				SnapshotAlteration sa = new SnapshotAlteration(); // 변경을 읽어내는 Alteration 객체
 				
+				changedItem1 = sa.getStrAppAlteration(this.itemName); // itemName == sName;
+				ssData.setAppChanged(changedItem1);
 				
-				
-				
-				
+
 				// 2. 사용자 데이터 변경정보
-				
-				
-				
-				
+				changedItem2 = sa.getUserDataStrAlteration(this.itemName);
+				ssData.setUserDataChanged(changedItem2);
 				
 				// 3. Contacts, Setting 변경정보
-				
-				
-				
-				
+				changedItem3 = sa.getSettingStrAlteration(this.itemName);
+				ssData.setSettingValChanged(changedItem3);
 				
 				
 				// sInfoList 에 있는 데이터들을 ssData 에 입력 (snapshot 객체화 )
 				ssData.setInfoLists(sInfoLists);
 				
-				
-				
-				
-				
 				// Snapshot 정보 전송
 				oos.writeObject(ssData);			
-				
 				
 				
 				// 스냅샷 이미지
@@ -290,7 +285,10 @@ public class ConnServer extends Thread {
 				pd.cancel();
 				
 				break;
-			case 7:
+			case 7: // get Snapshot Info
+				
+				
+				
 				break;
 			}
 			
