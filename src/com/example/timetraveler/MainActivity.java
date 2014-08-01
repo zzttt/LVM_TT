@@ -30,6 +30,7 @@ import com.Authorization.RegistrationDevice;
 import com.FileManager.FileInfo;
 import com.FileManager.SnapshotDiskManager;
 import com.FrameWork.ConnServer;
+import com.FrameWork.InstalledAppInfo;
 import com.FrameWork.opSwitch;
 
 import android.R.color;
@@ -401,88 +402,24 @@ public class MainActivity extends Activity implements OnClickListener {
 							
 							pl = new pipeWithLVM(rh);
 							pl.ActionWritePipe("lvcreate -s -L 200M -n "+today+" /dev/vg/userdata");
-							
-							// 어플 리스트를 읽어들인다.
-						/*	
-							PackageManager pm = getPackageManager();
-
-							List<PackageInfo> packs = getPackageManager()
-									.getInstalledPackages(
-											PackageManager.PERMISSION_GRANTED);
-
-							for (PackageInfo pack : packs) {
-
-								Log.i("TAG", pack.applicationInfo.loadLabel(pm)
-										.toString());
-								String sDir = pack.applicationInfo.sourceDir;
-								//Log.i("TAG", pack.packageName);
-								
-								Log.i("TAG", "appDir : "+sDir);
-								
-							}*/
-							
-							
-							// 어플리스트 백업
-							
-							
-							
-							// 개인정보
-							
-							// SMS
-							/*String MESSAGE_TYPE_INBOX = "1";
-							String MESSAGE_TYPE_SENT = "2";
-							String MESSAGE_TYPE_CONVERSATIONS = "3";
-							String MESSAGE_TYPE_NEW = "new";
-							
-							Uri allMessage = Uri.parse("content://sms/");
-							
-							Cursor cur = getContentResolver().query(allMessage,
-									null, null, null, null);
-							int count = cur.getCount();
-							Log.i("TAG", "SMS count = " + count);
-							String row = "";
-							String msg = "";
-							String date = "";
-							String protocol = "";
-							while (cur.moveToNext()) {
-								row = cur.getString(cur
-										.getColumnIndex("address"));
-								msg = cur.getString(cur.getColumnIndex("body"));
-								date = cur.getString(cur.getColumnIndex("date"));
-								protocol = cur.getString(cur
-										.getColumnIndex("protocol"));
-								// Logger.d( TAG , "SMS PROTOCOL = " +
-								// protocol);
-
-								String type = "";
-								if (protocol == MESSAGE_TYPE_SENT)
-									type = "sent";
-								else if (protocol == MESSAGE_TYPE_INBOX)
-									type = "receive";
-								else if (protocol == MESSAGE_TYPE_CONVERSATIONS)
-									type = "conversations";
-								else if (protocol == null)
-									type = "send";
-
-								Log.i("TAG", "SMS Phone: " + row + " / Mesg: "
-										+ msg + " / Type: " + type
-										+ " / Date: " + date);
+							try {
+								Thread.sleep(300);
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
 							}
-
-							break;*/
 							
-
-							// 통화내역
-							
-							
-							
-							// 설정
-							
-							// settings db 이용
-							
-							
-							// 연락처
-							
+							/**
+							 * 생성되는 lv snapshot에 상응되는 어플리스트를 백업한다.
+							 * 어플리스트는 ArrayList로 존재하고 이를 저장할 HashMap은,
+							 * lv snapshot에 대해 날짜를 Key, ArrayList를 Value로 가진다.
+							 */
+							/* 어플 리스트를 읽어 들여서 SharedPrefs 또는 특정 파일에에 
+							 * HashMap형태로 저장한다. 
+							 * today를 key로 저장 */
+							InstalledAppInfo mInsAppInfo = new InstalledAppInfo(getApplicationContext());
+							mInsAppInfo.resultToSaveFile(today);
+							mInsAppInfo.ReadAppInfo(today);
 						case 2: // scheduled snapshot
 							// Alarm Manager
 

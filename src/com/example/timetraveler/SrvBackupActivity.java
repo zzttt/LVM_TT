@@ -146,15 +146,15 @@ public class SrvBackupActivity extends Activity {
 				
 				//Log.d("inAction", "[" + getClass() + "]" + readResult);
 				
-				Log.d("handler","-------------------"+ readResult);
+				Log.d("handler","-------------------msg.obj result\n"+ readResult);
 				
 				//tv.setText(readResult);
 				// this.sendEmptyMessage(100); //set ListView as data
 				
 				// ------------------------------ set lists -------------------------------------
 				ssStrList = new ArrayList<String>();
-				readResult = readResult.replace("Convert", ",");
-				
+				//readResult = readResult.replace("Convert", ",");
+				Log.d("handler","replaced ::\n"+readResult);
 				String[] strArr = readResult.split(",");
 				
 				//Log.i("handler", readResult);
