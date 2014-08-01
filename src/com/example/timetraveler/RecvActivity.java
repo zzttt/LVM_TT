@@ -63,6 +63,7 @@ public class RecvActivity extends Activity {
 			func_code = RECV_USER_DATA;
 		}else if(mName.equals("전화번호부, SMS, 설정 복원")){ // 전화, sms , 설정 복원
 			func_code = RECV_SETTINGS;
+			Log.i("func", "testtest");
 		}else{ // 전체 복원
 			func_code = RECV_ALL;
 		}
@@ -210,8 +211,14 @@ public class RecvActivity extends Activity {
 			}
 
 			break;
-		case RECV_SETTINGS:
+		case RECV_SETTINGS:	// 전화, sms , 설정 복원
+		{
+			
+			
+			
 			break;
+		}
+			
 		}
 	}
 
@@ -303,7 +310,5 @@ public class RecvActivity extends Activity {
 			
 
 		}
-
 	}
-	
 }

@@ -41,10 +41,7 @@ public class SnapshotSetup {
 		interval = pref.getInt("spinnerSelection",0);
 		interval++;
 		Log.i("interval", Integer.toString(interval));
-		
-//		main_mode = mode;
-//		Log.i("main_mode", Boolean.toString(main_mode));
-		
+	
 		if(mode == false){
 			
 			Toast.makeText(context,"자동 스냅샷이 설정되었습니다.", Toast.LENGTH_SHORT).show();

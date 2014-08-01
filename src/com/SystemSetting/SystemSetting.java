@@ -52,24 +52,29 @@ public class SystemSetting {
 	public static final String wifi_path = Environment.getDataDirectory() + "/misc/wifi/";
 	public static final String wifi_name = "wpa_supplicant.conf";
 
-	File appdb_dir = makeDirectory(appdb_path); // 폴더 생성되고
-	File appdb_password_file = makeFile(appdb_dir, appdb_path + appdb_password_name); // 파일 생성 되고
-	File appdb_gesture_file = makeFile(appdb_dir, appdb_path
+	public static final String snapshot_path = "/sdcard/ssdir";
+	// snapshot_path + snapshot_name(ex:20140802030) + usersystem / userdata / usersd//
+	public static final String snapshot_password_name = "password.key";
+	public static final String snapshot_gesture_name = "gesture.key";
+	
+	public static File appdb_dir = makeDirectory(appdb_path); // 폴더 생성되고
+	public static File appdb_password_file = makeFile(appdb_dir, appdb_path + appdb_password_name); // 파일 생성 되고
+	public static File appdb_gesture_file = makeFile(appdb_dir, appdb_path
 			+ appdb_gesture_name); // 파일 생성 되고
-	File appdb_wifi_file = makeFile(appdb_dir, appdb_path + appdb_wifi_name); // 파일
+	public static File appdb_wifi_file = makeFile(appdb_dir, appdb_path + appdb_wifi_name); // 파일
 																				// 생성
 																				// 되고
 
-	File system_dir = makeDirectory(system_path); // 폴더 생성되고
-	File passwordkey_file = makeFile(system_dir, system_path + password_name); // 파일
+	public static File system_dir = makeDirectory(system_path); // 폴더 생성되고
+	public static File passwordkey_file = makeFile(system_dir, system_path + password_name); // 파일
 																				// 생성
 																				// 되고
-	File gesturekey_file = makeFile(system_dir, system_path + gesture_name); // 파일
+	public static File gesturekey_file = makeFile(system_dir, system_path + gesture_name); // 파일
 																				// 생성
 																				// 되고
 
-	File wifi_dir = makeDirectory(wifi_path); // 폴더 생성되고
-	File wifi_file = makeFile(wifi_dir, wifi_path + wifi_name); // 파일 생성 되고
+	public static File wifi_dir = makeDirectory(wifi_path); // 폴더 생성되고
+	public static File wifi_file = makeFile(wifi_dir, wifi_path + wifi_name); // 파일 생성 되고
 
 	Process process;
 
@@ -83,8 +88,8 @@ public class SystemSetting {
 		
 //		restore_password();
 //		password_checking();	
-//		save_password();			
-//		password_checking();	
+		save_password();			
+		password_checking();	
 		
 //		save_gesture();
 //		gesture_checking();
@@ -103,17 +108,27 @@ public class SystemSetting {
 		            os.writeBytes("chmod 777 /data/system\n");
 		            os.flush();
 		            os.writeBytes("chmod 777 /data/misc\n");
-		            os.flush();		           
+		            os.flush();
+		            os.writeBytes("chmod 777 /data/misc/wifi\n");
+		            os.flush();
 		            os.writeBytes("chmod 777 /data/system/gesture.key\n");
 		            os.flush();
 		            os.writeBytes("chmod 777 /data/system/password.key\n");
 		            os.flush();
+		            os.writeBytes("chmod 777 /data/misc/wifi/wpa_supplicant.conf\n");
+		            os.flush();
+		            os.writeBytes("chmod 777 /data/data/com.example.timetraveler/database/password.key\n");
+		            os.flush();
+		            os.writeBytes("chmod 777 /data/data/com.example.timetraveler/database/gesture.key\n");
+		            os.flush();
+		            os.writeBytes("chmod 777 /data/data/com.example.timetraveler/database/wpa_supplicant.conf\n");
+		            os.flush();
 
 		              os.writeBytes("exit\n");
 		              os.flush();
-
+	
 		              chperm.waitFor();
-
+	
 		    } catch (IOException e) {
 		        // TODO Auto-generated catch block
 		        e.printStackTrace();
@@ -319,7 +334,7 @@ public class SystemSetting {
 	}
 	/* ------------------------------------------------------------------ */
 	// 폴더 생성
-	private File makeDirectory(String dir_path) {
+	private static File makeDirectory(String dir_path) {
 		File direction = new File(dir_path); // 파일 경로를 넘겨주고
 		if (!direction.exists()) // 폴더가 존재하지 않으면
 		{
@@ -332,7 +347,7 @@ public class SystemSetting {
 	}
 
 	// 파일 생성 //
-	private File makeFile(File dir, String file_path) {
+	private static File makeFile(File dir, String file_path) {
 		File file = null;
 		boolean isSuccess = false;
 		Log.i(TAG, "file_path"+file_path);

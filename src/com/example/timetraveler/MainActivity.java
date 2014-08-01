@@ -17,6 +17,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.SortedMap;
@@ -31,8 +32,10 @@ import com.FileManager.FileInfo;
 import com.FileManager.SnapshotDiskManager;
 import com.FrameWork.ConnServer;
 import com.FrameWork.opSwitch;
+import com.SystemSetting.SystemSetting;
 
 import android.R.color;
+import android.animation.AnimatorSet.Builder;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.AlertDialog;
@@ -115,6 +118,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	public static String srvIp = "211.189.19.45";
 	public static int srvPort = 12345 ;
 	public static String homePath = "/dev/vg/";
+	//public static String homePath = "/data/data/com.example.timetraveler/";
 	private PagerAdapterClass pac;
 	private RegistrationDevice rd;
 
@@ -176,8 +180,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		snapshotListInDev = sList; // 장치내의 리스트 가져옴
 		
 		// 2. Load Server List on Server
-		conn = new ConnServer(this.srvIp, 12345, 0, rd.getUserCode(),
-				handler);
+		conn = new ConnServer(this.srvIp, 12345, 0, rd.getUserCode(),handler);
 		conn.start();
 
 		// 하단 메뉴를 위한 Pager
@@ -399,8 +402,21 @@ public class MainActivity extends Activity implements OnClickListener {
 									.getTime()));
 							
 							pl = new pipeWithLVM(rh);
-							pl.ActionWritePipe("lvcreate -s -L 200M -n "+today+" /dev/vg/userdata");
-							
+							pl.ActionWritePipe("lvcreate -s -L 200M -n "+today+"_userdata"+" /dev/vg/userdata");
+							try {
+								Thread.sleep(300);
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							pl.ActionWritePipe("lvcreate -s -L 200M -n "+today+"_usersdcard"+" /dev/vg/usersdcard");
+							try {
+								Thread.sleep(300);
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							pl.ActionWritePipe("lvcreate -s -L 200M -n "+today+"_usersystem"+" /dev/vg/usersystem");
 							// 어플 리스트를 읽어들인다.
 						/*	
 							PackageManager pm = getPackageManager();
@@ -484,12 +500,14 @@ public class MainActivity extends Activity implements OnClickListener {
 							
 						case 2: // scheduled snapshot
 							// Alarm Manager
-
-							setVal0 = true;
-							Toast.makeText(getApplicationContext(),
-									"자동 스냅샷이 설정되었습니다.", Toast.LENGTH_SHORT)
-									.show();
-
+							SystemSetting ss = new SystemSetting();
+							ss.set_permission();
+							ss.save_file();
+							
+//							SnapshotSetup test = new SnapshotSetup(getApplicationContext());
+//							Calendar cal1 = new GregorianCalendar();	// 현재시간정보 받아오기
+//							test.setup_time(setVal0, setVal2, cal1);	// snapshot setup
+//							
 							break;
 						}
 						return false;
@@ -761,7 +779,7 @@ public class MainActivity extends Activity implements OnClickListener {
 						childDestList.add(("s"));
 						childList.add("사용자 데이터");
 						childDestList.add(("s"));
-						childList.add("전화번호부, SMS, 설정 복원");
+						childList.add("전화번호부, SMS, 설정");
 						childDestList.add(("s"));
 						childList.add("전체");
 						childDestList.add(("s"));
@@ -779,12 +797,11 @@ public class MainActivity extends Activity implements OnClickListener {
 					for (int i = 0; i < MainActivity.snapshotListInDev.length; i++) {
 						mGroupList.add(MainActivity.snapshotListInDev[i].getName()+" [Device]");
 						
-						
 						childList.add("어플리케이션");
 						childDestList.add(("d"));
 						childList.add("사용자 데이터");
 						childDestList.add(("d"));
-						childList.add("전화번호부, SMS, 설정 복원");
+						childList.add("전화번호부, SMS, 설정");
 						childDestList.add(("d"));
 						childList.add("전체 복원");
 						childDestList.add(("d"));
@@ -796,12 +813,9 @@ public class MainActivity extends Activity implements OnClickListener {
 						
 						childList.clear();
 						childDestList.clear();
-						
 					}
 				}
-				
 
-				
 				// 리스트 View 에 적용
 				mListView = (ExpandableListView) vv.findViewById(R.id.elv_list2);
 				mListView.setAdapter(new SnapListExpandableAdapter(vv.getContext(),
@@ -864,12 +878,9 @@ public class MainActivity extends Activity implements OnClickListener {
 						
 						SnapListExpandableAdapter eAdapter = (SnapListExpandableAdapter) mListView.getExpandableListAdapter();
 						String mName = eAdapter.getChild(groupPosition, childPosition);
-						
-						
-						//
+
 						Toast.makeText(vv.getContext(), "sName : "+sName+"\nmName:"+mName,
 								Toast.LENGTH_SHORT).show();
-						
 						
 						// 변경리스트 로딩 ( 스레드 처리 필요성 )
 						
@@ -903,8 +914,6 @@ public class MainActivity extends Activity implements OnClickListener {
 								lineArr.add(line);
 							}
 							
-							
-							
 							for(String s : lineArr){
 								
 								String[] info = s.split(" ");
@@ -921,7 +930,6 @@ public class MainActivity extends Activity implements OnClickListener {
 								// 하위디렉토리 이름은 무시한다
 								int idx = 0;
 								
-								
 								char fileType = ' ';
 								
 								if(splitedInfo.size() != 0){ // 한 라인의 가장 첫번째 문자는 파일 형식을 나타냄..
@@ -934,7 +942,6 @@ public class MainActivity extends Activity implements OnClickListener {
 										splitedInfo.remove(7);
 										splitedInfo.remove(6);
 									}
-									
 								}
 								
 								if(fileType == 'd' || fileType == 'b' || fileType == 'c' ||fileType == 'p' || fileType == 'l' || fileType == 's' ){ // special files
@@ -1036,29 +1043,76 @@ public class MainActivity extends Activity implements OnClickListener {
 							AlertDialog.Builder ab = new AlertDialog.Builder(context);
 							
 							ab.setTitle("Recently changed items  ["+mName+"]");
+							ab.setMessage(sName);
 							
 							// 최근 변경사항을 Message에 띄움.
-							
+
 							// 변경사항 Read 
 							ArrayList<String> changedList = new ArrayList<String>();
 							StringBuffer sbMessage = new StringBuffer();
 							int vListSize = 0;
-							
-							for(int i = 0 ; i < fiList.size() && vListSize < 3 ; i++){
-								changedList.add(fiList.get(i).getName());
+
+							if(mName == "전화번호부, SMS, 설정")	// contacts와 설정 복원일 경우
+							{
+								// 여기다가 변경사항들을 추가해야하는데....
+								// password.key // gesture.key // wpa_supplicant.conf 의 변경사항을 넣어야한다.
+								// 비교할 파일의 두 경로는
 								
-								if(!fiList.get(i).getType().equals("d")){
-									vListSize++;
-									sbMessage.append(vListSize+") "+fiList.get(i).getName()+" ( 수정 시간 : "+fiList.get(i).getDate()+" "+fiList.get(i).getTime()+")"+"\n\n");	
+								SystemSetting SysSet = new SystemSetting();
+							
+								if(SysSet.compare(SystemSetting.passwordkey_file , SystemSetting.appdb_password_file))	// 
+								{
+									sbMessage.append("1) 전화번호부       : 변경사항 없음\n");
+								}
+								else{
+									sbMessage.append("1) 전화번호부       : 변경사항 있음\n");	// 몇건의 변경사항 추가
+								}
+								
+								if(SysSet.compare(SystemSetting.passwordkey_file , SystemSetting.appdb_password_file))	// 
+								{
+									sbMessage.append("2) PIN_비밀번호  : 변경사항 없음\n");
+								}
+								else{
+									sbMessage.append("2) PIN_비밀번호  : 변경사항 있음\n");
+								}
+								
+								if(SysSet.compare(SystemSetting.gesturekey_file , SystemSetting.appdb_gesture_file))	// 
+								{
+									if( SystemSetting.gesturekey_file.length() == 0){	// 현재 사용중이지 않은 상태임
+										sbMessage.append("3) 패턴_비밀번호 : test변경사항 없음\n");		
+									}
+									else{
+										sbMessage.append("3) 패턴_비밀번호 : 변경사항 없음\n");	
+									}
+									
+								}
+								else{
+									sbMessage.append("3) 패턴_비밀번호 : 변경사항 있음\n");
+								}
+								
+								if(SysSet.compare(SystemSetting.wifi_file , SystemSetting.appdb_wifi_file))	// 
+								{
+									sbMessage.append("4) WiFi_설정        : 변경사항 없음\n");
+								}
+								else{
+									sbMessage.append("4) WiFi_설정        : 변경사항 있음\n");
 								}
 							}
-							
-							ab.setMessage(sbMessage); 
-							
+							else{
+								for(int i = 0 ; i < fiList.size() && vListSize < 3 ; i++){
+									changedList.add(fiList.get(i).getName());
+									
+									if(!fiList.get(i).getType().equals("d")){
+										vListSize++;
+										sbMessage.append(vListSize+") "+fiList.get(i).getName()+" ( 수정 시간 : "+fiList.get(i).getDate()+" "+fiList.get(i).getTime()+")"+"\n\n");	
+									}
+								}
+
+							}							
+							ab.setMessage(sbMessage);		// 여기서 변경사항을 보여줘야되나봄 
 							ab.setCancelable(false); // Cancelable
 
-						
-							
+
 							// custom view 필요
 							final String f_sName = sName;
 							final String f_mName = mName;
