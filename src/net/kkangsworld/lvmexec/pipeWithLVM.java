@@ -44,7 +44,7 @@ public class pipeWithLVM {
 		//readFromPipe(); //read도 동시에 실행
 	}
 
-	public void ActionWritePipe(String command) {
+	public synchronized void ActionWritePipe(String command) {
 
 		if(!resultReader.isAlive()) {
 			//resultReader = new ResultReader(rh); //ResultReader thread init;

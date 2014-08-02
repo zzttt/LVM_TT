@@ -53,7 +53,7 @@ public class SrvBackupActivity extends Activity {
 		
 		ProgressDialog pd = new ProgressDialog(this);
 		pd.setTitle("waiting for handling..");
-		//pd.show();
+		pd.show();
 		
 		//
 		rh = new msgHandler(this , pd);
@@ -147,7 +147,7 @@ public class SrvBackupActivity extends Activity {
 				
 				//Log.d("inAction", "[" + getClass() + "]" + readResult);
 				
-				Log.d("handler","-------------------"+ readResult);
+				Log.d("handler","-------------------msg.obj result\n"+ readResult);
 				
 				//tv.setText(readResult);
 				// this.sendEmptyMessage(100); //set ListView as data
@@ -155,6 +155,8 @@ public class SrvBackupActivity extends Activity {
 				// ------------------------------ set lists -------------------------------------
 				ssStrList = new ArrayList<String>();
 				
+				//readResult = readResult.replace("Convert", ",");
+				Log.d("handler","replaced ::\n"+readResult);
 				
 				String[] strArr = readResult.split(",");
 				

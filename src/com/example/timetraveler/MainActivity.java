@@ -33,6 +33,7 @@ import com.FileManager.FileInfo;
 import com.FileManager.SnapshotDiskManager;
 import com.FrameWork.ConnServer;
 import com.FrameWork.SnapshotAlteration;
+import com.FrameWork.InstalledAppInfo;
 import com.FrameWork.opSwitch;
 
 import android.R.color;
@@ -117,7 +118,8 @@ public class MainActivity extends Activity implements OnClickListener {
 	
 	public static String srvIp = "211.189.19.45";
 	public static int srvPort = 12345 ;
-	public static String homePath = "/dev/vg/";
+	public static String homePath = "/data/data/com.example.timetraveler/";
+	//public static String homePath = "/dev/vg/";
 	private PagerAdapterClass pac;
 	private RegistrationDevice rd;
 
@@ -131,6 +133,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	readHandler rh;
 	pipeWithLVM pl;
 	String readResult;
+	InstalledAppInfo mInsAppInfo;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -150,6 +153,9 @@ public class MainActivity extends Activity implements OnClickListener {
 		/* SnapShot Service 시작 */
 		Intent i = new Intent(this, SnapshotService.class);
 		startService(i);
+		
+		/* Install App Loader Inatanced */
+		mInsAppInfo = new InstalledAppInfo(getApplicationContext());
 		
 		pd = new ProgressDialog(this);
 		pd.setCanceledOnTouchOutside(false);
@@ -471,21 +477,17 @@ public class MainActivity extends Activity implements OnClickListener {
 										+ msg + " / Type: " + type
 										+ " / Date: " + date);
 							}
-
-							break;*/
 							
-
-							// 통화내역
-							
-							
-							
-							// 설정
-							
-							// settings db 이용
-							
-							
-							// 연락처
-							
+							/**
+							 * 생성되는 lv snapshot에 상응되는 어플리스트를 백업한다.
+							 * 어플리스트는 ArrayList로 존재하고 이를 저장할 HashMap은,
+							 * lv snapshot에 대해 날짜를 Key, ArrayList를 Value로 가진다.
+							 */
+							/* 어플 리스트를 읽어 들여서 SharedPrefs 또는 특정 파일에에 
+							 * HashMap형태로 저장한다. 
+							 * today를 key로 저장 */
+							mInsAppInfo.resultToSaveFile("ABC");
+							//mInsAppInfo.ReadAppInfo(today);
 						case 2: // scheduled snapshot
 							// Alarm Manager
 
