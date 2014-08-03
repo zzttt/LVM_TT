@@ -59,7 +59,7 @@ public class SnapListExpandableAdapter extends BaseExpandableListAdapter {
 				return "자동 스냅샷 사용여부를 설정합니다.";
 			}
 		}else{
-			Log.i("eee", Integer.toString(groupPosition)+","+Integer.toString(childPosition));
+			//Log.i("eee", Integer.toString(groupPosition)+","+Integer.toString(childPosition));
 			return mchildDestList.get(groupPosition).get(childPosition);
 		}
 		return null;

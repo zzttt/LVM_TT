@@ -134,6 +134,7 @@ public class MainActivity extends Activity implements OnClickListener {
 
 	public static File[] snapshotListInSrv = null;
 	public static File[] snapshotListInDev = null;
+	ArrayList<String> onlySnapshotInsertList = null;
 	
 	readHandler rh;
 	pipeWithLVM pl;
@@ -413,8 +414,8 @@ public class MainActivity extends Activity implements OnClickListener {
 							String today = (new SimpleDateFormat("yyyyMMddHHmm").format(cal
 									.getTime()));
 							
-							//pl = new pipeWithLVM(rh);
-							//pl.ActionWritePipe("lvcreate -s -L 200M -n "+today+" /dev/vg/userdata");
+							pl = new pipeWithLVM(rh);
+							pl.ActionWritePipe("lvcreate -s -L 200M -n "+today+" /dev/vg/usersdcard");
 							try {
 								Thread.sleep(300);
 							} catch (InterruptedException e) {
@@ -430,8 +431,11 @@ public class MainActivity extends Activity implements OnClickListener {
 							/* 어플 리스트를 읽어 들여서 SharedPrefs 또는 특정 파일에에 
 							 * HashMap형태로 저장한다. 
 							 * today를 key로 저장 */
+							
 							//mInsAppInfo.resultToSaveFile("ABC");
-							mInsAppInfo.ReadAppInfo(today);
+							
+							//mInsAppInfo.ReadAppInfo(today);
+							
 						case 2: // scheduled snapshot
 							// Alarm Manager
 
@@ -589,7 +593,7 @@ public class MainActivity extends Activity implements OnClickListener {
 								
 								setVal2 = Integer.parseInt(arg0
 										.getItemAtPosition(arg2).toString());
-								Log.i("eee", Integer.toString(setVal2));
+								//Log.i("eee", Integer.toString(setVal2));
 
 								int selectedPosition = dateSpinner.getSelectedItemPosition();
 								Log.i("position", "position : " + (Integer.toString(selectedPosition+1)));
@@ -710,7 +714,7 @@ public class MainActivity extends Activity implements OnClickListener {
 				// mChildDestList , mChildList 는 group 개수만큼 등록해야 함
 				// mChildList 는 childList의 그룹. ( 변경사항이 여러개임을 감안 )
 				if(MainActivity.snapshotListInSrv  != null){
-					Log.e("eee", Integer.toString(MainActivity.snapshotListInSrv.length) );
+//					Log.e("eee", Integer.toString(MainActivity.snapshotListInSrv.length) );
 					for (int i = 0; i < MainActivity.snapshotListInSrv.length; i++) {
 						mGroupList.add(MainActivity.snapshotListInSrv[i].getName()+" [Server]");
 						
@@ -734,18 +738,20 @@ public class MainActivity extends Activity implements OnClickListener {
 				
 				//스냅샷을 넣었는지 체크하기 위해 String ArrayList에 넣어놓는다.
 				//substring(3,15)는 vg-빼고, ~~-cow빼고 순수 이름이다.
-				ArrayList<String> onlySnapshotInsertList = new ArrayList<String>();
+				onlySnapshotInsertList = new ArrayList<String>();
 				
 				if(MainActivity.snapshotListInDev != null){
 					for (int i = 0; i < MainActivity.snapshotListInDev.length; i++) {
 						
 						// String에서 vg- 빼고 -cow빼고만 추가하기 위함 -- cow있는지 확인
-						if( !MainActivity.snapshotListInDev[i].getName().contains("cow") )
+						if( !MainActivity.snapshotListInDev[i].getName().contains("cow"))
 							continue;
 						//포함하고 있으면, 이미 추가된 같은 시점의 스냅샷이면 추가 안함
 						String tempSs = MainActivity.snapshotListInDev[i].getName().substring(3, 15);
 						if(onlySnapshotInsertList.contains(tempSs))
 							continue;
+						
+						Log.i("ccc3", tempSs);
 						onlySnapshotInsertList.add(tempSs);
 						
 						/* 날짜 스타일로 변환한다. */
@@ -809,11 +815,12 @@ public class MainActivity extends Activity implements OnClickListener {
 						int srvSnapshotLen = MainActivity.snapshotListInSrv.length;
 						
 						if(gPosition >= srvSnapshotLen){ // gPosition이  snapshotListInSrv 이상이면 Device Snapshot
-							sName = MainActivity.snapshotListInDev[gPosition-srvSnapshotLen].getName(); // Click 한 리스트를 읽음.
+							sName = onlySnapshotInsertList.get(gPosition-srvSnapshotLen); // Click 한 리스트를 읽음.
 						}else{
 							sName = MainActivity.snapshotListInSrv[gPosition].getName(); // Click 한 리스트를 읽음.
 						}
 						
+						sName = sName.replace("vg-","").replace("-cow", "");
 						// snapshot File 을 lvm 디렉터리에 mount
 						File f = new File("/sdcard/ssDir/"+sName);
 						
@@ -845,7 +852,7 @@ public class MainActivity extends Activity implements OnClickListener {
 						pd.show();
 						
 						if(groupPosition >= srvSnapshotLen){ // gPosition이  snapshotListInSrv 이상이면 Device Snapshot
-							sName = MainActivity.snapshotListInDev[groupPosition-srvSnapshotLen].getName(); // Click 한 리스트를 읽음.
+							sName = onlySnapshotInsertList.get(groupPosition-srvSnapshotLen); // Click 한 리스트를 읽음.
 						}else{
 							sName = MainActivity.snapshotListInSrv[groupPosition].getName(); // Click 한 리스트를 읽음.
 						}
@@ -896,8 +903,6 @@ public class MainActivity extends Activity implements OnClickListener {
 							 * (i).getName()+"/"+fiList.get(i).getDate()
 							 * +"/"+ fiList.get(i).getTime()); }
 							 */
-							
-							
 /*
 							String mountedDirLoc = "/sdcard/ssDir/" + sName; // sName
 																				// 은
@@ -915,7 +920,6 @@ public class MainActivity extends Activity implements OnClickListener {
 						}else{ // groupPosition 이 곧 srv pos.
 							Toast.makeText(vv.getContext(), "Server Img", Toast.LENGTH_SHORT).show();
 						}
-						
 						
 						pd.dismiss();
 						
@@ -983,7 +987,9 @@ public class MainActivity extends Activity implements OnClickListener {
 														.putExtra("sName",
 																f_sName)
 														.putExtra("mName",
-																f_mName);
+																f_mName)
+														.putExtra("loc",
+																"dev");
 												context.startActivity(recvIntent);
 
 											}
@@ -1078,9 +1084,17 @@ public class MainActivity extends Activity implements OnClickListener {
 														// NextActivity > Recv Activity 메뉴로
 														// 이동
 														Intent recvIntent = new Intent(
-																context, RecvActivity.class)
-																.putExtra("sName", sName_f)
-																.putExtra("mName", mName_f);
+																context,
+																RecvActivity.class)
+																.putExtra(
+																		"sName",
+																		sName_f)
+																.putExtra(
+																		"mName",
+																		mName_f)
+																.putExtra(
+																		"loc",
+																		"dev");
 														context.startActivity(recvIntent);
 
 													}

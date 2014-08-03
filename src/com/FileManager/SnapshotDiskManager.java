@@ -37,8 +37,22 @@ public class SnapshotDiskManager {
 	public File[] getSnapshotList(){
 		File f = new File(ssHome);
 		File[] ssDirList = f.listFiles();
-		ArrayList<File> list = new ArrayList<File>();
+	/*	ArrayList<File> list = new ArrayList<File>();
 		
+		for(File ff : ssDirList){
+		
+			if(!ff.getName().contains("cow")){
+				list.add(ff);	
+				Log.i("ccc",ff.getName());
+			}
+		}
+		
+		File[] ssResult = new File[list.size()];
+		int idx = 0;
+		for(File ff : list){
+			ssResult[idx++] = ff;
+			Log.i("ccc2",ff.getName()+"//"+ssResult.length);
+		}*/
 		return ssDirList;
 		
 	}
