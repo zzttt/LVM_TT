@@ -46,7 +46,6 @@ public class SnapshotAlteration {
 	public String getStrAppAlteration(String sName) {
 		fiList = getAppAlteration(sName);
 		StringBuffer result = new StringBuffer();
-
 		
 		for( int i = 0 ; i < 3 && i < fiList.size() ; i++)
 			result.append(fiList.get(i).getName()+"\n");
@@ -91,6 +90,9 @@ public class SnapshotAlteration {
 			String com = "ls -lR /sdcard/ssDir/" + sName + "\n";
 
 			p.getOutputStream().write(com.getBytes());
+			
+			mountCom = "umount /sdcard/ssDir/" + sName + "\n";
+			p.getOutputStream().write(mountCom.getBytes());
 
 			// root 종료
 			p.getOutputStream().write("exit\n".getBytes());
@@ -113,7 +115,6 @@ public class SnapshotAlteration {
 				lineArr.add(line);
 			}
 
-			
 			// 라인별 파싱
 			for (String s : lineArr) {
 

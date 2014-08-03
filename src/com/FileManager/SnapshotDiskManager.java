@@ -39,8 +39,6 @@ public class SnapshotDiskManager {
 		File[] ssDirList = f.listFiles();
 		ArrayList<File> list = new ArrayList<File>();
 		
-		
-		
 		return ssDirList;
 		
 	}

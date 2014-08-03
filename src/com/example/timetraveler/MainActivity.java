@@ -862,25 +862,25 @@ public class MainActivity extends Activity implements OnClickListener {
 						// 스냅샷을 마운트 해서 변경리스트 로딩함 ( 스레드 처리 필요성 )
 						// 장치 내의 스냅 샷 만을 의미한다.
 						if(groupPosition >= srvSnapshotLen){// groupPosition-srvSnapshotLen 이 devList idx
-							Log.d("lvm",
+							/*Log.d("lvm",
 									"file count : "
 											+ Integer.toString(fiList
 													.size()));
-							
+							*/
 							SnapshotAlteration sa = new SnapshotAlteration();
+
+							sName = sName.replace("vg-","").replace("년","").replace("월", "").replace("일","").trim();
 							
-							
+							Log.e("eee", sName);
 							if(mName.equals("어플리케이션")){
 								fiList.addAll(sa.getAppAlteration(sName));
 							}else if(mName.equals("사용자 데이터")){
 								fiList.addAll(sa.getUserDataAlteration(sName)); // sName에 해당하는 FileInfoList를 얻는다.	
 							}else if(mName.equals("Contacts, Settings")){
 								fiList.addAll(sa.getSettingAlteration(sName));
-							}else{ // 사용자 데이터 
+							}else{ //전체복원
 								 
 							}
-							
-							
 							
 							// ------------ 읽어온 리스트를 정렬한다 --------------
 							Collections.sort(fiList, timeComparator); // 날짜별
@@ -896,8 +896,6 @@ public class MainActivity extends Activity implements OnClickListener {
 							 * (i).getName()+"/"+fiList.get(i).getDate()
 							 * +"/"+ fiList.get(i).getTime()); }
 							 */
-							
-							
 							
 							
 /*
@@ -1147,7 +1145,6 @@ public class MainActivity extends Activity implements OnClickListener {
 					
 				});
 				
-				
 				Toast.makeText(vv.getContext(), "Reading complete...",
 						Toast.LENGTH_SHORT).show();
 				dismissDialog(pd);
@@ -1165,7 +1162,6 @@ public class MainActivity extends Activity implements OnClickListener {
 
 				break;
 			case 102:
-				
 				
 				break;
 			default:
