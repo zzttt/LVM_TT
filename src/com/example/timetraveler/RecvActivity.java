@@ -24,6 +24,7 @@ import android.content.Intent;
 import android.opengl.Visibility;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -48,32 +49,36 @@ public class RecvActivity extends Activity {
 	final static int RECV_USER_DATA = 2;
 	final static int RECV_SETTINGS = 3;
 	final static int RECV_ALL = 4;
+	
+	static String cur_Loc = null; // 현재 디렉토리
 
 	private int func_code = 0;
 	private Process p = null;
-
+	private String sName = null;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_recv);
-
-		displayListView();
-
+		
+		sName = getIntent().getStringExtra("sName").replace("/dev", "")
+				.replace("-cow", "");
+		
+		displayListView(sName, sName+"/0/");
 	}
 	
 
 
-	private void displayListView() {
+	public void displayListView(String sName, String subDir) {
 		// TODO Auto-generated method stub
 		// Array list of countries
 		ArrayList<Country> countryList = new ArrayList<Country>();
 	/*	Country country = new Country("AFG", "Afghanistan", false);
 		countryList.add(country);
 	*/
+		cur_Loc = subDir;
+		Log.i("ddd", subDir);
 		
 		
-		String sName = getIntent().getStringExtra("sName").replace("/dev", "")
-				.replace("-cow", "");
 		String mName = getIntent().getStringExtra("mName");
 		String loc = getIntent().getStringExtra("loc"); // 데이터 위치 ( dev : 장치 내 ,
 														// srv : 서버 )
@@ -120,7 +125,7 @@ public class RecvActivity extends Activity {
 
 				p.getOutputStream().write(mountCom.getBytes());
 
-				String com = "ls -lR /sdcard/ssDir/" + sName + "\n";
+				String com = "ls -l /sdcard/ssDir/" + subDir + "\n";
 
 				p.getOutputStream().write(com.getBytes());
 
@@ -226,18 +231,27 @@ public class RecvActivity extends Activity {
 
 				fList.clear();
 
+				if(!subDir.equals(sName+"/0/")){ // 최 상단 디렉토리가 아닌경우
+					// 상위메뉴를 만들어 줌
+					Country country = new Country("row", "..", false);
+					countryList.add(country);
+				}
+				
 				for (int i = 0; i < fiList.size(); i++) {
 					if (fiList.get(i).getName().contains(":") && i != 0) { // 하위
 																			// 디렉터리
 						//fList.add(" ");
 						//fList.add("[Dir]  " + fiList.get(i).getName());
-						Country country = new Country("row", "[Dir]  " + fiList.get(i).getName(), false);
+						Country country = new Country("row", ">  " + fiList.get(i).getName(), false);
 						countryList.add(country);
-					} else if (!fiList.get(i).getType().equals("d")) { // 해당
+					} else if (!fiList.get(i).getType().equals("d") ) { // 해당
 																		// 디렉토리
 																		// 내의 파일
 						//fList.add(fiList.get(i).getName());
 						Country country = new Country("row", fiList.get(i).getName(), false);
+						countryList.add(country);
+					}else if ( fiList.get(i).getType().equals("d") && !fiList.get(i).getName().contains("ssDir") && !fiList.get(i).getName().contains("Android")  ){
+						Country country = new Country("row", ">  " + fiList.get(i).getName(), false);
 						countryList.add(country);
 					}
 
@@ -263,7 +277,7 @@ public class RecvActivity extends Activity {
 		// Assign adapter to ListView
 		listView.setAdapter(dataAdapter);
 
-		listView.setOnItemClickListener(new OnItemClickListener() {
+		/*listView.setOnItemClickListener(new OnItemClickListener() {
 			public void onItemClick(AdapterView parent, View view,
 					int position, long id) {
 				// When clicked, show a toast with the TextView text
@@ -272,7 +286,9 @@ public class RecvActivity extends Activity {
 						"Clicked on Row: " + country.getName(),
 						Toast.LENGTH_LONG).show();
 			}
-		});
+		});*/
+		
+		
 	}
 
 	@Override
@@ -354,6 +370,29 @@ public class RecvActivity extends Activity {
 				//holder.row = (RelativeLayout) convertView.findViewById(R.id.file_row);
 				
 				convertView.setTag(holder);
+				
+				holder.code.setOnClickListener(new View.OnClickListener() {
+					
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+						TextView tv = (TextView)v;
+						if(tv.getText().toString().contains(">")){
+							/*Toast.makeText(
+									getApplicationContext(),
+									"새로운 메뉴 로드", Toast.LENGTH_LONG)
+									.show();*/
+							
+							String dir = cur_Loc+"/"+tv.getText().toString().substring(3, tv.getText().length());
+							displayListView(sName, dir); 
+							
+						}else if(tv.getText().toString().equals("..")){
+							// 상위 메뉴로 이동
+							String dir = cur_Loc.substring(0, cur_Loc.lastIndexOf("/") );
+							displayListView(sName, dir); 
+						}
+					}
+				});
 
 				
 				holder.name.setOnClickListener(new View.OnClickListener() {
@@ -362,10 +401,11 @@ public class RecvActivity extends Activity {
 						Country country = (Country) cb.getTag();
 						Toast.makeText(
 								getApplicationContext(),
-								"Clicked on Checkbox: " + cb.getText() + " is "
+								"Clicked on Checkbox: " + cur_Loc+"/"+cb.getText() + " is "
 										+ cb.isChecked(), Toast.LENGTH_LONG)
 								.show();
-						country.setSelected(cb.isChecked());
+						country.setSelected(cb.isChecked(),cur_Loc,cb.getText().toString()); // 선택됨을 체크  (선택 시 해당 경로와 이름을 저장 )
+						
 					}
 				});
 			} else {
@@ -375,8 +415,9 @@ public class RecvActivity extends Activity {
 			Country country = countryList.get(position);
 		
 			
-			if(country.getName().contains("[Dir]")){
-				holder.code.setText(country.getName().replace("[Dir]", ">  "));
+			if(country.getName().contains(">") || country.getName().equals("..")){
+				holder.code.setText(country.getName());
+				holder.code.setGravity(Gravity.CENTER_VERTICAL);
 				holder.name.setVisibility(View.GONE);
 				holder.name.setTag(country);
 			}else{
@@ -384,6 +425,7 @@ public class RecvActivity extends Activity {
 				holder.name.setText(country.getName());
 				holder.name.setChecked(country.isSelected());
 				holder.name.setTag(country);
+				holder.name.setGravity(Gravity.CENTER_VERTICAL);
 			}
 			return convertView;
 
@@ -393,44 +435,88 @@ public class RecvActivity extends Activity {
 	public void mOnClick(View v) {
 		switch (v.getId()) {
 		case R.id.startRecv: // startRecovery
-			StringBuffer responseText = new StringBuffer();
-			responseText.append("The following were selected...\n");
 
-			ArrayList<Country> countryList = dataAdapter.countryList; // checkbox 선택 리스트
-			
-			
-			
-			for (int i = 0; i < countryList.size(); i++) {
-				Country country = countryList.get(i);
-				if (country.isSelected()) {
-					responseText.append("\n" + country.getName());
-				}
-			}
-
-			Toast.makeText(getApplicationContext(), responseText,
-					Toast.LENGTH_LONG).show();
-			
-			
+			final ArrayList<Country> countryList = dataAdapter.countryList; // checkbox 선택 리스트
+		
 			
 			AlertDialog.Builder adb = new AlertDialog.Builder(this);
 			adb.setTitle("Notice");
 			adb.setMessage("복원을 진행하시겠습니까?");
 			final Dialog mDialog = adb.create();
 
+			
+			final Thread recovProcess = new Thread(){
+				
+				@Override
+				public void run(){
+					ProgressDialog progressDialog;
+					progressDialog = new ProgressDialog(RecvActivity.this);
+					progressDialog
+							.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+					progressDialog.setMax(countryList.size());
+					progressDialog.setMessage("복원 중 입니다...");
+
+					progressDialog.setCancelable(true);
+					progressDialog.show();
+					
+					for (int i = 0; i < countryList.size(); i++) {
+						Country country = countryList.get(i);
+						
+						if(country.isSelected()){
+							String finalPath =  country.getPath().replace(sName+"/0/", "/sdcard/");
+							//Log.v("ddd", country.getPath().replace(sName+"/0/", "/sdcard/") ); // 실제 경로
+							
+							progressDialog.setProgress(i);
+							
+							// 마운트 진행 후 파일을 옮긴다.
+							try {
+								p = new ProcessBuilder("su").start();
+
+								String mountCom = "mount -t ext4 /dev/vg/" + sName
+										+ " /sdcard/ssDir/" + sName + "\n";
+
+								p.getOutputStream().write(mountCom.getBytes()); // 마운트 완료
+								
+								String cpCommand = "cp  /sdcard/ssDir/"+ country.getPath() +" "+finalPath+"\n"; // 현재 path 에서 최종 path로 이동
+								
+								Log.v("ddd", cpCommand ); // 실제 경로
+								
+								p.getOutputStream().write(cpCommand.getBytes()); // 복사완료
+								
+								String uMountCom = "umount /sdcard/ssDir/" + sName + "\n";
+
+								p.getOutputStream().write(uMountCom.getBytes());
+								p.getOutputStream().write("exit\n".getBytes());
+								p.getOutputStream().flush();
+								
+								p.waitFor();
+								
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+
+							
+							
+							
+						}
+					}
+					
+					progressDialog.dismiss();
+				}
+				
+			};
+			
 			adb.setPositiveButton("복원시작", new OnClickListener() {
 
 				@Override
 				public void onClick(DialogInterface arg0, int arg1) {
 					// TODO Auto-generated method stub
-					mDialog.dismiss();
-
-					ProgressDialog progressDialog;
-					progressDialog = new ProgressDialog(RecvActivity.this);
-					progressDialog
-							.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-					progressDialog.setMessage("복원 중 입니다...");
-					progressDialog.setCancelable(true);
-					progressDialog.show();
+					//mDialog.dismiss();
+					recovProcess.run();
 				}
 
 			});
@@ -455,6 +541,8 @@ public class RecvActivity extends Activity {
 
 		String code = null;
 		String name = null;
+		String path = null;
+		
 		boolean selected = false;
 
 		public Country(String code, String name, boolean selected) {
@@ -484,10 +572,19 @@ public class RecvActivity extends Activity {
 			return selected;
 		}
 
-		public void setSelected(boolean selected) {
+		public void setSelected(boolean selected, String path , String fileName) {
 			this.selected = selected;
+			this.path  = path +"/"+ fileName;
 		}
-
+		
+		public String getPath(){
+			return this.path;
+		}
+		
+		public void setPath(String path){
+			this.path = path;
+		}
+		
 	}
 
 }
