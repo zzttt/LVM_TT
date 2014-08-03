@@ -62,9 +62,7 @@ public class SrvBackupActivity extends Activity {
 		
 		// LVM pipe 에 핸들러와 함께 전송
 		pl = new pipeWithLVM(rh);
-
 		pl.ActionWritePipe("lvs --separator , ");
-		
 	}
 
 	public void setText(Context context) {
@@ -155,7 +153,7 @@ public class SrvBackupActivity extends Activity {
 				// ------------------------------ set lists -------------------------------------
 				ssStrList = new ArrayList<String>();
 				
-				//readResult = readResult.replace("Convert", ",");
+				readResult = readResult.replace("Convert", ",");
 				Log.d("handler","replaced ::\n"+readResult);
 				
 				String[] strArr = readResult.split(",");
@@ -178,6 +176,8 @@ public class SrvBackupActivity extends Activity {
 				
 				ArrayAdapter<String> adapter = new ArrayAdapter<String>(context,
 						android.R.layout.simple_list_item_1, ssStrList);
+				
+				adapter.notifyDataSetChanged(); // 데이터변경을 어댑터에 알림
 				
 				Log.i("lvm", "set adapt");
 				lv.setAdapter(adapter); // set Adapter
@@ -250,7 +250,7 @@ public class SrvBackupActivity extends Activity {
 
 				});
 				
-				//pd.cancel();
+				pd.cancel();
 				
 				break;
 			case 100: 

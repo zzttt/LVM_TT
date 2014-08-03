@@ -118,8 +118,8 @@ public class MainActivity extends Activity implements OnClickListener {
 	
 	public static String srvIp = "211.189.19.45";
 	public static int srvPort = 12345 ;
-	public static String homePath = "/data/data/com.example.timetraveler/";
-	//public static String homePath = "/dev/vg/";
+	//public static String homePath = "/data/data/com.example.timetraveler/";
+	public static String homePath = "/dev/vg/";
 	private PagerAdapterClass pac;
 	private RegistrationDevice rd;
 
@@ -154,7 +154,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		Intent i = new Intent(this, SnapshotService.class);
 		startService(i);
 		
-		/* Install App Loader Inatanced */
+		/* Install App Loader Instanced */
 		mInsAppInfo = new InstalledAppInfo(getApplicationContext());
 		
 		pd = new ProgressDialog(this);
@@ -1046,7 +1046,19 @@ public class MainActivity extends Activity implements OnClickListener {
 
 							// 변경사항 Read
 							
-							ConnServer cs = new ConnServer( srvIp , 12345 , 5 ,  rd.getUserCode() , sName, pd); // 사용자 정보 조회
+							Handler mHandler = new Handler(){
+								@Override
+								public void handleMessage(Message msg){
+									switch(msg.what){
+									case 0:
+										break;
+									case 1:
+										break;				
+									}
+								}
+							};
+							
+							ConnServer cs = new ConnServer( srvIp , 12345 , 7 ,  rd.getUserCode() , sName, mName, mHandler); // 사용자 정보 조회
 							cs.start();
 							
 							try {
@@ -1054,24 +1066,7 @@ public class MainActivity extends Activity implements OnClickListener {
 							} catch (InterruptedException e) {
 								// TODO Auto-generated catch block
 								e.printStackTrace();
-							}
-							
-							
-							try {
-								Socket sc = new Socket(srvIp , 12345);
-								//socket 연결 후  데이터 대기
-								ObjectInputStream sOIS = new ObjectInputStream(sc.getInputStream()); 
-								
-								
-								
-							} catch (StreamCorruptedException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							} catch (IOException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-							
+							}							
 							
 							ab.setMessage("서버에서 데이터를 가져옵니다");
 
