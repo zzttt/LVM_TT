@@ -291,6 +291,7 @@ public class ConnServer extends Thread {
 				// 3. Contacts, Setting 변경정보
 				changedItem3 = sa.getSettingStrAlteration(this.itemName);
 				ssData.setSettingValChanged(changedItem3);
+				
 
 				// sInfoList 에 있는 데이터들을 ssData 에 입력 (snapshot 객체화 )
 				ssData.setInfoLists(sInfoLists);
@@ -322,11 +323,13 @@ public class ConnServer extends Thread {
 
 				ois = new ObjectInputStream(sc.getInputStream());
 				// authCode에 해당하는 snapshot 데이터를 읽어온다.
+				
+				
+				Message msg = andHandler.obtainMessage();
 
 				try {
 					// uData String 을 그대로 읽어옴
 					StringBuffer uData = (StringBuffer) ois.readObject();
-					Log.e("eee", uData.toString());
 
 					// sName : 스냅샷 이름
 					try {
@@ -335,6 +338,9 @@ public class ConnServer extends Thread {
 																				// 리스트
 						Log.e("eee", sObj.toString());
 
+						msg.what = 0;
+						msg.obj = sObj.toString();
+					
 					} catch (JSONException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -346,7 +352,7 @@ public class ConnServer extends Thread {
 					e.printStackTrace();
 				}
 
-				andHandler.sendEmptyMessage(0); // 조회한 snapshot 정보를 핸들러로 전달
+				andHandler.sendMessage(msg); // 조회한 snapshot 정보를 핸들러로 전달
 
 				break;
 			}

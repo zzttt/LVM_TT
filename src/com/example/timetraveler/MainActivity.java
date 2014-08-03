@@ -13,6 +13,7 @@ import java.io.StreamCorruptedException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.text.Collator;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -23,6 +24,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.logging.Logger;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import net.kkangsworld.lvmexec.pipeWithLVM;
 import net.kkangsworld.lvmexec.readHandler;
@@ -120,6 +124,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	public static int srvPort = 12345 ;
 	//public static String homePath = "/data/data/com.example.timetraveler/";
 	public static String homePath = "/dev/vg/";
+	public static String mapperPath = "/dev/mapper/";
 	private PagerAdapterClass pac;
 	private RegistrationDevice rd;
 
@@ -179,7 +184,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		}
 
 		// 1. Load Snapshot List on Device
-		SnapshotDiskManager sdm = new SnapshotDiskManager(homePath);
+		SnapshotDiskManager sdm = new SnapshotDiskManager(mapperPath);
 		File[] sList = sdm.getSnapshotList();
 		
 		snapshotListInDev = sList; // 장치내의 리스트 가져옴
@@ -215,7 +220,7 @@ public class MainActivity extends Activity implements OnClickListener {
 			
 			handler.sendEmptyMessage(101); // View Reset Handler
 			
-			SnapshotDiskManager sdm = new SnapshotDiskManager(homePath);
+			SnapshotDiskManager sdm = new SnapshotDiskManager(mapperPath);
 			File[] sList = sdm.getSnapshotList();
 			
 			snapshotListInDev = sList; // 장치내의 리스트 가져옴
@@ -408,74 +413,13 @@ public class MainActivity extends Activity implements OnClickListener {
 							String today = (new SimpleDateFormat("yyyyMMddHHmm").format(cal
 									.getTime()));
 							
-							pl = new pipeWithLVM(rh);
-							pl.ActionWritePipe("lvcreate -s -L 200M -n "+today+" /dev/vg/userdata");
-							
-							// 어플 리스트를 읽어들인다.
-						/*	
-							PackageManager pm = getPackageManager();
-
-							List<PackageInfo> packs = getPackageManager()
-									.getInstalledPackages(
-											PackageManager.PERMISSION_GRANTED);
-
-							for (PackageInfo pack : packs) {
-
-								Log.i("TAG", pack.applicationInfo.loadLabel(pm)
-										.toString());
-								String sDir = pack.applicationInfo.sourceDir;
-								//Log.i("TAG", pack.packageName);
-								
-								Log.i("TAG", "appDir : "+sDir);
-								
-							}*/
-							
-							
-							// 어플리스트 백업
-							
-							
-							
-							// 개인정보
-							
-							// SMS
-							/*String MESSAGE_TYPE_INBOX = "1";
-							String MESSAGE_TYPE_SENT = "2";
-							String MESSAGE_TYPE_CONVERSATIONS = "3";
-							String MESSAGE_TYPE_NEW = "new";
-							
-							Uri allMessage = Uri.parse("content://sms/");
-							
-							Cursor cur = getContentResolver().query(allMessage,
-									null, null, null, null);
-							int count = cur.getCount();
-							Log.i("TAG", "SMS count = " + count);
-							String row = "";
-							String msg = "";
-							String date = "";
-							String protocol = "";
-							while (cur.moveToNext()) {
-								row = cur.getString(cur
-										.getColumnIndex("address"));
-								msg = cur.getString(cur.getColumnIndex("body"));
-								date = cur.getString(cur.getColumnIndex("date"));
-								protocol = cur.getString(cur
-										.getColumnIndex("protocol"));
-								// Logger.d( TAG , "SMS PROTOCOL = " +
-								// protocol);
-
-								String type = "";
-								if (protocol == MESSAGE_TYPE_SENT)
-									type = "sent";
-								else if (protocol == MESSAGE_TYPE_INBOX)
-									type = "receive";
-								else if (protocol == MESSAGE_TYPE_CONVERSATIONS)
-									type = "conversations";
-								else if (protocol == null)
-									type = "send";
-
-								Log.i("TAG", "SMS Phone: " + row + " / Mesg: "
-										+ msg + " / Type: " + type
-										+ " / Date: " + date);
+							//pl = new pipeWithLVM(rh);
+							//pl.ActionWritePipe("lvcreate -s -L 200M -n "+today+" /dev/vg/userdata");
+							try {
+								Thread.sleep(300);
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
 							}
 							
 							/**
@@ -486,8 +430,8 @@ public class MainActivity extends Activity implements OnClickListener {
 							/* 어플 리스트를 읽어 들여서 SharedPrefs 또는 특정 파일에에 
 							 * HashMap형태로 저장한다. 
 							 * today를 key로 저장 */
-							mInsAppInfo.resultToSaveFile("ABC");
-							//mInsAppInfo.ReadAppInfo(today);
+							//mInsAppInfo.resultToSaveFile("ABC");
+							mInsAppInfo.ReadAppInfo(today);
 						case 2: // scheduled snapshot
 							// Alarm Manager
 
@@ -788,11 +732,46 @@ public class MainActivity extends Activity implements OnClickListener {
 					}
 				}
 				
+				//스냅샷을 넣었는지 체크하기 위해 String ArrayList에 넣어놓는다.
+				//substring(3,15)는 vg-빼고, ~~-cow빼고 순수 이름이다.
+				ArrayList<String> onlySnapshotInsertList = new ArrayList<String>();
+				
 				if(MainActivity.snapshotListInDev != null){
 					for (int i = 0; i < MainActivity.snapshotListInDev.length; i++) {
-						mGroupList.add(MainActivity.snapshotListInDev[i].getName()+" [Device]");
 						
+						// String에서 vg- 빼고 -cow빼고만 추가하기 위함 -- cow있는지 확인
+						if( !MainActivity.snapshotListInDev[i].getName().contains("cow") )
+							continue;
+						//포함하고 있으면, 이미 추가된 같은 시점의 스냅샷이면 추가 안함
+						String tempSs = MainActivity.snapshotListInDev[i].getName().substring(3, 15);
+						if(onlySnapshotInsertList.contains(tempSs))
+							continue;
+						onlySnapshotInsertList.add(tempSs);
 						
+						/* 날짜 스타일로 변환한다. */
+						java.util.Date date = null;
+						//기존형식을 파싱하여 Date형태로 만들고 다시 새로운 형식으로 만들어서 string화
+						java.text.SimpleDateFormat format = new java.text.SimpleDateFormat("yyyyMMddHHmm");
+						   try {
+							date = format.parse(tempSs);
+						} catch (ParseException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						   java.text.SimpleDateFormat format1 = new java.text.SimpleDateFormat("yyyy년 MM월 dd일 HH시 mm분");
+						   String dateStringSs = format1.format(date);
+						   
+						/* Listview에 추가한다. */
+						mGroupList.add(dateStringSs+" [Device]");
+						//mGroupList.add(MainActivity.snapshotListInDev[i].getName()+" [Device]");
+
+						/**
+						 *  각각 영역에 대한 mapping 필요 
+						 *  어플리케이션 --> 어떤 위치
+						 *  사용자데이터 --> /usersdcard
+						 *  전번/SMS/설정 --> useDB, /usersystem
+						 *  전체복원 --> lvconvert
+						 */
 						childList.add("어플리케이션");
 						childDestList.add(("d"));
 						childList.add("사용자 데이터");
@@ -851,7 +830,6 @@ public class MainActivity extends Activity implements OnClickListener {
 				});
 				
 				mListView.setOnChildClickListener(new OnChildClickListener(){
-
 					@Override
 					public boolean onChildClick(ExpandableListView parent, View vv,
 							int groupPosition, int childPosition, long id) {
@@ -1036,7 +1014,7 @@ public class MainActivity extends Activity implements OnClickListener {
 							// R.layout.scrolldialog, null);
 
 							// Dialog as user want to see
-							AlertDialog.Builder ab = new AlertDialog.Builder(
+							final AlertDialog.Builder ab = new AlertDialog.Builder(
 									context);
 
 							ab.setTitle("Recently changed items  [" + mName
@@ -1045,20 +1023,96 @@ public class MainActivity extends Activity implements OnClickListener {
 							// 최근 변경사항을 Message에 띄움.
 
 							// 변경사항 Read
+							final String sName_f = sName;
+							final String mName_f = mName;
 							
 							Handler mHandler = new Handler(){
 								@Override
 								public void handleMessage(Message msg){
 									switch(msg.what){
 									case 0:
+										
+										// msg obj 는  
+										String uData = (String)msg.obj;
+										
+										try {
+											JSONObject jsonObj = new JSONObject(uData);
+											Log.i("eee", sName_f);
+
+											Log.i("eee", jsonObj.toString());
+											
+											JSONObject itmeObj = (JSONObject) jsonObj.get(sName_f);
+											
+											String changedItem = null;
+											if(mName_f.equals("어플리케이션")){
+												changedItem = itmeObj.get("appAlt").toString();
+												Log.d("eee", itmeObj.get("appAlt").toString());
+											}else if(mName_f.equals("사용자 데이터")){
+												changedItem = itmeObj.get("udAlt").toString();
+												Log.d("eee", itmeObj.get("udAlt").toString());
+											}else if(mName_f.equals("Contacts, Settings")){
+												changedItem = itmeObj.get("svAlt").toString();
+												Log.d("eee", itmeObj.get("svAlt").toString());
+												
+											}else{
+												
+											}
+
+											ab.setMessage(changedItem);
+											
+										} catch (JSONException e) {
+											// TODO Auto-generated catch block
+											e.printStackTrace();
+										}
+										
+										ab.setCancelable(false); // Cancelable
+
+										
+										// custom view 필요
+
+										ab.setPositiveButton(mName_f + " 복원",
+												new DialogInterface.OnClickListener() {
+													@Override
+													public void onClick(
+															DialogInterface arg0, int arg1) {
+														setDismiss(mDialog);
+
+														// NextActivity > Recv Activity 메뉴로
+														// 이동
+														Intent recvIntent = new Intent(
+																context, RecvActivity.class)
+																.putExtra("sName", sName_f)
+																.putExtra("mName", mName_f);
+														context.startActivity(recvIntent);
+
+													}
+
+												});
+
+										ab.setNegativeButton("이전으로",
+												new DialogInterface.OnClickListener() {
+													@Override
+													public void onClick(
+															DialogInterface arg0, int arg1) {
+														setDismiss(mDialog);
+													}
+												});
+										mDialog = ab.create();
+
+										mDialog.show();
+										
+										
 										break;
 									case 1:
+										
+										
 										break;				
 									}
 								}
 							};
 							
-							ConnServer cs = new ConnServer( srvIp , 12345 , 7 ,  rd.getUserCode() , sName, mName, mHandler); // 사용자 정보 조회
+							// 스냅샷 정보를 읽어들임 
+							ConnServer cs = new ConnServer( srvIp , 12345 , 7 ,  rd.getUserCode() , sName, mName, mHandler); 
 							cs.start();
 							
 							try {
@@ -1068,44 +1122,7 @@ public class MainActivity extends Activity implements OnClickListener {
 								e.printStackTrace();
 							}							
 							
-							ab.setMessage("서버에서 데이터를 가져옵니다");
-
-							ab.setCancelable(false); // Cancelable
-
-							// custom view 필요
-							final String f_sName = sName;
-							final String f_mName = mName;
-
-							ab.setPositiveButton(mName + " 복원",
-									new DialogInterface.OnClickListener() {
-										@Override
-										public void onClick(
-												DialogInterface arg0, int arg1) {
-											setDismiss(mDialog);
-
-											// NextActivity > Recv Activity 메뉴로
-											// 이동
-											Intent recvIntent = new Intent(
-													context, RecvActivity.class)
-													.putExtra("sName", f_sName)
-													.putExtra("mName", f_mName);
-											context.startActivity(recvIntent);
-
-										}
-
-									});
-
-							ab.setNegativeButton("이전으로",
-									new DialogInterface.OnClickListener() {
-										@Override
-										public void onClick(
-												DialogInterface arg0, int arg1) {
-											setDismiss(mDialog);
-										}
-									});
-							mDialog = ab.create();
-
-							mDialog.show();
+						
 						}
 						
 						

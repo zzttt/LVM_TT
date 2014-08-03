@@ -18,7 +18,7 @@ public class SnapshotAlteration {
 	}
 	
 	public String getSettingStrAlteration(String sName) {
-		fiList = getAppAlteration(sName);
+		fiList = getSettingAlteration(sName);
 		StringBuffer result = new StringBuffer();
 
 		for( int i = 0 ; i < 3  && i < fiList.size() ; i++) // item 은 3개만 리턴
