@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import com.FileManager.FileInfo;
+import com.FrameWork.InstalledAppInfo;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -21,75 +22,127 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
+import android.opengl.Visibility;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class RecvActivity extends Activity {
+
+	MyCustomAdapter dataAdapter = null;
 
 	final static int RECV_APP = 1;
 	final static int RECV_USER_DATA = 2;
 	final static int RECV_SETTINGS = 3;
 	final static int RECV_ALL = 4;
 	
+	static String cur_Loc = null; // 현재 디렉토리
+
 	private int func_code = 0;
 	private Process p = null;
+	private String sName = null;
+	
+	private InstalledAppInfo mInsAppInfo;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_recv);
 		
-		String sName = getIntent().getStringExtra("sName");
+		sName = getIntent().getStringExtra("sName").replace("/dev", "")
+				.replace("-cow", "");
+		
+		displayListView(sName, sName+"/0/");
+	}
+	
+
+
+	public void displayListView(String sName, String subDir) {
+		// TODO Auto-generated method stub
+		// Array list of countries
+		ArrayList<Country> countryList = new ArrayList<Country>();
+	/*	Country country = new Country("AFG", "Afghanistan", false);
+		countryList.add(country);
+	*/
+		cur_Loc = subDir;
+		Log.i("ddd", subDir);
+		
+		
 		String mName = getIntent().getStringExtra("mName");
-		
+		String loc = getIntent().getStringExtra("loc"); // 데이터 위치 ( dev : 장치 내 ,
+														// srv : 서버 )
 		/*
-		 *  sName ( snapshot name )
-		 *  mName ( selected menu name )
-		 *  sName 데이터에서 mName 에 해당하는 데이터를 읽어온다.
-		 */
-		
-		if(mName.equals("어플리케이션")){ // 어플리케이션 복원
+		 * sName ( snapshot name ) mName ( selected menu name ) sName 데이터에서
+		 * mName 에 해당하는 데이터를 읽어온다.*/
+		 
+
+		if (mName.equals("어플리케이션")) { // 어플리케이션 복원
 			func_code = RECV_APP;
-		}else if(mName.equals("사용자 데이터")){ // 사용자 데이터 복원
+		} else if (mName.equals("사용자 데이터")) { // 사용자 데이터 복원
 			func_code = RECV_USER_DATA;
-		}else if(mName.equals("전화번호부, SMS, 설정 복원")){ // 전화, sms , 설정 복원
+		} else if (mName.equals("전화번호부, SMS, 설정 복원")) { // 전화, sms , 설정 복원
 			func_code = RECV_SETTINGS;
-		}else{ // 전체 복원
+		} else { // 전체 복원
 			func_code = RECV_ALL;
 		}
 
 		switch (func_code) {
 		case RECV_ALL:
 			// 전체 복원 , 바로 lvconvert 수행
-			
+
 			try {
 				p = new ProcessBuilder("su").start();
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
-			
-			
+
 			break;
 		case RECV_APP:
+			mInsAppInfo = new InstalledAppInfo(getApplicationContext());
 
-			break;
-		case RECV_USER_DATA:
-			// 사용자 데이터 백업
-			try {
+			// List View , adapter
+			ListView lv = (ListView) findViewById(R.id.lv_recvList);
+			ArrayList<String> fList = new ArrayList<String>();
+			
+			//어플리케이션 복원
+			/* 어플리케이션 리스트 다시 불러옴 from sName으로 부터 sName == Key이므로 */
+			//스냅샷 시점의 설치된 어플 arylist 불러옴
+			//테스트를 위한 하드코딩 -- ABC로 저장
+			ArrayList<InstalledAppInfo> InSsApp = mInsAppInfo.ReadAppInfo("ABC");
+			StringBuffer sbMessage = new StringBuffer();
+			int vListSize = 0;
+			
+
+			//ArrayList<InstalledAppInfo> fiList = new ArrayList<InstalledAppInfo>();
+		
+			
+			//어플리스트 출력
+			for(int i=0;i<InSsApp.size();i++) {
+				vListSize++;
+				fList.add(InSsApp.get(i).resultOfAppNamePrint());
+				Log.d("AppName", "aa"+InSsApp.get(i).resultOfAppNamePrint());
+			}
+			
+			/*try {
 				p = new ProcessBuilder("su").start();
 
-				// func_code 에 따라서 snapshot 을 읽어들임.
-
+				// func_code 에 따라서 이미징된 userdata를 읽어들임.
 				String mountCom = "mount -t ext4 /dev/vg/" + sName
 						+ " /sdcard/ssDir/" + sName + "\n";
 
@@ -105,10 +158,56 @@ public class RecvActivity extends Activity {
 						p.getInputStream()));
 
 				String line = null;
+			 	*/
+			
+			
+			ItemListArrayAdapter adapter = new ItemListArrayAdapter(this,
+					android.R.layout.simple_list_item_1, fList);
+			lv.setAdapter(adapter);
+	
+			break;
+			
+		case RECV_USER_DATA:
+			// 사용자 데이터 백업
+			try {
+				p = new ProcessBuilder("su").start();
 
-				// List View , adapter
-				ListView lv = (ListView) findViewById(R.id.lv_recvList);
-				ArrayList<String> fList = new ArrayList<String>();
+				// func_code 에 따라서 snapshot 을 읽어들임.
+				Log.i("ccc", sName + "/" + loc);
+
+				String mountCom = "mount -t ext4 /dev/vg/" + sName
+						+ " /sdcard/ssDir/" + sName + "\n";
+
+				p.getOutputStream().write(mountCom.getBytes());
+
+				String com = "ls -l /sdcard/ssDir/" + subDir + "\n";
+
+				p.getOutputStream().write(com.getBytes());
+
+				mountCom = "umount /sdcard/ssDir/" + sName + "\n";
+
+				p.getOutputStream().write(mountCom.getBytes());
+
+				p.getOutputStream().write("exit\n".getBytes());
+				p.getOutputStream().flush();
+
+				
+				try {
+					p.waitFor();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				
+				BufferedReader br = new BufferedReader(new InputStreamReader(
+						p.getInputStream()));
+
+				String line = null;
+
+				// List View , adapter ----------------------------------------------- 리스트 추가부분
+				//ListView lv = (ListView) findViewById(R.id.lv_recvList);
+				//ArrayList<String> fList = new ArrayList<String>();
 				ArrayList<FileInfo> fiList = new ArrayList<FileInfo>();
 
 				while ((line = br.readLine()) != null) {
@@ -187,23 +286,36 @@ public class RecvActivity extends Activity {
 
 				fList.clear();
 
+				if(!subDir.equals(sName+"/0/")){ // 최 상단 디렉토리가 아닌경우
+					// 상위메뉴를 만들어 줌
+					Country country = new Country("row", "..", false);
+					countryList.add(country);
+				}
+				
 				for (int i = 0; i < fiList.size(); i++) {
 					if (fiList.get(i).getName().contains(":") && i != 0) { // 하위
 																			// 디렉터리
-						fList.add(" ");
-						fList.add("[Dir]  " + fiList.get(i).getName());
-					} else if (!fiList.get(i).getType().equals("d")) { // 해당
+						//fList.add(" ");
+						//fList.add("[Dir]  " + fiList.get(i).getName());
+						Country country = new Country("row", ">  " + fiList.get(i).getName(), false);
+						countryList.add(country);
+					} else if (!fiList.get(i).getType().equals("d") ) { // 해당
 																		// 디렉토리
 																		// 내의 파일
-						fList.add(fiList.get(i).getName());
+						//fList.add(fiList.get(i).getName());
+						Country country = new Country("row", fiList.get(i).getName(), false);
+						countryList.add(country);
+					}else if ( fiList.get(i).getType().equals("d") && !fiList.get(i).getName().contains("ssDir") && !fiList.get(i).getName().contains("Android")  ){
+						Country country = new Country("row", ">  " + fiList.get(i).getName(), false);
+						countryList.add(country);
 					}
 
 				}
 
-				ItemListArrayAdapter adapter = new ItemListArrayAdapter(this,
+/*				ItemListArrayAdapter adapter = new ItemListArrayAdapter(this,
 						android.R.layout.simple_list_item_1, fList);
 				lv.setAdapter(adapter);
-
+*/
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -213,6 +325,25 @@ public class RecvActivity extends Activity {
 		case RECV_SETTINGS:
 			break;
 		}
+
+		// create an ArrayAdaptar from the String Array
+		dataAdapter = new MyCustomAdapter(this, R.layout.file_info, countryList);
+		ListView listView = (ListView) findViewById(R.id.lv_recvList);
+		// Assign adapter to ListView
+		listView.setAdapter(dataAdapter);
+
+		/*listView.setOnItemClickListener(new OnItemClickListener() {
+			public void onItemClick(AdapterView parent, View view,
+					int position, long id) {
+				// When clicked, show a toast with the TextView text
+				Country country = (Country) parent.getItemAtPosition(position);
+				Toast.makeText(getApplicationContext(),
+						"Clicked on Row: " + country.getName(),
+						To ast.LENGTH_LONG).show();
+			}
+		});*/
+		
+		
 	}
 
 	@Override
@@ -233,8 +364,7 @@ public class RecvActivity extends Activity {
 		}
 		return super.onOptionsItemSelected(item);
 	}
-	
-	
+
 	// 복원항목 리스트 어댑터
 	private class ItemListArrayAdapter extends ArrayAdapter<String> {
 
@@ -261,29 +391,187 @@ public class RecvActivity extends Activity {
 
 	}
 
-	
+	private class MyCustomAdapter extends ArrayAdapter<Country> {
+		private ArrayList<Country> countryList;
+
+		public MyCustomAdapter(Context context, int textViewResourceId,
+				ArrayList<Country> countryList) {
+			super(context, textViewResourceId, countryList);
+			this.countryList = new ArrayList<Country>();
+			this.countryList.addAll(countryList);
+		}
+
+		private class ViewHolder {
+			TextView code;
+			CheckBox name;
+			RelativeLayout row;
+		}
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+
+			ViewHolder holder = null;
+			//Log.v("ConvertView", String.valueOf(position));
+
+			if (convertView == null) {
+				LayoutInflater vi = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+				convertView = vi.inflate(R.layout.file_info, null);
+
+				holder = new ViewHolder();
+				holder.code = (TextView) convertView.findViewById(R.id.code);
+
+				holder.name = (CheckBox) convertView // name view 는 code 를 match_parent 로 바꿔서 안보인다.
+						.findViewById(R.id.checkBox1);
+				//holder.row = (RelativeLayout) convertView.findViewById(R.id.file_row);
+				
+				convertView.setTag(holder);
+				
+				holder.code.setOnClickListener(new View.OnClickListener() {
+					
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+						TextView tv = (TextView)v;
+						if(tv.getText().toString().contains(">")){
+							/*Toast.makeText(
+									getApplicationContext(),
+									"새로운 메뉴 로드", Toast.LENGTH_LONG)
+									.show();*/
+							
+							String dir = cur_Loc+"/"+tv.getText().toString().substring(3, tv.getText().length());
+							displayListView(sName, dir); 
+							
+						}else if(tv.getText().toString().equals("..")){
+							// 상위 메뉴로 이동
+							String dir = cur_Loc.substring(0, cur_Loc.lastIndexOf("/") );
+							displayListView(sName, dir); 
+						}
+					}
+				});
+
+				
+				holder.name.setOnClickListener(new View.OnClickListener() {
+					public void onClick(View v) {
+						CheckBox cb = (CheckBox) v;
+						Country country = (Country) cb.getTag();
+						Toast.makeText(
+								getApplicationContext(),
+								"Clicked on Checkbox: " + cur_Loc+"/"+cb.getText() + " is "
+										+ cb.isChecked(), Toast.LENGTH_LONG)
+								.show();
+						country.setSelected(cb.isChecked(),cur_Loc,cb.getText().toString()); // 선택됨을 체크  (선택 시 해당 경로와 이름을 저장 )
+						
+					}
+				});
+			} else {
+				holder = (ViewHolder) convertView.getTag();
+			}
+
+			Country country = countryList.get(position);
+		
+			
+			if(country.getName().contains(">") || country.getName().equals("..")){
+				holder.code.setText(country.getName());
+				holder.code.setGravity(Gravity.CENTER_VERTICAL);
+				holder.name.setVisibility(View.GONE);
+				holder.name.setTag(country);
+			}else{
+				holder.name.setVisibility(View.VISIBLE);
+				holder.name.setText(country.getName());
+				holder.name.setChecked(country.isSelected());
+				holder.name.setTag(country);
+				holder.name.setGravity(Gravity.CENTER_VERTICAL);
+			}
+			return convertView;
+
+		}
+	}
+
 	public void mOnClick(View v) {
 		switch (v.getId()) {
 		case R.id.startRecv: // startRecovery
+
+			final ArrayList<Country> countryList = dataAdapter.countryList; // checkbox 선택 리스트
+		
+			
 			AlertDialog.Builder adb = new AlertDialog.Builder(this);
 			adb.setTitle("Notice");
 			adb.setMessage("복원을 진행하시겠습니까?");
 			final Dialog mDialog = adb.create();
 
+			
+			final Thread recovProcess = new Thread(){
+				
+				@Override
+				public void run(){
+					ProgressDialog progressDialog;
+					progressDialog = new ProgressDialog(RecvActivity.this);
+					progressDialog
+							.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+					progressDialog.setMax(countryList.size());
+					progressDialog.setMessage("복원 중 입니다...");
+
+					progressDialog.setCancelable(true);
+					progressDialog.show();
+					
+					for (int i = 0; i < countryList.size(); i++) {
+						Country country = countryList.get(i);
+						
+						if(country.isSelected()){
+							String finalPath =  country.getPath().replace(sName+"/0/", "/sdcard/");
+							//Log.v("ddd", country.getPath().replace(sName+"/0/", "/sdcard/") ); // 실제 경로
+							
+							progressDialog.setProgress(i);
+							
+							// 마운트 진행 후 파일을 옮긴다.
+							try {
+								p = new ProcessBuilder("su").start();
+
+								String mountCom = "mount -t ext4 /dev/vg/" + sName
+										+ " /sdcard/ssDir/" + sName + "\n";
+
+								p.getOutputStream().write(mountCom.getBytes()); // 마운트 완료
+								
+								String cpCommand = "cp  /sdcard/ssDir/"+ country.getPath() +" "+finalPath+"\n"; // 현재 path 에서 최종 path로 이동
+								
+								Log.v("ddd", cpCommand ); // 실제 경로
+								
+								p.getOutputStream().write(cpCommand.getBytes()); // 복사완료
+								
+								String uMountCom = "umount /sdcard/ssDir/" + sName + "\n";
+
+								p.getOutputStream().write(uMountCom.getBytes());
+								p.getOutputStream().write("exit\n".getBytes());
+								p.getOutputStream().flush();
+								
+								p.waitFor();
+								
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+
+							
+							
+							
+						}
+					}
+					
+					progressDialog.dismiss();
+				}
+				
+			};
+			
 			adb.setPositiveButton("복원시작", new OnClickListener() {
 
 				@Override
 				public void onClick(DialogInterface arg0, int arg1) {
 					// TODO Auto-generated method stub
-					mDialog.dismiss();
-
-					ProgressDialog progressDialog;
-					progressDialog = new ProgressDialog(RecvActivity.this);
-					progressDialog
-							.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-					progressDialog.setMessage("복원 중 입니다...");
-					progressDialog.setCancelable(true);
-					progressDialog.show();
+					//mDialog.dismiss();
+					recovProcess.run();
 				}
 
 			});
@@ -297,13 +585,61 @@ public class RecvActivity extends Activity {
 				}
 
 			});
-			
-			
+
 			adb.show();
-			
 
 		}
 
 	}
-	
+
+	class Country {
+
+		String code = null;
+		String name = null;
+		String path = null;
+		
+		boolean selected = false;
+
+		public Country(String code, String name, boolean selected) {
+			super();
+			this.code = code;
+			this.name = name;
+			this.selected = selected;
+		}
+
+		public String getCode() {
+			return code;
+		}
+
+		public void setCode(String code) {
+			this.code = code;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public boolean isSelected() {
+			return selected;
+		}
+
+		public void setSelected(boolean selected, String path , String fileName) {
+			this.selected = selected;
+			this.path  = path +"/"+ fileName;
+		}
+		
+		public String getPath(){
+			return this.path;
+		}
+		
+		public void setPath(String path){
+			this.path = path;
+		}
+		
+	}
+
 }
