@@ -122,8 +122,8 @@ public class MainActivity extends Activity implements OnClickListener {
 	
 	public static String srvIp = "211.189.19.45";
 	public static int srvPort = 12345 ;
-	//public static String homePath = "/data/data/com.example.timetraveler/";
-	public static String homePath = "/dev/vg/";
+	public static String homePath = "/data/data/com.example.timetraveler/";
+	//public static String homePath = "/dev/vg/";
 	public static String mapperPath = "/dev/mapper/";
 	private PagerAdapterClass pac;
 	private RegistrationDevice rd;
