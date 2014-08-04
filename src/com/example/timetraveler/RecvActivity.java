@@ -30,8 +30,10 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
+import android.net.Uri;
 import android.opengl.Visibility;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -66,6 +68,8 @@ public class RecvActivity extends Activity {
 	private String sName = null;
 	private String mName = null;
 	private String loc = null;
+	private Thread recovProcess = null;
+	
 	private InstalledAppInfo mInsAppInfo = new InstalledAppInfo(this);
 	
 	private ArrayList<String> resultAppListByAppName;
@@ -307,28 +311,7 @@ public class RecvActivity extends Activity {
 					Item Item = new Item("row", resultAppListByAppName.get(i), appmapByPack.get(resultAppListByAppName.get(i)), false);
 					ItemList.add(Item);
 				}
-						
-				/*for (int i = 0; i < fiList.size(); i++) {
-					if (fiList.get(i).getName().contains(":") && i != 0) { // 하위
-																			// 디렉터리
-						//fList.add(" ");
-						//fList.add("[Dir]  " + fiList.get(i).getName());
-						Item Item = new Item("row", ">  " + fiList.get(i).getName(), false);
-						ItemList.add(Item);
-					} else if (fiList.get(i).getType().equals("d") ) { // 해당
-																		// 디렉토리
-																		// 내의 파일
-						//fList.add(fiList.get(i).getName());
-						Item Item = new Item("row", fiList.get(i).getName(), false);
-						ItemList.add(Item);
-					}else {
-						Item Item = new Item("row", ">  " + fiList.get(i).getName(), false);
-						ItemList.add(Item);
-					}
-
-				}*/
-				
-
+			
 				
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -657,7 +640,7 @@ public class RecvActivity extends Activity {
 								"Clicked on Checkbox: " + cur_Loc+"/"+targetText+ " is "
 										+ cb.isChecked(), Toast.LENGTH_LONG)
 								.show();
-						Item.setSelected(cb.isChecked(),cur_Loc,targetText.toString()); // 선택됨을 체크  (선택 시 해당 경로와 이름을 저장 )
+						Item.setSelected(cb.isChecked(),cur_Loc,targetText.toString(), func_code); // 선택됨을 체크  (선택 시 해당 경로와 이름을 저장 )
 						
 					}
 				});
@@ -685,6 +668,207 @@ public class RecvActivity extends Activity {
 		}
 	}
 
+	private void StartInstall(String packageName, String pwdPath) {
+		
+		/* -2 -1인지 파싱하기 */
+		String apkName = ExtractAPKName(packageName, pwdPath);
+		apkName = "file://"+pwdPath+apkName;
+		Log.d("eee", apkName);
+		//Log.d("eee", "합:"+pwdPath+apkName);
+		
+		/* APK 실행 */
+		Intent cmdToInstall = new Intent(Intent.ACTION_VIEW)
+	    .setDataAndType(Uri.parse(apkName), 
+	                    "application/vnd.android.package-archive");
+		startActivity(cmdToInstall);
+		//startActivityForResult(cmdToInstall, 1);
+		
+		/* Tar로 묶기 */
+		TarTieDir(packageName, apkName);
+	}
+	
+private void StartInstall2(String packageName, String pwdPath) {
+		
+		/* -2 -1인지 파싱하기 */
+		String apkName = packageName;
+		//apkName = "file://"+pwdPath+apkName;
+		Log.d("eee", apkName);
+		//Log.d("eee", "합:"+pwdPath+apkName);
+		
+		/* APK 실행 */
+		Intent cmdToInstall = new Intent(Intent.ACTION_VIEW)
+	    .setDataAndType(Uri.parse("file:///sdcard/"+apkName), 
+	                    "application/vnd.android.package-archive");
+		startActivity(cmdToInstall);
+		//startActivityForResult(cmdToInstall, 1);
+		
+		/* Tar로 묶기 */
+		//TarTieDir("com.example.applist", apkName);
+	}
+	
+	private void CopyToAppData(String packageName) {
+		
+	}
+	
+	private String ExtractAPKName(String packageName, String pwdPath) {
+		  ArrayList<String> fList = new ArrayList<String>();
+		    Process p;
+		    String resultAppName = null;
+		    
+		try {
+			p = new ProcessBuilder("su").start();
+		
+
+			String com2 = "ls -l "+pwdPath+"\n";
+			Log.e("ccc", com2);
+			
+			p.getOutputStream().write(com2.getBytes());
+			
+			p.getOutputStream().write("exit\n".getBytes());
+			p.getOutputStream().flush();
+		
+			
+			BufferedReader br = new BufferedReader(new InputStreamReader(
+					p.getInputStream()));
+	
+			
+			
+			String line = null;
+	        while (true) {
+					line = br.readLine();
+					if (line == null) { break; }
+					if(line.substring(0, 1).equals("-"))
+						fList.add(line);
+		           
+		            System.out.println(line);
+		            
+	
+	        	}
+	        p.waitFor();
+	        } catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		
+	
+		for (String s : fList) {
+			
+			//Log.d("APP", s);
+			if (s.length() != 0) {
+
+				String[] info = s.split(" ");
+				//Log.d("ddd", Integer.toString(info.length) );
+				ArrayList<String> splitedInfo = new ArrayList<String>();
+
+				for (String ss : info) {
+					ss = ss.trim(); // 공백제거
+					if (ss.length() != 0)
+						splitedInfo.add(ss);
+				}
+
+				FileInfo fi;
+				// split 결과는 실제 파일의 정보 , 하위 디렉토리 이름 으로 나누어짐.
+				// 하위디렉토리 이름은 무시한다
+				int idx = 0;
+
+				char fileType = ' ';
+
+				if (splitedInfo.size() != 0) { // 한 라인의 가장 첫번째 문자는 파일
+												// 형식을
+												// 나타냄..
+					fileType = splitedInfo.get(0).charAt(0);
+					// Log.d("lvm", "("+String.valueOf(fileType)+")");
+
+					if (fileType == '-') { // general files
+					// general file에는 용량정보까지 포함 됨.
+					
+					StringBuffer fileName = new StringBuffer();
+					int maxIdx = splitedInfo.size();
+					
+					for(int i = 6 ; i < maxIdx ; i++){
+						if( i == 6)
+							fileName.append(splitedInfo.get(i));
+						else
+							fileName.append(" "+splitedInfo.get(i));
+					}
+					
+					if(fileName.toString().contains(packageName)) {
+						resultAppName = fileName.toString();
+					}
+					
+					
+					
+					fi = new FileInfo(String.valueOf(fileType),
+							splitedInfo.get(0).substring(1),
+							splitedInfo.get(3), splitedInfo.get(4),
+							splitedInfo.get(5), fileName.toString());
+					
+					//Log.v("ddd", splitedInfo.get(6));
+					
+					//fiList.add(fi); // fiList 에 등록
+				} else { // directory 정보는 객체를 따로 저장하지 않음.
+					fi = new FileInfo(String.valueOf(fileType),
+							splitedInfo.get(0));
+					//fiList.add(fi); // fiList 에 등록
+					}
+	
+				}
+			}
+		}
+		Log.d("APP", "searched Apk : "+resultAppName);
+		
+		return resultAppName;
+
+	}
+	
+	private int TarTieDir(String packageName, String apkName) {
+	    String command = "tar -cvf " + Environment.getExternalStorageDirectory() + "/cp/"
+		            + packageName + ".tar" + " " + "/data/data/"+packageName+" "+ "/data/app/"+apkName+"\n";
+		    
+		    //apk 추가
+		    //command += " "+ "/data/app/"+apkName;
+		    Process p;
+		    
+			try {
+				p = new ProcessBuilder("su").start();
+			
+				p.getOutputStream().write(command.getBytes());
+	
+				Log.e("APP", "tar command : "+command);
+				
+				p.getOutputStream().write("exit\n".getBytes());
+				p.getOutputStream().flush();
+			
+				BufferedReader br = new BufferedReader(new InputStreamReader(
+						p.getInputStream()));
+	
+				String line = null;
+	        while (true) {
+					line = br.readLine();
+					if (line == null) { break; }
+					
+		            System.out.println(line);
+	        	}
+	        
+	        p.waitFor();
+	        } catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return -1;
+			}catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return -1;
+			}
+
+		return 0;
+
+	}
+	
+	
 	public void mOnClick(View v) {
 		switch (v.getId()) {
 		case R.id.startRecv: // startRecovery
@@ -696,97 +880,186 @@ public class RecvActivity extends Activity {
 			adb.setMessage("복원을 진행하시겠습니까?");
 			final Dialog mDialog = adb.create();
 
-			
-			final Thread recovProcess = new Thread(){
-				
-				@Override
-				public void run(){
-					ProgressDialog progressDialog;
-					progressDialog = new ProgressDialog(RecvActivity.this);
-					progressDialog
-							.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-					progressDialog.setMax(ItemList.size());
-					progressDialog.setMessage("파일 복원 중 입니다...");
-
-					progressDialog.setCancelable(true);
-					progressDialog.show();
+			switch(func_code) {
+			case RECV_APP:
+					recovProcess = new Thread(){
 					
-					for (int i = 0; i < ItemList.size(); i++) {
-						Item Item = ItemList.get(i);
+					@Override
+					public void run(){
+						ProgressDialog progressDialog;
+						progressDialog = new ProgressDialog(RecvActivity.this);
+						progressDialog
+								.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+						progressDialog.setMax(ItemList.size());
+						progressDialog.setMessage("파일 복원 중 입니다...");
+
+						progressDialog.setCancelable(true);
+						progressDialog.show();
 						
-						if(Item.isSelected()){
-							String finalPath =  Item.getPath().replace(sName+"/0/", "/sdcard/");
-							Log.v("eee", Item.getPath().replace(sName+"/0/", "/sdcard/") ); // 실제 경로
+						for (int i = 0; i < ItemList.size(); i++) {
+							Item Item = ItemList.get(i);
 							
-							progressDialog.setProgress(i);
-							
-							// 마운트 진행 후 파일을 옮긴다. ( Sdcard 혹은 Server로 전송 )
-							try {
-								p = new ProcessBuilder("su").start();
+							if(Item.isSelected()){
+								/* /data/data영역 체크 */
+								String dataCoverPath =  Item.getPath().replace(sName, "/sdcard/");
+								String apkCoverPath = null;
+								//TODO : 경로체크 필요
+								
+								Log.v("path", Item.getPath().replace(sName, "/data") ); // 실제 경로 경로체크
+								
+								progressDialog.setProgress(i);
+								
 
-								
-								String mountCom = "mount -t ext4 /dev/vg/" + sName
-										+ " /sdcard/ssDir/" + sName + "\n";
-								
-								Log.v("eee", mountCom );
-								
-								p.getOutputStream().write(mountCom.getBytes());
+								// 마운트 진행 후 파일을 옮긴다. ( Sdcard 혹은 Server로 전송 )
+								try {
+									p = new ProcessBuilder("su").start();
 
-								String com = "ls -l /sdcard/ssDir/" + Item.getPath().substring(0, Item.getPath().lastIndexOf("/")) + " | grep \""+Item.getPath().substring(Item.getPath().lastIndexOf("/")+2,Item.getPath().length()-1)+"\" \n";
+									
+									String mountCom = "mount -t ext4 /dev/vg/" + sName
+											+ " /sdcard/ssDir/" + sName + "\n";
+									
+									Log.v("eee", mountCom );
+									
+									p.getOutputStream().write(mountCom.getBytes());
 
-								Log.v("eee", com );
-								
-								//p.getOutputStream().write(com.getBytes());
-								
-								// dd 로 obs
-								
-								//Socket sc = new Socket(MainActivity.srvIp,MainActivity.srvPort);
-								String sendToSocket = "dd if=/sdcard/ssDir/"+Item.getPath()+" obs=512k \n";
-								Log.v("eee", sendToSocket );
-								/*
-								ObjectOutputStream oos = new ObjectOutputStream(sc.getOutputStream());
-								
-								Payload pl = new Payload(8, MainActivity.rd.getUserCode());
-								oos.writeObject(pl); // code 8 번은 임시파일 전송
-								*/
-								
-								// 복사 명령어 실행
-								p.getOutputStream().write(sendToSocket.getBytes());
-								
-								byte buffer[] = new byte[1024*512]; // 512k
-								int size = 0;
-								long totalSize = 0;
-								
-								
-								mountCom = "umount /sdcard/ssDir/" + sName + "\n";
-								
-								//p.getOutputStream().write(mountCom.getBytes());
+									/*
+									 * pName-1.apk가 없으면
+									 * pName-2.apk로 해준다.
+									 */
+									
+									
+									String apkName = ExtractAPKName(Item.getPath().replace(sName, "").replace("/app/", ""), "/sdcard/ssDir/" + sName+"/app/");
+									String cpCom = "cp /sdcard/ssDir/" + sName+"/app/"+apkName+" "+"/sdcard/"+"\n";
+									
+									p.getOutputStream().write(cpCom.getBytes());
 
-								p.getOutputStream().write("exit\n".getBytes());
-								p.getOutputStream().flush();
+									String modCom = "chmod 777 /sdcard/"+apkName;
+									
+									p.getOutputStream().write(modCom.getBytes());
+									
+									p.getOutputStream().write("exit\n".getBytes());
+									p.getOutputStream().flush();
+									
+									Log.d("APP", Item.getPath().replace(sName, "").replace("/app/", ""));
+									
+									//ExtractAPKName(Item.getPath().replace(sName, "").replace("/app/", ""), "/sdcard/ssDir/" + sName);
+									StartInstall2(apkName, "/sdcard/");
 								
-								/*while( (size =  p.getInputStream().read(buffer)) > 0){
-									//Log.i("eee", Integer.toString(size));
-									totalSize += size;
-								}*/
+									
+									
+									
+									mountCom = "umount /sdcard/ssDir/" + sName + "\n";
+									
+									p.getOutputStream().write(mountCom.getBytes());
+
+									p.getOutputStream().write("exit\n".getBytes());
+									p.getOutputStream().flush();
 								
-								//AsyncFileSender afs = new AsyncFileSender(p.getInputStream(),null,null);
-								//afs.execute();
-								
-								/*Log.i("eee", "total : " + Long.toString(totalSize)+" stream complete");
-								FileSender fs = new FileSender();
-								fs.SendFile(totalSize);
-								*/
-								
-							} catch (IOException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							} 
+								} catch (IOException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								} 
+							}
 						}
-					}
-					progressDialog.dismiss();
-				}	
-			};
+						progressDialog.dismiss();
+					}	
+				};
+				break;
+			case RECV_USER_DATA:
+				recovProcess = new Thread(){
+					
+					@Override
+					public void run(){
+						ProgressDialog progressDialog;
+						progressDialog = new ProgressDialog(RecvActivity.this);
+						progressDialog
+								.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+						progressDialog.setMax(ItemList.size());
+						progressDialog.setMessage("파일 복원 중 입니다...");
+
+						progressDialog.setCancelable(true);
+						progressDialog.show();
+						
+						for (int i = 0; i < ItemList.size(); i++) {
+							Item Item = ItemList.get(i);
+							
+							if(Item.isSelected()){
+								String finalPath =  Item.getPath().replace(sName+"/0/", "/sdcard/");
+								Log.v("eee", Item.getPath().replace(sName+"/0/", "/sdcard/") ); // 실제 경로
+								
+								progressDialog.setProgress(i);
+								
+								// 마운트 진행 후 파일을 옮긴다. ( Sdcard 혹은 Server로 전송 )
+								try {
+									p = new ProcessBuilder("su").start();
+
+									
+									String mountCom = "mount -t ext4 /dev/vg/" + sName
+											+ " /sdcard/ssDir/" + sName + "\n";
+									
+									Log.v("eee", mountCom );
+									
+									p.getOutputStream().write(mountCom.getBytes());
+
+									String com = "ls -l /sdcard/ssDir/" + Item.getPath().substring(0, Item.getPath().lastIndexOf("/")) + " | grep \""+Item.getPath().substring(Item.getPath().lastIndexOf("/")+2,Item.getPath().length()-1)+"\" \n";
+
+									Log.v("eee", com );
+									
+									//p.getOutputStream().write(com.getBytes());
+									
+									// dd 로 obs
+									
+									//Socket sc = new Socket(MainActivity.srvIp,MainActivity.srvPort);
+									String sendToSocket = "dd if=/sdcard/ssDir/"+Item.getPath()+" obs=512k \n";
+									Log.v("eee", sendToSocket );
+									/*
+									ObjectOutputStream oos = new ObjectOutputStream(sc.getOutputStream());
+									
+									Payload pl = new Payload(8, MainActivity.rd.getUserCode());
+									oos.writeObject(pl); // code 8 번은 임시파일 전송
+									*/
+									
+									// 복사 명령어 실행
+									p.getOutputStream().write(sendToSocket.getBytes());
+									
+									byte buffer[] = new byte[1024*512]; // 512k
+									int size = 0;
+									long totalSize = 0;
+									
+									
+									mountCom = "umount /sdcard/ssDir/" + sName + "\n";
+									
+									//p.getOutputStream().write(mountCom.getBytes());
+
+									p.getOutputStream().write("exit\n".getBytes());
+									p.getOutputStream().flush();
+									
+									/*while( (size =  p.getInputStream().read(buffer)) > 0){
+										//Log.i("eee", Integer.toString(size));
+										totalSize += size;
+									}*/
+									
+									//AsyncFileSender afs = new AsyncFileSender(p.getInputStream(),null,null);
+									//afs.execute();
+									
+									/*Log.i("eee", "total : " + Long.toString(totalSize)+" stream complete");
+									FileSender fs = new FileSender();
+									fs.SendFile(totalSize);
+									*/
+									
+								} catch (IOException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								} 
+							}
+						}
+						progressDialog.dismiss();
+					}	
+				};
+				break;
+			}
+			
+		
 			
 			adb.setPositiveButton("복원시작", new OnClickListener() {
 				@Override
@@ -864,9 +1137,12 @@ public class RecvActivity extends Activity {
 			return selected;
 		}
 
-		public void setSelected(boolean selected, String path , String fileName) {
+		public void setSelected(boolean selected, String path , String fileName, int func_code) {
 			this.selected = selected;
-			this.path  = path +"/\""+ fileName+"\"";
+			if(func_code == RECV_USER_DATA)
+				this.path  = path +"/\""+ fileName+"\"";
+			else if(func_code == RECV_APP)
+				this.path  = path +"/app/"+fileName;
 		}
 		
 		public String getPath(){
