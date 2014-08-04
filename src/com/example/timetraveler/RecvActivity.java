@@ -827,6 +827,8 @@ private void StartInstall2(String packageName, String pwdPath) {
 	private int TarTieDir(String packageName, String apkName) {
 	    String command = "tar -cvf " + Environment.getExternalStorageDirectory() + "/cp/"
 		            + packageName + ".tar" + " " + "/data/data/"+packageName+" "+ "/data/app/"+apkName+"\n";
+	    
+	    /*/sdcard/cp/com.example.asd.tar /mountDir/sName/data/com.example.asd /mountDir/sName/app/apkName */
 		    
 		    //apk Ãß°¡
 		    //command += " "+ "/data/app/"+apkName;
