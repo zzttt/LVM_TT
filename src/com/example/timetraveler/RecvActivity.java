@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import com.FileManager.FileInfo;
-import com.FrameWork.InstalledAppInfo;
+import com.FrameWork.ConnServer;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -56,9 +56,7 @@ public class RecvActivity extends Activity {
 	private int func_code = 0;
 	private Process p = null;
 	private String sName = null;
-	
-	private InstalledAppInfo mInsAppInfo;
-	
+	private String loc = null;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -66,8 +64,19 @@ public class RecvActivity extends Activity {
 		
 		sName = getIntent().getStringExtra("sName").replace("/dev", "")
 				.replace("-cow", "");
+
+		loc = getIntent().getStringExtra("loc"); // 데이터 위치 ( dev : 장치 내 ,
+														// srv : 서버 )
 		
-		displayListView(sName, sName+"/0/");
+		if(loc.equals("dev"))
+			displayListView(sName, sName+"/0/"); //스냅샷 위치가 device 일 경우
+		else{
+			
+		}
+		
+		
+		
+		
 	}
 	
 
@@ -79,13 +88,11 @@ public class RecvActivity extends Activity {
 	/*	Country country = new Country("AFG", "Afghanistan", false);
 		countryList.add(country);
 	*/
-		cur_Loc = subDir;
-		Log.i("ddd", subDir);
+		cur_Loc = subDir; // current Location
+		//Log.i("ddd", subDir);
 		
 		
 		String mName = getIntent().getStringExtra("mName");
-		String loc = getIntent().getStringExtra("loc"); // 데이터 위치 ( dev : 장치 내 ,
-														// srv : 서버 )
 		/*
 		 * sName ( snapshot name ) mName ( selected menu name ) sName 데이터에서
 		 * mName 에 해당하는 데이터를 읽어온다.*/
@@ -114,59 +121,184 @@ public class RecvActivity extends Activity {
 
 			break;
 		case RECV_APP:
-			mInsAppInfo = new InstalledAppInfo(getApplicationContext());
-
-			// List View , adapter
-			ListView lv = (ListView) findViewById(R.id.lv_recvList);
-			ArrayList<String> fList = new ArrayList<String>();
-			
-			//어플리케이션 복원
-			/* 어플리케이션 리스트 다시 불러옴 from sName으로 부터 sName == Key이므로 */
-			//스냅샷 시점의 설치된 어플 arylist 불러옴
-			//테스트를 위한 하드코딩 -- ABC로 저장
-			ArrayList<InstalledAppInfo> InSsApp = mInsAppInfo.ReadAppInfo("ABC");
-			StringBuffer sbMessage = new StringBuffer();
-			int vListSize = 0;
-			
-
-			//ArrayList<InstalledAppInfo> fiList = new ArrayList<InstalledAppInfo>();
-		
-			
-			//어플리스트 출력
-			for(int i=0;i<InSsApp.size();i++) {
-				vListSize++;
-				fList.add(InSsApp.get(i).resultOfAppNamePrint());
-				Log.d("AppName", "aa"+InSsApp.get(i).resultOfAppNamePrint());
-			}
-			
-			/*try {
+			//어플
+			try {
 				p = new ProcessBuilder("su").start();
 
-				// func_code 에 따라서 이미징된 userdata를 읽어들임.
+				// func_code 에 따라서 snapshot 을 읽어들임. 이건 일단 패스
+				Log.i("ccc", sName + "/" + loc);
+
+				//어플 영역 snapshot 읽어들인다.
 				String mountCom = "mount -t ext4 /dev/vg/" + sName
 						+ " /sdcard/ssDir/" + sName + "\n";
 
 				p.getOutputStream().write(mountCom.getBytes());
 
-				String com = "ls -lR /sdcard/ssDir/" + sName + "\n";
+				String com = "ls -l /sdcard/ssDir/" + subDir + "\n";
 
 				p.getOutputStream().write(com.getBytes());
+
+				//마운트 해제
+				mountCom = "umount /sdcard/ssDir/" + sName + "\n";
+
+				p.getOutputStream().write(mountCom.getBytes());
+
 				p.getOutputStream().write("exit\n".getBytes());
 				p.getOutputStream().flush();
 
+				
+				try {
+					p.waitFor();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				/**
+				 * /data/data/ 영역에서 package list이름 불러오고, 
+				 * app은 /data/app에서 apk추출 
+				 * */
+				
+				/* 불러온 packageName Directory를 기반으로 appName을 구해와서 리스트에 추가한다.
+				 * 추가되서 선택하면 /data/app에서 apk실행 Intent를 실행하고
+				 * data/data폴더를 복사해서 넣어준다.
+				 * 이미 설치되있는지 체크되는 루틴으로 설치되어 있으면 /data폴더만 카피한다.
+				 * 
+				 *  */
 				BufferedReader br = new BufferedReader(new InputStreamReader(
 						p.getInputStream()));
 
 				String line = null;
-			 	*/
-			
-			
-			ItemListArrayAdapter adapter = new ItemListArrayAdapter(this,
-					android.R.layout.simple_list_item_1, fList);
-			lv.setAdapter(adapter);
-	
+
+				// List View , adapter ----------------------------------------------- 리스트 추가부분
+				ListView lv = (ListView) findViewById(R.id.lv_recvList);
+				ArrayList<String> fList = new ArrayList<String>();
+				ArrayList<FileInfo> fiList = new ArrayList<FileInfo>();
+
+				while ((line = br.readLine()) != null) {
+					Log.e("lvm", line);
+					fList.add(line);
+				}
+
+				for (String s : fList) {
+					if (s.length() != 0) {
+
+						String[] info = s.split(" ");
+						//Log.d("ddd", Integer.toString(info.length) );
+						ArrayList<String> splitedInfo = new ArrayList<String>();
+
+						for (String ss : info) {
+							ss = ss.trim(); // 공백제거
+							if (ss.length() != 0)
+								splitedInfo.add(ss);
+						}
+
+						FileInfo fi;
+						// split 결과는 실제 파일의 정보 , 하위 디렉토리 이름 으로 나누어짐.
+						// 하위디렉토리 이름은 무시한다
+						int idx = 0;
+
+						char fileType = ' ';
+
+						if (splitedInfo.size() != 0) { // 한 라인의 가장 첫번째 문자는 파일
+														// 형식을
+														// 나타냄..
+							fileType = splitedInfo.get(0).charAt(0);
+							// Log.d("lvm", "("+String.valueOf(fileType)+")");
+
+							if (fileType == 'l') { // 링크파일의 경우 파일명 수정 필요 ( idx 5
+													// 부터
+													// fileName.. 5 이후 문자열을 통합 )
+								String fName = splitedInfo.get(5)
+										+ splitedInfo.get(6)
+										+ splitedInfo.get(7);
+								splitedInfo.set(5, fName);
+								splitedInfo.remove(7);
+								splitedInfo.remove(6);
+							}
+						}
+
+						if (fileType == 'd' || fileType == 'b'
+								|| fileType == 'c' || fileType == 'p'
+								|| fileType == 'l' || fileType == 's') { // special
+																			// files
+							// b(Block file(b) , Character device file(c) ,
+							// Named
+							// pipe file or just a pipe file(p)
+							// Symbolic link file(l), Socket file(s)
+
+							fi = new FileInfo(String.valueOf(fileType),
+									splitedInfo.get(0).substring(1),
+									splitedInfo.get(3), splitedInfo.get(4),
+									splitedInfo.get(5));
+							fiList.add(fi); // fiList 에 등록
+						} else if (fileType == '-') { // general files
+							// general file에는 용량정보까지 포함 됨.
+							
+							StringBuffer fileName = new StringBuffer();
+							int maxIdx = splitedInfo.size();
+							
+							for(int i = 6 ; i < maxIdx ; i++){
+								fileName.append(splitedInfo.get(i));
+							}
+							
+							
+							fi = new FileInfo(String.valueOf(fileType),
+									splitedInfo.get(0).substring(1),
+									splitedInfo.get(3), splitedInfo.get(4),
+									splitedInfo.get(5), fileName.toString());
+							
+							//Log.v("ddd", splitedInfo.get(6));
+							
+							fiList.add(fi); // fiList 에 등록
+						} else { // directory 정보는 객체를 따로 저장하지 않음.
+							fi = new FileInfo(String.valueOf(fileType),
+									splitedInfo.get(0));
+							fiList.add(fi); // fiList 에 등록
+						}
+
+					}
+				}
+				Log.d("lvm", "file count : " + Integer.toString(fiList.size()));
+
+				fList.clear();
+
+				if(!subDir.equals(sName+"/0/")){ // 최 상단 디렉토리가 아닌경우
+					// 상위메뉴를 만들어 줌
+					Country country = new Country("row", "..", false);
+					countryList.add(country);
+				}
+				
+				for (int i = 0; i < fiList.size(); i++) {
+					if (fiList.get(i).getName().contains(":") && i != 0) { // 하위
+																			// 디렉터리
+						//fList.add(" ");
+						//fList.add("[Dir]  " + fiList.get(i).getName());
+						Country country = new Country("row", ">  " + fiList.get(i).getName(), false);
+						countryList.add(country);
+					} else if (!fiList.get(i).getType().equals("d") ) { // 해당
+																		// 디렉토리
+																		// 내의 파일
+						//fList.add(fiList.get(i).getName());
+						Country country = new Country("row", fiList.get(i).getName(), false);
+						countryList.add(country);
+					}else if ( fiList.get(i).getType().equals("d") && !fiList.get(i).getName().contains("ssDir") && !fiList.get(i).getName().contains("Android")  ){
+						Country country = new Country("row", ">  " + fiList.get(i).getName(), false);
+						countryList.add(country);
+					}
+
+				}
+
+/*				ItemListArrayAdapter adapter = new ItemListArrayAdapter(this,
+						android.R.layout.simple_list_item_1, fList);
+				lv.setAdapter(adapter);
+*/
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+
 			break;
-			
 		case RECV_USER_DATA:
 			// 사용자 데이터 백업
 			try {
@@ -206,8 +338,8 @@ public class RecvActivity extends Activity {
 				String line = null;
 
 				// List View , adapter ----------------------------------------------- 리스트 추가부분
-				//ListView lv = (ListView) findViewById(R.id.lv_recvList);
-				//ArrayList<String> fList = new ArrayList<String>();
+				ListView lv = (ListView) findViewById(R.id.lv_recvList);
+				ArrayList<String> fList = new ArrayList<String>();
 				ArrayList<FileInfo> fiList = new ArrayList<FileInfo>();
 
 				while ((line = br.readLine()) != null) {
@@ -219,10 +351,11 @@ public class RecvActivity extends Activity {
 					if (s.length() != 0) {
 
 						String[] info = s.split(" ");
+						//Log.d("ddd", Integer.toString(info.length) );
 						ArrayList<String> splitedInfo = new ArrayList<String>();
 
 						for (String ss : info) {
-							ss = ss.trim();
+							ss = ss.trim(); // 공백제거
 							if (ss.length() != 0)
 								splitedInfo.add(ss);
 						}
@@ -250,7 +383,6 @@ public class RecvActivity extends Activity {
 								splitedInfo.remove(7);
 								splitedInfo.remove(6);
 							}
-
 						}
 
 						if (fileType == 'd' || fileType == 'b'
@@ -269,10 +401,22 @@ public class RecvActivity extends Activity {
 							fiList.add(fi); // fiList 에 등록
 						} else if (fileType == '-') { // general files
 							// general file에는 용량정보까지 포함 됨.
+							
+							StringBuffer fileName = new StringBuffer();
+							int maxIdx = splitedInfo.size();
+							
+							for(int i = 6 ; i < maxIdx ; i++){
+								fileName.append(splitedInfo.get(i));
+							}
+							
+							
 							fi = new FileInfo(String.valueOf(fileType),
 									splitedInfo.get(0).substring(1),
 									splitedInfo.get(3), splitedInfo.get(4),
-									splitedInfo.get(5), splitedInfo.get(6));
+									splitedInfo.get(5), fileName.toString());
+							
+							//Log.v("ddd", splitedInfo.get(6));
+							
 							fiList.add(fi); // fiList 에 등록
 						} else { // directory 정보는 객체를 따로 저장하지 않음.
 							fi = new FileInfo(String.valueOf(fileType),
@@ -339,7 +483,7 @@ public class RecvActivity extends Activity {
 				Country country = (Country) parent.getItemAtPosition(position);
 				Toast.makeText(getApplicationContext(),
 						"Clicked on Row: " + country.getName(),
-						To ast.LENGTH_LONG).show();
+						Toast.LENGTH_LONG).show();
 			}
 		});*/
 		
@@ -490,7 +634,7 @@ public class RecvActivity extends Activity {
 	public void mOnClick(View v) {
 		switch (v.getId()) {
 		case R.id.startRecv: // startRecovery
-
+			
 			final ArrayList<Country> countryList = dataAdapter.countryList; // checkbox 선택 리스트
 		
 			
@@ -509,7 +653,7 @@ public class RecvActivity extends Activity {
 					progressDialog
 							.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 					progressDialog.setMax(countryList.size());
-					progressDialog.setMessage("복원 중 입니다...");
+					progressDialog.setMessage("파일 복원 중 입니다...");
 
 					progressDialog.setCancelable(true);
 					progressDialog.show();
@@ -522,8 +666,8 @@ public class RecvActivity extends Activity {
 							//Log.v("ddd", country.getPath().replace(sName+"/0/", "/sdcard/") ); // 실제 경로
 							
 							progressDialog.setProgress(i);
-							
-							// 마운트 진행 후 파일을 옮긴다.
+					
+							// 마운트 진행 후 파일을 옮긴다. ( Sdcard 혹은 Server로 전송 )
 							try {
 								p = new ProcessBuilder("su").start();
 
@@ -532,15 +676,26 @@ public class RecvActivity extends Activity {
 
 								p.getOutputStream().write(mountCom.getBytes()); // 마운트 완료
 								
-								String cpCommand = "cp  /sdcard/ssDir/"+ country.getPath() +" "+finalPath+"\n"; // 현재 path 에서 최종 path로 이동
+								
+								String filePath = "/sdcard/ssDir/"+country.getPath();
+								Log.e("eee", filePath);
+								
+								/*ConnServer cs = new ConnServer(MainActivity.srvIp, 12345 , 1 , MainActivity.rd.getUserCode() , filePath );
+								cs.start();
+								
+								cs.join(); // cs 기다림
+								*/
+								
+								/*String cpCommand = "cp  /sdcard/ssDir/"+ country.getPath() +" "+finalPath+"\n"; // 현재 path 에서 최종 path로 이동
 								
 								Log.v("ddd", cpCommand ); // 실제 경로
 								
 								p.getOutputStream().write(cpCommand.getBytes()); // 복사완료
+								*/
 								
 								String uMountCom = "umount /sdcard/ssDir/" + sName + "\n";
 
-								p.getOutputStream().write(uMountCom.getBytes());
+								//p.getOutputStream().write(uMountCom.getBytes());
 								p.getOutputStream().write("exit\n".getBytes());
 								p.getOutputStream().flush();
 								
@@ -554,8 +709,6 @@ public class RecvActivity extends Activity {
 								e.printStackTrace();
 							}
 
-							
-							
 							
 						}
 					}
@@ -629,7 +782,7 @@ public class RecvActivity extends Activity {
 
 		public void setSelected(boolean selected, String path , String fileName) {
 			this.selected = selected;
-			this.path  = path +"/"+ fileName;
+			this.path  = path +"/\""+ fileName+"\"";
 		}
 		
 		public String getPath(){
