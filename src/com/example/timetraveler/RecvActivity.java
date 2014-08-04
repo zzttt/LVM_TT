@@ -4,6 +4,10 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectOutputStream;
+import java.io.Reader;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,7 +15,11 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
+import com.FileManager.AsyncFileSender;
 import com.FileManager.FileInfo;
+import com.FileManager.FileSender;
+import com.FrameWork.ConnServer;
+import com.FrameWork.Payload;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -55,6 +63,7 @@ public class RecvActivity extends Activity {
 	private int func_code = 0;
 	private Process p = null;
 	private String sName = null;
+	private String loc = null;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -62,8 +71,19 @@ public class RecvActivity extends Activity {
 		
 		sName = getIntent().getStringExtra("sName").replace("/dev", "")
 				.replace("-cow", "");
+
+		loc = getIntent().getStringExtra("loc"); // 데이터 위치 ( dev : 장치 내 ,
+														// srv : 서버 )
 		
-		displayListView(sName, sName+"/0/");
+		if(loc.equals("dev"))
+			displayListView(sName, sName+"/0/"); //스냅샷 위치가 device 일 경우
+		else{
+			
+		}
+		
+		
+		
+		
 	}
 	
 
@@ -75,13 +95,11 @@ public class RecvActivity extends Activity {
 	/*	Country country = new Country("AFG", "Afghanistan", false);
 		countryList.add(country);
 	*/
-		cur_Loc = subDir;
-		Log.i("ddd", subDir);
+		cur_Loc = subDir; // current Location
+		//Log.i("ddd", subDir);
 		
 		
 		String mName = getIntent().getStringExtra("mName");
-		String loc = getIntent().getStringExtra("loc"); // 데이터 위치 ( dev : 장치 내 ,
-														// srv : 서버 )
 		/*
 		 * sName ( snapshot name ) mName ( selected menu name ) sName 데이터에서
 		 * mName 에 해당하는 데이터를 읽어온다.*/
@@ -164,10 +182,11 @@ public class RecvActivity extends Activity {
 					if (s.length() != 0) {
 
 						String[] info = s.split(" ");
+						//Log.d("ddd", Integer.toString(info.length) );
 						ArrayList<String> splitedInfo = new ArrayList<String>();
 
 						for (String ss : info) {
-							ss = ss.trim();
+							ss = ss.trim(); // 공백제거
 							if (ss.length() != 0)
 								splitedInfo.add(ss);
 						}
@@ -195,7 +214,6 @@ public class RecvActivity extends Activity {
 								splitedInfo.remove(7);
 								splitedInfo.remove(6);
 							}
-
 						}
 
 						if (fileType == 'd' || fileType == 'b'
@@ -214,10 +232,25 @@ public class RecvActivity extends Activity {
 							fiList.add(fi); // fiList 에 등록
 						} else if (fileType == '-') { // general files
 							// general file에는 용량정보까지 포함 됨.
+							
+							StringBuffer fileName = new StringBuffer();
+							int maxIdx = splitedInfo.size();
+							
+							for(int i = 6 ; i < maxIdx ; i++){
+								if( i == 6)
+									fileName.append(splitedInfo.get(i));
+								else
+									fileName.append(" "+splitedInfo.get(i));
+							}
+							
+							
 							fi = new FileInfo(String.valueOf(fileType),
 									splitedInfo.get(0).substring(1),
 									splitedInfo.get(3), splitedInfo.get(4),
-									splitedInfo.get(5), splitedInfo.get(6));
+									splitedInfo.get(5), fileName.toString());
+							
+							//Log.v("ddd", splitedInfo.get(6));
+							
 							fiList.add(fi); // fiList 에 등록
 						} else { // directory 정보는 객체를 따로 저장하지 않음.
 							fi = new FileInfo(String.valueOf(fileType),
@@ -435,7 +468,7 @@ public class RecvActivity extends Activity {
 	public void mOnClick(View v) {
 		switch (v.getId()) {
 		case R.id.startRecv: // startRecovery
-
+			
 			final ArrayList<Country> countryList = dataAdapter.countryList; // checkbox 선택 리스트
 		
 			
@@ -454,7 +487,7 @@ public class RecvActivity extends Activity {
 					progressDialog
 							.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 					progressDialog.setMax(countryList.size());
-					progressDialog.setMessage("복원 중 입니다...");
+					progressDialog.setMessage("파일 복원 중 입니다...");
 
 					progressDialog.setCancelable(true);
 					progressDialog.show();
@@ -464,71 +497,94 @@ public class RecvActivity extends Activity {
 						
 						if(country.isSelected()){
 							String finalPath =  country.getPath().replace(sName+"/0/", "/sdcard/");
-							//Log.v("ddd", country.getPath().replace(sName+"/0/", "/sdcard/") ); // 실제 경로
+							Log.v("eee", country.getPath().replace(sName+"/0/", "/sdcard/") ); // 실제 경로
 							
 							progressDialog.setProgress(i);
 							
-							// 마운트 진행 후 파일을 옮긴다.
+							// 마운트 진행 후 파일을 옮긴다. ( Sdcard 혹은 Server로 전송 )
 							try {
 								p = new ProcessBuilder("su").start();
 
+								
 								String mountCom = "mount -t ext4 /dev/vg/" + sName
 										+ " /sdcard/ssDir/" + sName + "\n";
+								
+								Log.v("eee", mountCom );
+								
+								p.getOutputStream().write(mountCom.getBytes());
 
-								p.getOutputStream().write(mountCom.getBytes()); // 마운트 완료
-								
-								String cpCommand = "cp  /sdcard/ssDir/"+ country.getPath() +" "+finalPath+"\n"; // 현재 path 에서 최종 path로 이동
-								
-								Log.v("ddd", cpCommand ); // 실제 경로
-								
-								p.getOutputStream().write(cpCommand.getBytes()); // 복사완료
-								
-								String uMountCom = "umount /sdcard/ssDir/" + sName + "\n";
+								String com = "ls -l /sdcard/ssDir/" + country.getPath().substring(0, country.getPath().lastIndexOf("/")) + " | grep \""+country.getPath().substring(country.getPath().lastIndexOf("/")+2,country.getPath().length()-1)+"\" \n";
 
-								p.getOutputStream().write(uMountCom.getBytes());
+								Log.v("eee", com );
+								
+								//p.getOutputStream().write(com.getBytes());
+								
+								// dd 로 obs
+								
+								//Socket sc = new Socket(MainActivity.srvIp,MainActivity.srvPort);
+								String sendToSocket = "dd if=/sdcard/ssDir/"+country.getPath()+" obs=512k \n";
+								Log.v("eee", sendToSocket );
+								/*
+								ObjectOutputStream oos = new ObjectOutputStream(sc.getOutputStream());
+								
+								Payload pl = new Payload(8, MainActivity.rd.getUserCode());
+								oos.writeObject(pl); // code 8 번은 임시파일 전송
+								*/
+								
+								// 복사 명령어 실행
+								p.getOutputStream().write(sendToSocket.getBytes());
+								
+								byte buffer[] = new byte[1024*512]; // 512k
+								int size = 0;
+								long totalSize = 0;
+								
+								
+								mountCom = "umount /sdcard/ssDir/" + sName + "\n";
+
+								
+								//p.getOutputStream().write(mountCom.getBytes());
+
 								p.getOutputStream().write("exit\n".getBytes());
 								p.getOutputStream().flush();
 								
-								p.waitFor();
+								/*while( (size =  p.getInputStream().read(buffer)) > 0){
+									//Log.i("eee", Integer.toString(size));
+									totalSize += size;
+								}*/
+								
+								AsyncFileSender afs = new AsyncFileSender(p.getInputStream(),null,null);
+								afs.execute();
+								
+								/*Log.i("eee", "total : " + Long.toString(totalSize)+" stream complete");
+								FileSender fs = new FileSender();
+								fs.SendFile(totalSize);
+								*/
 								
 							} catch (IOException e) {
 								// TODO Auto-generated catch block
 								e.printStackTrace();
-							} catch (InterruptedException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-
-							
-							
-							
+							} 
 						}
 					}
-					
 					progressDialog.dismiss();
-				}
-				
+				}	
 			};
 			
 			adb.setPositiveButton("복원시작", new OnClickListener() {
-
 				@Override
 				public void onClick(DialogInterface arg0, int arg1) {
 					// TODO Auto-generated method stub
 					//mDialog.dismiss();
 					recovProcess.run();
 				}
-
 			});
 
 			adb.setNegativeButton("취소", new OnClickListener() {
-
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
 					// TODO Auto-generated method stub
 					mDialog.dismiss();// 종료
 				}
-
 			});
 
 			adb.show();
@@ -536,9 +592,10 @@ public class RecvActivity extends Activity {
 		}
 
 	}
-
+	
+	
 	class Country {
-
+		
 		String code = null;
 		String name = null;
 		String path = null;
@@ -574,7 +631,7 @@ public class RecvActivity extends Activity {
 
 		public void setSelected(boolean selected, String path , String fileName) {
 			this.selected = selected;
-			this.path  = path +"/"+ fileName;
+			this.path  = path +"/\""+ fileName+"\"";
 		}
 		
 		public String getPath(){

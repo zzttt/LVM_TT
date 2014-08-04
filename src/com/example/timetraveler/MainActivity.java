@@ -125,8 +125,8 @@ public class MainActivity extends Activity implements OnClickListener {
 	//public static String homePath = "/data/data/com.example.timetraveler/";
 	public static String homePath = "/dev/vg/";
 	public static String mapperPath = "/dev/mapper/";
+	public static RegistrationDevice rd;
 	private PagerAdapterClass pac;
-	private RegistrationDevice rd;
 
 	public static boolean setVal0 = false; // auto snapshot On // Off
 	public static int setVal1 = 0; // 백업 용량 세팅 값 1
@@ -415,7 +415,7 @@ public class MainActivity extends Activity implements OnClickListener {
 									.getTime()));
 							
 							pl = new pipeWithLVM(rh);
-							pl.ActionWritePipe("lvcreate -s -L 200M -n "+today+" /dev/vg/usersdcard");
+							pl.ActionWritePipe("lvcreate -s -L 1G -n "+today+" /dev/vg/usersdcard");
 							try {
 								Thread.sleep(300);
 							} catch (InterruptedException e) {
@@ -843,6 +843,7 @@ public class MainActivity extends Activity implements OnClickListener {
 						// TODO Auto-generated method stub
 						
 						String sName = null;
+						
 						int srvSnapshotLen = MainActivity.snapshotListInSrv.length;
 						ArrayList<FileInfo> fiList = new ArrayList<FileInfo>(); // fileInfo List
 						
@@ -867,7 +868,15 @@ public class MainActivity extends Activity implements OnClickListener {
 						
 						
 						// 스냅샷을 마운트 해서 변경리스트 로딩함 ( 스레드 처리 필요성 )
-						// 장치 내의 스냅 샷 만을 의미한다.
+						// 
+						/**
+						 * 
+						 * 
+						 * 
+						 * 장치 내의 스냅 샷 on Child Click
+						 * 
+						 * 
+						 */
 						if(groupPosition >= srvSnapshotLen){// groupPosition-srvSnapshotLen 이 devList idx
 							/*Log.d("lvm",
 									"file count : "
@@ -890,8 +899,10 @@ public class MainActivity extends Activity implements OnClickListener {
 							}
 							
 							// ------------ 읽어온 리스트를 정렬한다 --------------
-							Collections.sort(fiList, timeComparator); // 날짜별
+							Collections.sort(fiList, date); // 날짜별
 																		// 정렬
+							Collections.sort(fiList, time);
+							
 							Collections.reverse(fiList);
 
 							// log
@@ -918,7 +929,17 @@ public class MainActivity extends Activity implements OnClickListener {
 							// sdm.getAllFilesInDepth();
 
 						}else{ // groupPosition 이 곧 srv pos.
+							/**
+							 * 
+							 * 
+							 * 
+							 * 서버 스냅 샷 on Child Click
+							 * 
+							 * 
+							 */
+							
 							Toast.makeText(vv.getContext(), "Server Img", Toast.LENGTH_SHORT).show();
+
 						}
 						
 						pd.dismiss();
@@ -947,16 +968,16 @@ public class MainActivity extends Activity implements OnClickListener {
 								ArrayList<String> changedList = new ArrayList<String>();
 								StringBuffer sbMessage = new StringBuffer();
 								int vListSize = 0;
-
+								Log.e("ddd", "flistSize : "+Integer.toString(fiList.size()) );
 								for (int i = 0; i < fiList.size()
 										&& vListSize < 3; i++) {
+									Log.e("ddd", fiList.get(i).getName());
 									changedList.add(fiList.get(i).getName());
 
 									if (!fiList.get(i).getType().equals("d")) {
 										vListSize++;
-										sbMessage.append(vListSize + ") "
-												+ fiList.get(i).getName()
-												+ " ( 수정 시간 : "
+										sbMessage.append(fiList.get(i).getName()
+												+ "\n( time : "
 												+ fiList.get(i).getDate() + " "
 												+ fiList.get(i).getTime() + ")"
 												+ "\n\n");
@@ -1010,7 +1031,15 @@ public class MainActivity extends Activity implements OnClickListener {
 								mDialog.show();
 							}
 						}else{ // 서버에 있는 스냅샷의 변경 리스트를 읽는다.
-							
+							/**
+							 * 
+							 * 
+							 * 
+							 * 서버 스냅 샷 변경리스트 읽기
+							 * 
+							 * 
+							 * 
+							 */
 							// scroll View changed List
 
 							// final ScrollView linear =
@@ -1094,7 +1123,7 @@ public class MainActivity extends Activity implements OnClickListener {
 																		mName_f)
 																.putExtra(
 																		"loc",
-																		"dev");
+																		"srv");
 														context.startActivity(recvIntent);
 
 													}
@@ -1143,15 +1172,26 @@ public class MainActivity extends Activity implements OnClickListener {
 					}// child on Click end
 					
 
-					private final Comparator<FileInfo> timeComparator = new Comparator<FileInfo>() {
+					private final Comparator<FileInfo> date = new Comparator<FileInfo>() {
 					
 						private final Collator collator = Collator
 								.getInstance();
 
 						@Override
 						public int compare(FileInfo object1, FileInfo object2) {
-							return collator.compare(object1.getDate()+object1.getTime(),
-									object2.getDate()+object1.getTime()); // 내림차순 정렬
+							return collator.compare(object1.getDate(), object2.getDate()); // 내림차순 정렬
+
+						}
+					};
+					
+					private final Comparator<FileInfo> time = new Comparator<FileInfo>() {
+						
+						private final Collator collator = Collator
+								.getInstance();
+
+						@Override
+						public int compare(FileInfo object1, FileInfo object2) {
+							return collator.compare(object1.getTime(), object2.getTime()); // 내림차순 정렬
 
 						}
 					};

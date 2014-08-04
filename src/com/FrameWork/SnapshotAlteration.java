@@ -3,33 +3,38 @@ package com.FrameWork;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.text.Collator;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
+import android.util.Log;
 import android.widget.Toast;
 
 import com.FileManager.FileInfo;
 
 public class SnapshotAlteration {
-	
+
 	ArrayList<FileInfo> fiList = new ArrayList<FileInfo>(); // 파일변경정보 출력을 위한 리스트
-	
+
 	public SnapshotAlteration() {
 
 	}
-	
+
 	public String getSettingStrAlteration(String sName) {
 		fiList = getSettingAlteration(sName);
 		StringBuffer result = new StringBuffer();
 
-		for( int i = 0 ; i < 3  && i < fiList.size() ; i++) // item 은 3개만 리턴
-			result.append(fiList.get(i).getName()+"\n");
-		
+		for (int i = 0; i < 3 && i < fiList.size(); i++)
+			// item 은 3개만 리턴
+			result.append(fiList.get(i).getName() + "\n");
+
 		return result.toString();
 	}
-	
-	
+
 	/**
 	 * 사용자 데이터 변경사항을 String 을으로 반환
+	 * 
 	 * @param sName
 	 * @return
 	 */
@@ -37,39 +42,86 @@ public class SnapshotAlteration {
 		fiList = getUserDataAlteration(sName);
 		StringBuffer result = new StringBuffer();
 
-		for( int i = 0 ; i < 3  && i < fiList.size() ; i++)
-			result.append(fiList.get(i).getName()+"\n");
-		
+		// ------------ 읽어온 리스트를 정렬한다 --------------
+		Collections.sort(fiList, date); // 날짜별
+										// 정렬
+		Collections.sort(fiList, time);
+
+		Collections.reverse(fiList);
+
+		/*
+		 * for( int i = 0 ;i < fiList.size() ; i++) Log.w("ddd",
+		 * fiList.get(i).getType
+		 * ()+"//"+fiList.get(i).getName()+"//"+fiList.get(i
+		 * ).getDate()+"//"+fiList.get(i).getTime());
+		 */
+		for (int i = 0; i < 3 && i < fiList.size(); i++) {
+
+			if (!fiList.get(i).getType().equals("d")) {
+				result.append(fiList.get(i).getName() + "\n( time : "
+						+ fiList.get(i).getDate() + " "
+						+ fiList.get(i).getTime() + ")" + "\n\n");
+			}
+
+		}
+
 		return result.toString();
 	}
-	
+
 	public String getStrAppAlteration(String sName) {
 		fiList = getAppAlteration(sName);
 		StringBuffer result = new StringBuffer();
-		
-		for( int i = 0 ; i < 3 && i < fiList.size() ; i++)
-			result.append(fiList.get(i).getName()+"\n");
-		
+
+		Collections.sort(fiList, date); // 날짜별
+		// 정렬
+		Collections.sort(fiList, time);
+
+		Collections.reverse(fiList);
+
+		for (int i = 0; i < 3 && i < fiList.size(); i++) {
+
+			if (!fiList.get(i).getType().equals("d")) {
+				result.append(fiList.get(i).getName() + "\n( time : "
+						+ fiList.get(i).getDate() + " "
+						+ fiList.get(i).getTime() + ")" + "\n\n");
+			}
+
+		}
 		return result.toString();
 	}
 
 	/**
-	 * sName에 해당하는 FileInfoList를 얻는다.
-	 * Application의 변동사항을 데이터로 받음
+	 * sName에 해당하는 FileInfoList를 얻는다. Application의 변동사항을 데이터로 받음
+	 * 
 	 * @param sName
 	 *            // 변화내역을 알고자 하는 스냅샷 이름
 	 * @return
 	 */
 	public ArrayList<FileInfo> getAppAlteration(String sName) {
-		String result = null;
+		StringBuffer result = new StringBuffer();
 
+		Collections.sort(fiList, date); // 날짜별
+		// 정렬
+		Collections.sort(fiList, time);
+
+		Collections.reverse(fiList);
+
+		for (int i = 0; i < 3 && i < fiList.size(); i++) {
+
+			if (!fiList.get(i).getType().equals("d")) {
+				result.append(fiList.get(i).getName() + "\n( time : "
+						+ fiList.get(i).getDate() + " "
+						+ fiList.get(i).getTime() + ")" + "\n\n");
+			}
+
+		}
 
 		return fiList;
 	}
 
 	/**
-	 * sName에 해당하는 FileInfoList를 얻는다.
-	 * 사용자 데이터의 변동사항을 받음
+	 * sName에 해당하는 FileInfoList를 얻는다. 사용자 데이터의 변동사항을 받음
+	 * 
 	 * @param sName
 	 *            // 변화내역을 알고자 하는 스냅샷 이름
 	 * @return
@@ -90,7 +142,7 @@ public class SnapshotAlteration {
 			String com = "ls -lR /sdcard/ssDir/" + sName + "\n";
 
 			p.getOutputStream().write(com.getBytes());
-			
+
 			mountCom = "umount /sdcard/ssDir/" + sName + "\n";
 			p.getOutputStream().write(mountCom.getBytes());
 
@@ -147,8 +199,7 @@ public class SnapshotAlteration {
 											// 부터 fileName..
 											// 5 이후 문자열을 통합
 											// )
-						String fName = splitedInfo.get(5)
-								+ splitedInfo.get(6)
+						String fName = splitedInfo.get(5) + splitedInfo.get(6)
 								+ splitedInfo.get(7);
 						splitedInfo.set(5, fName);
 						splitedInfo.remove(7);
@@ -157,10 +208,8 @@ public class SnapshotAlteration {
 
 				}
 
-				if (fileType == 'd' || fileType == 'b'
-						|| fileType == 'c'
-						|| fileType == 'p'
-						|| fileType == 'l'
+				if (fileType == 'd' || fileType == 'b' || fileType == 'c'
+						|| fileType == 'p' || fileType == 'l'
 						|| fileType == 's') { // special
 												// files
 					// b(Block file(b) , Character device
@@ -168,57 +217,102 @@ public class SnapshotAlteration {
 					// pipe file(p)
 					// Symbolic link file(l), Socket file(s)
 
-					fi = new FileInfo(String
-							.valueOf(fileType), splitedInfo
-							.get(0).substring(1),
-							splitedInfo.get(3), splitedInfo
-									.get(4), splitedInfo
-									.get(5));
+					fi = new FileInfo(String.valueOf(fileType), splitedInfo
+							.get(0).substring(1), splitedInfo.get(3),
+							splitedInfo.get(4), splitedInfo.get(5));
 					fiList.add(fi); // fiList 에 등록
 				} else if (fileType == '-') { // general
 												// files
 					// general file에는 용량정보까지 포함 됨.
-					fi = new FileInfo(String
-							.valueOf(fileType), splitedInfo
-							.get(0).substring(1),
-							splitedInfo.get(3), splitedInfo
-									.get(4), splitedInfo
-									.get(5), splitedInfo
-									.get(6));
-					fiList.add(fi); // fiList 에 등록
+
+					StringBuffer fileName = new StringBuffer();
+					String strFileName;
+					int maxIdx = splitedInfo.size();
+
+					for (int i = 6; i < maxIdx; i++) {
+						fileName.append(splitedInfo.get(i));
+					}
+
+					strFileName = fileName.toString();
+					fi = new FileInfo(String.valueOf(fileType), splitedInfo
+							.get(0).substring(1), splitedInfo.get(3),
+							splitedInfo.get(4), splitedInfo.get(5), strFileName);
+					// 확장자를 이용한 체크
+					if (strFileName.contains(".txt")
+							|| strFileName.contains(".avi")
+							|| strFileName.contains(".xml")
+							|| strFileName.contains(".mp3")
+							|| strFileName.contains(".mp4")
+							|| strFileName.contains(".gif")
+							|| strFileName.contains(".jpeg")
+							|| strFileName.contains(".jpg")
+							|| strFileName.contains(".img")
+							|| strFileName.contains(".png")
+							|| strFileName.contains(".bmp")
+							|| strFileName.contains(".pdf")
+							|| strFileName.contains(".hwp")
+							|| strFileName.contains(".html")
+							|| strFileName.contains(".gul")
+							|| strFileName.contains(".php")
+							|| strFileName.contains(".html")
+							|| strFileName.contains(".tar")
+							|| strFileName.contains(".jar")
+							|| strFileName.contains(".zip")
+							|| strFileName.contains(".gz")
+							|| strFileName.contains(".xls")
+							|| strFileName.contains(".wmf")
+							|| strFileName.contains(".wma")
+							|| strFileName.contains(".xcf")
+							|| strFileName.contains(".wav")
+							|| strFileName.contains(".svg")
+							|| strFileName.contains(".rc")
+							|| strFileName.contains(".rar")
+							|| strFileName.contains(".mpeg")
+							|| strFileName.contains(".gsp")
+							|| strFileName.contains(".fon")
+							|| strFileName.contains(".exp")
+							|| strFileName.contains(".bak")
+							|| strFileName.contains(".aac")
+							|| strFileName.contains(".ac3")
+							|| strFileName.contains(".ai")
+							|| strFileName.contains(".alz")
+							|| strFileName.contains(".asp")
+							|| strFileName.contains(".jpe")
+							|| strFileName.contains(".java")
+							|| strFileName.contains(".mpg")
+							|| strFileName.contains(".swf"))
+						fiList.add(fi); // fiList 에 등록
 				} else { // directory 정보는 객체를 따로 저장하지 않음.
 							// nothing to do
 				}
 
 			}
-			
-			
-			
-			
-			
+
 			try {
 				p.waitFor();
 				if (p.exitValue() != 255) {
 					// TODO Code to run on success
-/*					Toast.makeText(vv.getContext(), "root",
-							Toast.LENGTH_SHORT).show();*/
+					/*
+					 * Toast.makeText(vv.getContext(), "root",
+					 * Toast.LENGTH_SHORT).show();
+					 */
 				} else {
 					// TODO Code to run on unsuccessful
-					/*Toast.makeText(vv.getContext(),
-							"not root", Toast.LENGTH_SHORT)
-							.show();*/
+					/*
+					 * Toast.makeText(vv.getContext(), "not root",
+					 * Toast.LENGTH_SHORT) .show();
+					 */
 				}
 
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-				/*Toast.makeText(vv.getContext(), "not root",
-						Toast.LENGTH_SHORT).show();*/
+				/*
+				 * Toast.makeText(vv.getContext(), "not root",
+				 * Toast.LENGTH_SHORT).show();
+				 */
 			}
 
-			
-			
-			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -228,8 +322,8 @@ public class SnapshotAlteration {
 	}
 
 	/**
-	 * sName에 해당하는 FileInfoList를 얻는다.
-	 * 설정값의 변화를 데이터로 받음.
+	 * sName에 해당하는 FileInfoList를 얻는다. 설정값의 변화를 데이터로 받음.
+	 * 
 	 * @param sName
 	 *            // 변화내역을 알고자 하는 스냅샷 이름
 	 * @return
@@ -270,8 +364,7 @@ public class SnapshotAlteration {
 				// sTotalList.append(line+"\n");
 				lineArr.add(line);
 			}
-			
-			
+
 			// 라인별 파싱
 			for (String s : lineArr) {
 
@@ -304,8 +397,7 @@ public class SnapshotAlteration {
 											// 부터 fileName..
 											// 5 이후 문자열을 통합
 											// )
-						String fName = splitedInfo.get(5)
-								+ splitedInfo.get(6)
+						String fName = splitedInfo.get(5) + splitedInfo.get(6)
 								+ splitedInfo.get(7);
 						splitedInfo.set(5, fName);
 						splitedInfo.remove(7);
@@ -314,10 +406,8 @@ public class SnapshotAlteration {
 
 				}
 
-				if (fileType == 'd' || fileType == 'b'
-						|| fileType == 'c'
-						|| fileType == 'p'
-						|| fileType == 'l'
+				if (fileType == 'd' || fileType == 'b' || fileType == 'c'
+						|| fileType == 'p' || fileType == 'l'
 						|| fileType == 's') { // special
 												// files
 					// b(Block file(b) , Character device
@@ -325,55 +415,48 @@ public class SnapshotAlteration {
 					// pipe file(p)
 					// Symbolic link file(l), Socket file(s)
 
-					fi = new FileInfo(String
-							.valueOf(fileType), splitedInfo
-							.get(0).substring(1),
-							splitedInfo.get(3), splitedInfo
-									.get(4), splitedInfo
-									.get(5));
+					fi = new FileInfo(String.valueOf(fileType), splitedInfo
+							.get(0).substring(1), splitedInfo.get(3),
+							splitedInfo.get(4), splitedInfo.get(5));
 					fiList.add(fi); // fiList 에 등록
 				} else if (fileType == '-') { // general
 												// files
 					// general file에는 용량정보까지 포함 됨.
-					fi = new FileInfo(String
-							.valueOf(fileType), splitedInfo
-							.get(0).substring(1),
-							splitedInfo.get(3), splitedInfo
-									.get(4), splitedInfo
-									.get(5), splitedInfo
-									.get(6));
+					fi = new FileInfo(String.valueOf(fileType), splitedInfo
+							.get(0).substring(1), splitedInfo.get(3),
+							splitedInfo.get(4), splitedInfo.get(5),
+							splitedInfo.get(6));
 					fiList.add(fi); // fiList 에 등록
 				} else { // directory 정보는 객체를 따로 저장하지 않음.
 							// nothing to do
 				}
 
 			}
-			
-			
-			
-			
-			
+
 			try {
 				p.waitFor();
 				if (p.exitValue() != 255) {
 					// TODO Code to run on success
-/*					Toast.makeText(vv.getContext(), "root",
-							Toast.LENGTH_SHORT).show();*/
+					/*
+					 * Toast.makeText(vv.getContext(), "root",
+					 * Toast.LENGTH_SHORT).show();
+					 */
 				} else {
 					// TODO Code to run on unsuccessful
-					/*Toast.makeText(vv.getContext(),
-							"not root", Toast.LENGTH_SHORT)
-							.show();*/
+					/*
+					 * Toast.makeText(vv.getContext(), "not root",
+					 * Toast.LENGTH_SHORT) .show();
+					 */
 				}
 
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-				/*Toast.makeText(vv.getContext(), "not root",
-						Toast.LENGTH_SHORT).show();*/
+				/*
+				 * Toast.makeText(vv.getContext(), "not root",
+				 * Toast.LENGTH_SHORT).show();
+				 */
 			}
-
-			
 
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -382,5 +465,29 @@ public class SnapshotAlteration {
 
 		return fiList;
 	}
+
+	private final Comparator<FileInfo> date = new Comparator<FileInfo>() {
+
+		private final Collator collator = Collator.getInstance();
+
+		@Override
+		public int compare(FileInfo object1, FileInfo object2) {
+			return collator.compare(object1.getDate(), object2.getDate()); // 내림차순
+																			// 정렬
+
+		}
+	};
+
+	private final Comparator<FileInfo> time = new Comparator<FileInfo>() {
+
+		private final Collator collator = Collator.getInstance();
+
+		@Override
+		public int compare(FileInfo object1, FileInfo object2) {
+			return collator.compare(object1.getTime(), object2.getTime()); // 내림차순
+																			// 정렬
+
+		}
+	};
 
 }

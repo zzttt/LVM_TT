@@ -6,18 +6,31 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
 
+import com.FrameWork.Payload;
+import com.example.timetraveler.MainActivity;
+
 import android.util.Log;
 
 public class FileSender {
 
-	private String path;
+	private String path = null;
 	private Socket scTarget;
 	private BufferedReader in;
 	private BufferedOutputStream out;
 
 	public FileSender(){
-		
+		try {
+			scTarget = new Socket(MainActivity.srvIp, MainActivity.srvPort);
+			
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
+			
 	
 	public FileSender(Socket scTarget) {
 		this.scTarget = scTarget;
@@ -32,6 +45,32 @@ public class FileSender {
 		this.path = path;
 		this.scTarget = scTarget;
 	}
+	
+
+	public void SendFile(long fTotalSize){
+		
+		Socket sc = scTarget;
+
+		try {
+			sc = new Socket(MainActivity.srvIp, MainActivity.srvPort);
+			ObjectOutputStream oos = new ObjectOutputStream(
+					sc.getOutputStream());
+			Payload pl = new Payload(8, MainActivity.rd.getUserCode());
+			oos.writeObject(pl);
+
+			oos.writeLong(fTotalSize);
+			Log.i("eee", "total Size : " + fTotalSize);
+
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	
 	
 	/**
 	 * 

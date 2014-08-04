@@ -30,6 +30,8 @@ import com.example.timetraveler.MainActivity;
 
 public class ConnServer extends Thread {
 
+	private String filePath = null;
+	
 	private Socket sc;
 	private String authCode;
 
@@ -67,6 +69,15 @@ public class ConnServer extends Thread {
 		this.opCode = opCode;
 		this.authCode = userCode;
 	}
+	
+	public ConnServer(String srvIp, int port, int opCode, String userCode, String filePath) {
+		this.srvIp = srvIp;
+		this.port = port;
+		this.opCode = opCode;
+		this.authCode = userCode;
+		this.filePath = filePath;
+	}
+	
 
 	public ConnServer(String srvIp, int port, int opCode, String userCode,
 			String itemName, ProgressDialog pd) {
@@ -177,48 +188,79 @@ public class ConnServer extends Thread {
 
 				break;
 			case 1: // 파일 업로드
+				if(filePath == null){
+					Log.d("eee", "filePath  null ");
+					FileSender fs = new FileSender(MainActivity.homePath,
+							this.sc);
 
-				FileSender fs = new FileSender(MainActivity.homePath, this.sc);
+					// File 전송 절차
+					/*
+					 * 1. 소켓연결 , FileSender 초기화(앞에서 미리 실행) 2. Opcode 포함한 Payload
+					 * 를 Object output Stream으로 전송 전송 3. HomeDir내의 파일 개수를 전송 4.
+					 * HomeDir내의 파일 정보들을 모두 전송 5. FileSender를 통한 파일전송
+					 */
+					// 2
+					
+					pl = new Payload(1, authCode);
+					oos.writeObject(pl);
 
-				// File 전송 절차
-				/*
-				 * 1. 소켓연결 , FileSender 초기화(앞에서 미리 실행) 2. Opcode 포함한 Payload 를
-				 * Object output Stream으로 전송 전송 3. HomeDir내의 파일 개수를 전송 4.
-				 * HomeDir내의 파일 정보들을 모두 전송 5. FileSender를 통한 파일전송
-				 */
-				// 2
-				pl = new Payload(1, authCode);
-				oos.writeObject(pl);
+					// 3. HomeDir내의 파일 개수를 전송
+					File toSendFile = new File(MainActivity.homePath);
+					File[] snapshotList = toSendFile.listFiles();
+					int FileCount = 0;
 
-				// 3. HomeDir내의 파일 개수를 전송
-				File toSendFile = new File(MainActivity.homePath);
-				File[] snapshotList = toSendFile.listFiles();
-				int FileCount = 0;
-
-				for (int i = 0; i < snapshotList.length; i++) {
-					if (snapshotList[i].isFile()) {
-						FileCount++;
+					for (int i = 0; i < snapshotList.length; i++) {
+						if (snapshotList[i].isFile()) {
+							FileCount++;
+						}
 					}
-				}
-				// Log.i("eee", Integer.toString(FileCount));
-				oos.writeObject(FileCount); // 파일 갯수
+					// Log.i("eee", Integer.toString(FileCount));
+					oos.writeObject(FileCount); // 파일 갯수
 
-				// 4. HomeDir내의 파일 정보들을 모두 전송
-				for (int i = 0; i < snapshotList.length; i++) {
-					if (snapshotList[i].isFile()) {
-						oos.writeLong(snapshotList[i].length()); // file Size
-						oos.writeObject(snapshotList[i]);
-						oos.writeObject(snapshotList[i].getName());
+					// 4. HomeDir내의 파일 정보들을 모두 전송
+					for (int i = 0; i < snapshotList.length; i++) {
+						if (snapshotList[i].isFile()) {
+							oos.writeLong(snapshotList[i].length()); // file
+																		// Size
+							oos.writeObject(snapshotList[i]);
+							oos.writeObject(snapshotList[i].getName());
+						}
 					}
-				}
 
-				// 5. FileSender를 통한 파일전송
-				for (int i = 0; i < snapshotList.length; i++) {
-					if (snapshotList[i].isFile()) {
-						System.out.println("전송할 파일명 : " + snapshotList[i]);
-						fs.sendFile(snapshotList[i].getName()); // 파일 전송
+					// 5. FileSender를 통한 파일전송
+					for (int i = 0; i < snapshotList.length; i++) {
+						if (snapshotList[i].isFile()) {
+							System.out.println("전송할 파일명 : " + snapshotList[i]);
+							fs.sendFile(snapshotList[i].getName()); // 파일 전송
+						}
 					}
+				}else{
+					Log.d("eee", "filePath isn't null ");
+					FileSender fs = new FileSender(this.sc);
+					
+					Log.d("eee", "filePath // "  + this.filePath);
+					
+					File f = new File(this.filePath);
+					
+					pl = new Payload(1, authCode);
+					oos.writeObject(pl);
+					
+					
+					if(f.exists()){
+						Log.d("eee", "파일 존재");
+					}else{
+						Log.d("eee", "파일 없음");
+					}
+					oos.writeObject(1); // 단일 파일 전송
+
+					oos.writeLong(f.length()); // file Size
+					oos.writeObject(f);
+					oos.writeObject(f.getName());
+					
+					fs.sendFile(f.getName()); // 파일 전송
+					
 				}
+				
 
 				break;
 			case 2: // file download
@@ -286,6 +328,7 @@ public class ConnServer extends Thread {
 				changedItem2 = sa.getUserDataStrAlteration(this.itemName); // 사용자데이터의
 																			// 변경사항을
 																			// 읽음.
+				
 				ssData.setUserDataChanged(changedItem2);
 
 				// 3. Contacts, Setting 변경정보
@@ -354,6 +397,10 @@ public class ConnServer extends Thread {
 
 				andHandler.sendMessage(msg); // 조회한 snapshot 정보를 핸들러로 전달
 
+				break;
+				
+			case 8: //파일 업로드
+				
 				break;
 			}
 
