@@ -12,7 +12,10 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.io.StreamCorruptedException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -24,6 +27,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
 
@@ -36,6 +40,8 @@ public class InstalledAppInfo implements Serializable {
     private String pname = "";
     private String versionName = "";
     private int versionCode = 0;
+    private long installDate = 0;
+    private String installDateStr = "";
     //private Drawable icon;
     
     public InstalledAppInfo() {
@@ -128,8 +134,8 @@ public class InstalledAppInfo implements Serializable {
     	 
      }
      
-     private void resultPrint() {
-    	 Log.v(LOGTAG, "App :: "+appname + "   " + pname + "   " + versionName + "   " + versionCode);
+     public void resultPrint() {
+    	 Log.v(LOGTAG, "App :: "+appname + "   " + pname + "   " + versionName + "   " + versionCode+"   "+installDate+"STR:"+installDateStr);
      }
      
      public String resultOfAppNamePrint() {
@@ -138,6 +144,10 @@ public class InstalledAppInfo implements Serializable {
      
      public String resultOfPackagesNamePrint() {
     	 return pname;
+     }
+     
+     public String getInstallTimePrint() {
+    	 return installDateStr;
      }
      
      public String getAppNameFromPName(String pname) {
@@ -163,7 +173,6 @@ public class InstalledAppInfo implements Serializable {
          
          /* 여기 ArrayList에 Packagename, appname 등의 데이터를 담는다.*/
          List<PackageInfo> packs = context.getPackageManager().getInstalledPackages(0);
-
          for(int i=0;i<packs.size();i++) {
              PackageInfo p = packs.get(i);
              /*if ((!getSysPackages) && (p.versionName == null)) {
@@ -177,9 +186,33 @@ public class InstalledAppInfo implements Serializable {
              newInfo.pname = p.packageName;
              newInfo.versionName = p.versionName;
              newInfo.versionCode = p.versionCode;
+      
+             try {
+				newInfo.installDate = context.getPackageManager().getPackageInfo(newInfo.pname, 0).firstInstallTime;
+				Log.d("TTT", String.valueOf(newInfo.installDate));
+			} catch (NameNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+             
+             newInfo.installDateStr = getDate(newInfo.installDate);
+         
+   
              //newInfo.icon = p.applicationInfo.loadIcon(context.getPackageManager());
              res.add(newInfo);
          }
          return res; 
      }
+     
+     private static String getDate(long datetime) {
+    	    DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm"); 
+    	 	//DateFormat formatter = new SimpleDateFormat("yyyyMMddHHmm");
+    	    Calendar calendar = Calendar.getInstance();    
+    	    calendar.setTimeInMillis(datetime); 
+    	    String strDate = formatter.format(calendar.getTime());
+    	 
+    	    Log.d("ASD", strDate+"TIME:"+datetime);
+    	    
+    	    return strDate;
+    	 }
 }

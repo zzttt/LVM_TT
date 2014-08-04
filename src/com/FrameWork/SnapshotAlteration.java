@@ -123,9 +123,12 @@ public class SnapshotAlteration {
            sbMessage.append(vListSize+") "+InSsApp.get(i).resultOfAppNamePrint()+"\n");
            
            Log.d("AppName", "aa"+InSsApp.get(i).resultOfAppNamePrint());
-           FileInfo fi = new FileInfo("-","rwxrwxrwx" , "",Integer.toString(vListSize) ,"0312",InSsApp.get(i).resultOfAppNamePrint() );
+         //FileInfo fi = new FileInfo("-","rwxrwxrwx" , "",InSsApp.get(i).getInstallTimePrint().substring(0,8) ,InSsApp.get(i).getInstallTimePrint().substring(8,12),
+           FileInfo fi = new FileInfo("-","rwxrwxrwx" , "",InSsApp.get(i).getInstallTimePrint().substring(0,10) ,InSsApp.get(i).getInstallTimePrint().substring(11,16),
+           InSsApp.get(i).resultOfAppNamePrint() );
            
-           
+           //FileInfo(String fType, String permission, String fSize,
+			//String mDate, String mTime, String fName) {
            appFiList.add(fi);
         }
 

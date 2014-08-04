@@ -435,6 +435,9 @@ public class MainActivity extends Activity implements OnClickListener {
 							 * today를 key로 저장 */
 							
 							mInsAppInfo.resultToSaveFile("ABC");
+
+							mInsAppInfo.ReadAppInfo("ABC");
+							mInsAppInfo.resultPrint();
 							
 							//mInsAppInfo.ReadAppInfo(today);
 							
@@ -901,10 +904,8 @@ public class MainActivity extends Activity implements OnClickListener {
 							}
 							
 							// ------------ 읽어온 리스트를 정렬한다 --------------
-							Collections.sort(fiList, date); // 날짜별
-																		// 정렬
-							Collections.sort(fiList, time);
-							
+							Collections.sort(fiList, date); // 날짜별 정렬
+						
 							Collections.reverse(fiList);
 
 							// log
@@ -1181,23 +1182,12 @@ public class MainActivity extends Activity implements OnClickListener {
 
 						@Override
 						public int compare(FileInfo object1, FileInfo object2) {
-							return collator.compare(object1.getDate(), object2.getDate()); // 내림차순 정렬
+							return collator.compare(object1.getDate()+object1.getTime(), object2.getDate()+object2.getTime()); // 내림차순 정렬
 
 						}
 					};
 					
-					private final Comparator<FileInfo> time = new Comparator<FileInfo>() {
-						
-						private final Collator collator = Collator
-								.getInstance();
-
-						@Override
-						public int compare(FileInfo object1, FileInfo object2) {
-							return collator.compare(object1.getTime(), object2.getTime()); // 내림차순 정렬
-
-						}
-					};
-					
+								
 					
 				});
 				

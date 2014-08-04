@@ -1,6 +1,8 @@
 package com.FileManager;
 
-public class FileInfo {
+import java.io.Serializable;
+
+public class FileInfo implements Serializable{
 
 	private String fType, permission, fSize, mDate, mTime, fName;
 	
