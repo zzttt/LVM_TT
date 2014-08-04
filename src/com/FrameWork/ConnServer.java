@@ -319,7 +319,7 @@ public class ConnServer extends Thread {
 																	// Alteration
 																	// °´Ã¼
 
-				changedItem1 = sa.getStrAppAlteration(this.itemName); // itemName
+				changedItem1 = sa.getStrAppAlteration(this.itemName , null ); // itemName
 																		// ==
 																		// sName;
 				ssData.setAppChanged(changedItem1);

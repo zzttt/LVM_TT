@@ -146,6 +146,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		WifiManager mng = (WifiManager) getSystemService(WIFI_SERVICE);
+
 		
 		manager = (ConnectivityManager) getApplicationContext()
 				.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -415,7 +416,8 @@ public class MainActivity extends Activity implements OnClickListener {
 									.getTime()));
 							
 							pl = new pipeWithLVM(rh);
-							pl.ActionWritePipe("lvcreate -s -L 1G -n "+today+" /dev/vg/usersdcard");
+							//pl.ActionWritePipe("lvcreate -s -L 1G -n "+today+" /dev/vg/usersdcard");
+							
 							try {
 								Thread.sleep(300);
 							} catch (InterruptedException e) {
@@ -432,7 +434,7 @@ public class MainActivity extends Activity implements OnClickListener {
 							 * HashMap형태로 저장한다. 
 							 * today를 key로 저장 */
 							
-							//mInsAppInfo.resultToSaveFile("ABC");
+							mInsAppInfo.resultToSaveFile("ABC");
 							
 							//mInsAppInfo.ReadAppInfo(today);
 							
@@ -833,7 +835,6 @@ public class MainActivity extends Activity implements OnClickListener {
 						
 						return false;
 					}
-					
 				});
 				
 				mListView.setOnChildClickListener(new OnChildClickListener(){
@@ -843,6 +844,7 @@ public class MainActivity extends Activity implements OnClickListener {
 						// TODO Auto-generated method stub
 						
 						String sName = null;
+						
 						
 						int srvSnapshotLen = MainActivity.snapshotListInSrv.length;
 						ArrayList<FileInfo> fiList = new ArrayList<FileInfo>(); // fileInfo List
@@ -889,7 +891,7 @@ public class MainActivity extends Activity implements OnClickListener {
 							
 							Log.e("eee", sName);
 							if(mName.equals("어플리케이션")){
-								fiList.addAll(sa.getAppAlteration(sName));
+								fiList.addAll(sa.getAppAlteration(sName, context));
 							}else if(mName.equals("사용자 데이터")){
 								fiList.addAll(sa.getUserDataAlteration(sName)); // sName에 해당하는 FileInfoList를 얻는다.	
 							}else if(mName.equals("Contacts, Settings")){
@@ -963,7 +965,7 @@ public class MainActivity extends Activity implements OnClickListener {
 										+ "]");
 
 								// 최근 변경사항을 Message에 띄움.
-
+								
 								// 변경사항 Read
 								ArrayList<String> changedList = new ArrayList<String>();
 								StringBuffer sbMessage = new StringBuffer();

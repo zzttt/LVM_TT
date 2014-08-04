@@ -14,11 +14,17 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import com.FileManager.AsyncFileSender;
+//import com.FileManager.AsyncFileSender;
 import com.FileManager.FileInfo;
 import com.FileManager.FileSender;
 import com.FrameWork.ConnServer;
+import com.FrameWork.Payload;
+import com.FileManager.FileSender;
+import com.FrameWork.ConnServer;
+import com.FrameWork.InstalledAppInfo;
 import com.FrameWork.Payload;
 
 import android.app.Activity;
@@ -30,7 +36,11 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.opengl.Visibility;
+import android.net.Uri;
+import android.opengl.Visibility;
 import android.os.Bundle;
+import android.os.AsyncTask.Status;
+import android.os.Environment;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -57,7 +67,7 @@ public class RecvActivity extends Activity {
 	final static int RECV_USER_DATA = 2;
 	final static int RECV_SETTINGS = 3;
 	final static int RECV_ALL = 4;
-	
+
 	static String cur_Loc = null; // 현재 디렉토리
 
 	private int func_code = 0;
@@ -65,20 +75,26 @@ public class RecvActivity extends Activity {
 	private String sName = null;
 	private String mName = null;
 	private String loc = null;
-	
+	private Thread recovProcess = null;
+
+	private InstalledAppInfo mInsAppInfo = new InstalledAppInfo(this);
+
+	private ArrayList<String> resultAppListByAppName;
+	private ArrayList<String> resultAppListByPName;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_recv);
-		
+
 		sName = getIntent().getStringExtra("sName").replace("/dev", "")
 				.replace("-cow", "");
 
 		loc = getIntent().getStringExtra("loc"); // 데이터 위치 ( dev : 장치 내 ,
-														// srv : 서버 )
-		
+													// srv : 서버 )
+
 		mName = getIntent().getStringExtra("mName");
-		
+
 		if (mName.equals("어플리케이션")) { // 어플리케이션 복원
 			func_code = RECV_APP;
 		} else if (mName.equals("사용자 데이터")) { // 사용자 데이터 복원
@@ -88,38 +104,32 @@ public class RecvActivity extends Activity {
 		} else { // 전체 복원
 			func_code = RECV_ALL;
 		}
-		
-		if(loc.equals("dev") && func_code == RECV_APP)
-			displayListView(sName, sName); //스냅샷 위치가 device 일 경우
-		else if(loc.equals("dev") && func_code == RECV_USER_DATA){
-			displayListView(sName, sName+"/0/"); //스냅샷 위치가 device 일 경우
-		}else{
-			
-		}
-		
-		
-		
-		
-	}
-	
 
+		if (loc.equals("dev") && func_code == RECV_APP)
+			displayListView(sName, sName); // 스냅샷 위치가 device 일 경우
+		else if (loc.equals("dev") && func_code == RECV_USER_DATA) {
+			displayListView(sName, sName + "/0/"); // 스냅샷 위치가 device 일 경우
+		} else {
+
+		}
+
+	}
 
 	public void displayListView(String sName, String subDir) {
 		// TODO Auto-generated method stub
 		// Array list of countries
 		ArrayList<Item> ItemList = new ArrayList<Item>();
-	/*	Item Item = new Item("AFG", "Afghanistan", false);
-		ItemList.add(Item);
-	*/
+		/*
+		 * Item Item = new Item("AFG", "Afghanistan", false);
+		 * ItemList.add(Item);
+		 */
 		cur_Loc = subDir; // current Location
-		//Log.i("ddd", subDir);
-		
+		// Log.i("ddd", subDir);
+
 		/*
 		 * sName ( snapshot name ) mName ( selected menu name ) sName 데이터에서
-		 * mName 에 해당하는 데이터를 읽어온다.*/
-		 
-
-
+		 * mName 에 해당하는 데이터를 읽어온다.
+		 */
 		switch (func_code) {
 		case RECV_ALL:
 			// 전체 복원 , 바로 lvconvert 수행
@@ -141,37 +151,36 @@ public class RecvActivity extends Activity {
 
 				p.getOutputStream().write(mountCom.getBytes());
 
+				// /data/data영역
 				String com = "ls -l /sdcard/ssDir/" + subDir + "/data/\n";
 
 				Log.e("ccc", com);
-				
+
 				p.getOutputStream().write(com.getBytes());
-				
+
 				mountCom = "umount /sdcard/ssDir/" + sName + "\n";
-				
+
 				Log.e("ccc", mountCom);
-				
+
 				p.getOutputStream().write(mountCom.getBytes());
 
 				p.getOutputStream().write("exit\n".getBytes());
 				p.getOutputStream().flush();
-				
+
 				try {
 					p.waitFor();
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				
-				
+
 				BufferedReader br = new BufferedReader(new InputStreamReader(
 						p.getInputStream()));
 
 				String line = null;
 
-				
-				
-				// List View , adapter ----------------------------------------------- 리스트 추가부분
+				// List View , adapter
+				// ----------------------------------------------- 리스트 추가부분
 				ListView lv = (ListView) findViewById(R.id.lv_recvList);
 				ArrayList<String> fList = new ArrayList<String>();
 				ArrayList<FileInfo> fiList = new ArrayList<FileInfo>();
@@ -185,7 +194,7 @@ public class RecvActivity extends Activity {
 					if (s.length() != 0) {
 
 						String[] info = s.split(" ");
-						//Log.d("ddd", Integer.toString(info.length) );
+						// Log.d("ddd", Integer.toString(info.length) );
 						ArrayList<String> splitedInfo = new ArrayList<String>();
 
 						for (String ss : info) {
@@ -235,25 +244,24 @@ public class RecvActivity extends Activity {
 							fiList.add(fi); // fiList 에 등록
 						} else if (fileType == '-') { // general files
 							// general file에는 용량정보까지 포함 됨.
-							
+
 							StringBuffer fileName = new StringBuffer();
 							int maxIdx = splitedInfo.size();
-							
-							for(int i = 6 ; i < maxIdx ; i++){
-								if( i == 6)
+
+							for (int i = 6; i < maxIdx; i++) {
+								if (i == 6)
 									fileName.append(splitedInfo.get(i));
 								else
-									fileName.append(" "+splitedInfo.get(i));
+									fileName.append(" " + splitedInfo.get(i));
 							}
-							
-							
+
 							fi = new FileInfo(String.valueOf(fileType),
 									splitedInfo.get(0).substring(1),
 									splitedInfo.get(3), splitedInfo.get(4),
 									splitedInfo.get(5), fileName.toString());
-							
-							//Log.v("ddd", splitedInfo.get(6));
-							
+
+							// Log.v("ddd", splitedInfo.get(6));
+
 							fiList.add(fi); // fiList 에 등록
 						} else { // directory 정보는 객체를 따로 저장하지 않음.
 							fi = new FileInfo(String.valueOf(fileType),
@@ -267,35 +275,56 @@ public class RecvActivity extends Activity {
 
 				fList.clear();
 
-						
-				for (int i = 0; i < fiList.size(); i++) {
-					if (fiList.get(i).getName().contains(":") && i != 0) { // 하위
-																			// 디렉터리
-						//fList.add(" ");
-						//fList.add("[Dir]  " + fiList.get(i).getName());
-						Item Item = new Item("row", ">  " + fiList.get(i).getName(), false);
-						ItemList.add(Item);
-					} else if (fiList.get(i).getType().equals("d") ) { // 해당
-																		// 디렉토리
-																		// 내의 파일
-						//fList.add(fiList.get(i).getName());
-						Item Item = new Item("row", fiList.get(i).getName(), false);
-						ItemList.add(Item);
-					}else{
-						Item Item = new Item("row", ">  " + fiList.get(i).getName(), false);
-						ItemList.add(Item);
-					}
+				/* AppList 추출 */
+				ArrayList<InstalledAppInfo> appList = new ArrayList<InstalledAppInfo>();
+				appList = mInsAppInfo.ReadAppInfo("ABC");
 
+				HashMap<String, String> appmap = new HashMap<String, String>();
+				HashMap<String, String> appmapByPack = new HashMap<String, String>();
+				resultAppListByAppName = new ArrayList<String>();
+				resultAppListByPName = new ArrayList<String>();
+
+				// 어플리스트를 Hashmap화 -- Key를 packages이름으로해서 appname을 value로 한다.
+				for (int i = 0; i < appList.size(); i++) {
+					appmap.put(appList.get(i).resultOfPackagesNamePrint(),
+							appList.get(i).resultOfAppNamePrint());
+					appmapByPack.put(appList.get(i).resultOfAppNamePrint(),
+							appList.get(i).resultOfPackagesNamePrint());
+					// resultAppListByPName.add(appList.get(i).resultOfPackagesNamePrint());
+					// //패키지 이름도 리스트화
+					// Log.d("APP", appList.get(i).resultOfAppNamePrint());
 				}
 
-				
+				// 어플리스트를 생성
+				for (int i = 0; i < fiList.size(); i++) {
+					// fiList이름으로 appmap을 key로해서 resultAppList로 추가한다. 이걸 List로
+					// 뿌린다.
+					if (appmap.get(fiList.get(i).getName()) != null) {
+						resultAppListByAppName.add(appmap.get(fiList.get(i)
+								.getName()));
+						//
+						// Log.d("APP", resultAppList.get(i));
+					}
+				}
+
+				for (int i = 0; i < resultAppListByAppName.size(); i++) {
+					/*
+					 * HashMap에서 Key로 AppName으로부터 다시 Package이름을 구해서
+					 * resultAppListByPName에 넣는다.
+					 */
+					resultAppListByPName.add(appmapByPack
+							.get(resultAppListByAppName.get(i)));
+					Item Item = new Item("row", resultAppListByAppName.get(i),
+							appmapByPack.get(resultAppListByAppName.get(i)),
+							false);
+					ItemList.add(Item);
+				}
+
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
-			
-			
+
 			break;
 		case RECV_USER_DATA:
 			// 사용자 데이터 백업
@@ -321,21 +350,20 @@ public class RecvActivity extends Activity {
 				p.getOutputStream().write("exit\n".getBytes());
 				p.getOutputStream().flush();
 
-				
 				try {
 					p.waitFor();
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				
-				
+
 				BufferedReader br = new BufferedReader(new InputStreamReader(
 						p.getInputStream()));
 
 				String line = null;
 
-				// List View , adapter ----------------------------------------------- 리스트 추가부분
+				// List View , adapter
+				// ----------------------------------------------- 리스트 추가부분
 				ListView lv = (ListView) findViewById(R.id.lv_recvList);
 				ArrayList<String> fList = new ArrayList<String>();
 				ArrayList<FileInfo> fiList = new ArrayList<FileInfo>();
@@ -349,7 +377,7 @@ public class RecvActivity extends Activity {
 					if (s.length() != 0) {
 
 						String[] info = s.split(" ");
-						//Log.d("ddd", Integer.toString(info.length) );
+						// Log.d("ddd", Integer.toString(info.length) );
 						ArrayList<String> splitedInfo = new ArrayList<String>();
 
 						for (String ss : info) {
@@ -399,25 +427,24 @@ public class RecvActivity extends Activity {
 							fiList.add(fi); // fiList 에 등록
 						} else if (fileType == '-') { // general files
 							// general file에는 용량정보까지 포함 됨.
-							
+
 							StringBuffer fileName = new StringBuffer();
 							int maxIdx = splitedInfo.size();
-							
-							for(int i = 6 ; i < maxIdx ; i++){
-								if( i == 6)
+
+							for (int i = 6; i < maxIdx; i++) {
+								if (i == 6)
 									fileName.append(splitedInfo.get(i));
 								else
-									fileName.append(" "+splitedInfo.get(i));
+									fileName.append(" " + splitedInfo.get(i));
 							}
-							
-							
+
 							fi = new FileInfo(String.valueOf(fileType),
 									splitedInfo.get(0).substring(1),
 									splitedInfo.get(3), splitedInfo.get(4),
 									splitedInfo.get(5), fileName.toString());
-							
-							//Log.v("ddd", splitedInfo.get(6));
-							
+
+							// Log.v("ddd", splitedInfo.get(6));
+
 							fiList.add(fi); // fiList 에 등록
 						} else { // directory 정보는 객체를 따로 저장하지 않음.
 							fi = new FileInfo(String.valueOf(fileType),
@@ -431,36 +458,42 @@ public class RecvActivity extends Activity {
 
 				fList.clear();
 
-				if(!subDir.equals(sName+"/0/")){ // 최 상단 디렉토리가 아닌경우
+				if (!subDir.equals(sName + "/0/")) { // 최 상단 디렉토리가 아닌경우
 					// 상위메뉴를 만들어 줌
 					Item Item = new Item("row", "..", false);
 					ItemList.add(Item);
 				}
-				
+
 				for (int i = 0; i < fiList.size(); i++) {
 					if (fiList.get(i).getName().contains(":") && i != 0) { // 하위
 																			// 디렉터리
-						//fList.add(" ");
-						//fList.add("[Dir]  " + fiList.get(i).getName());
-						Item Item = new Item("row", ">  " + fiList.get(i).getName(), false);
+						// fList.add(" ");
+						// fList.add("[Dir]  " + fiList.get(i).getName());
+						Item Item = new Item("row", ">  "
+								+ fiList.get(i).getName(), false);
 						ItemList.add(Item);
-					} else if (!fiList.get(i).getType().equals("d") ) { // 해당
+					} else if (!fiList.get(i).getType().equals("d")) { // 해당
 																		// 디렉토리
 																		// 내의 파일
-						//fList.add(fiList.get(i).getName());
-						Item Item = new Item("row", fiList.get(i).getName(), false);
+						// fList.add(fiList.get(i).getName());
+						Item Item = new Item("row", fiList.get(i).getName(),
+								false);
 						ItemList.add(Item);
-					}else if ( fiList.get(i).getType().equals("d") && !fiList.get(i).getName().contains("ssDir") && !fiList.get(i).getName().contains("Android")  ){
-						Item Item = new Item("row", ">  " + fiList.get(i).getName(), false);
+					} else if (fiList.get(i).getType().equals("d")
+							&& !fiList.get(i).getName().contains("ssDir")
+							&& !fiList.get(i).getName().contains("Android")) {
+						Item Item = new Item("row", ">  "
+								+ fiList.get(i).getName(), false);
 						ItemList.add(Item);
 					}
 
 				}
 
-/*				ItemListArrayAdapter adapter = new ItemListArrayAdapter(this,
-						android.R.layout.simple_list_item_1, fList);
-				lv.setAdapter(adapter);
-*/
+				/*
+				 * ItemListArrayAdapter adapter = new ItemListArrayAdapter(this,
+				 * android.R.layout.simple_list_item_1, fList);
+				 * lv.setAdapter(adapter);
+				 */
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -477,18 +510,15 @@ public class RecvActivity extends Activity {
 		// Assign adapter to ListView
 		listView.setAdapter(dataAdapter);
 
-		/*listView.setOnItemClickListener(new OnItemClickListener() {
-			public void onItemClick(AdapterView parent, View view,
-					int position, long id) {
-				// When clicked, show a toast with the TextView text
-				Item Item = (Item) parent.getItemAtPosition(position);
-				Toast.makeText(getApplicationContext(),
-						"Clicked on Row: " + Item.getName(),
-						Toast.LENGTH_LONG).show();
-			}
-		});*/
-		
-		
+		/*
+		 * listView.setOnItemClickListener(new OnItemClickListener() { public
+		 * void onItemClick(AdapterView parent, View view, int position, long
+		 * id) { // When clicked, show a toast with the TextView text Item Item
+		 * = (Item) parent.getItemAtPosition(position);
+		 * Toast.makeText(getApplicationContext(), "Clicked on Row: " +
+		 * Item.getName(), Toast.LENGTH_LONG).show(); } });
+		 */
+
 	}
 
 	@Override
@@ -556,7 +586,7 @@ public class RecvActivity extends Activity {
 		public View getView(int position, View convertView, ViewGroup parent) {
 
 			ViewHolder holder = null;
-			//Log.v("ConvertView", String.valueOf(position));
+			// Log.v("ConvertView", String.valueOf(position));
 
 			if (convertView == null) {
 				LayoutInflater vi = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -565,47 +595,69 @@ public class RecvActivity extends Activity {
 				holder = new ViewHolder();
 				holder.code = (TextView) convertView.findViewById(R.id.code);
 
-				holder.name = (CheckBox) convertView // name view 는 code 를 match_parent 로 바꿔서 안보인다.
+				holder.name = (CheckBox) convertView // name view 는 code 를
+														// match_parent 로 바꿔서
+														// 안보인다.
 						.findViewById(R.id.checkBox1);
-				//holder.row = (RelativeLayout) convertView.findViewById(R.id.file_row);
-				
+				// holder.row = (RelativeLayout)
+				// convertView.findViewById(R.id.file_row);
+
 				convertView.setTag(holder);
-				
+
 				holder.code.setOnClickListener(new View.OnClickListener() {
-					
+
 					@Override
 					public void onClick(View v) {
 						// TODO Auto-generated method stub
-						TextView tv = (TextView)v;
-						if(tv.getText().toString().contains(">")){
-							/*Toast.makeText(
-									getApplicationContext(),
-									"새로운 메뉴 로드", Toast.LENGTH_LONG)
-									.show();*/
-							
-							String dir = cur_Loc+"/"+tv.getText().toString().substring(3, tv.getText().length());
-							displayListView(sName, dir); 
-							
-						}else if(tv.getText().toString().equals("..")){
+						TextView tv = (TextView) v;
+						if (tv.getText().toString().contains(">")) {
+							/*
+							 * Toast.makeText( getApplicationContext(),
+							 * "새로운 메뉴 로드", Toast.LENGTH_LONG) .show();
+							 */
+
+							String dir = cur_Loc
+									+ "/"
+									+ tv.getText()
+											.toString()
+											.substring(3, tv.getText().length());
+							displayListView(sName, dir);
+
+						} else if (tv.getText().toString().equals("..")) {
 							// 상위 메뉴로 이동
-							String dir = cur_Loc.substring(0, cur_Loc.lastIndexOf("/") );
-							displayListView(sName, dir); 
+							String dir = cur_Loc.substring(0,
+									cur_Loc.lastIndexOf("/"));
+							displayListView(sName, dir);
 						}
 					}
 				});
 
-				
 				holder.name.setOnClickListener(new View.OnClickListener() {
 					public void onClick(View v) {
+
 						CheckBox cb = (CheckBox) v;
 						Item Item = (Item) cb.getTag();
+						String targetText = null;
+						switch (func_code) {
+						case RECV_APP:
+							targetText = Item.getPackName();
+							break;
+						case RECV_USER_DATA:
+							targetText = (String) cb.getText();
+							break;
+						}
+
 						Toast.makeText(
 								getApplicationContext(),
-								"Clicked on Checkbox: " + cur_Loc+"/"+cb.getText() + " is "
-										+ cb.isChecked(), Toast.LENGTH_LONG)
-								.show();
-						Item.setSelected(cb.isChecked(),cur_Loc,cb.getText().toString()); // 선택됨을 체크  (선택 시 해당 경로와 이름을 저장 )
-						
+								"Clicked on Checkbox: " + cur_Loc + "/"
+										+ targetText + " is " + cb.isChecked(),
+								Toast.LENGTH_LONG).show();
+						Item.setSelected(cb.isChecked(), cur_Loc,
+								targetText.toString(), func_code); // 선택됨을 체크
+																	// (선택 시 해당
+																	// 경로와 이름을
+																	// 저장 )
+
 					}
 				});
 			} else {
@@ -613,14 +665,13 @@ public class RecvActivity extends Activity {
 			}
 
 			Item Item = ItemList.get(position);
-		
-			
-			if(Item.getName().contains(">") || Item.getName().equals("..")){
+
+			if (Item.getName().contains(">") || Item.getName().equals("..")) {
 				holder.code.setText(Item.getName());
 				holder.code.setGravity(Gravity.CENTER_VERTICAL);
 				holder.name.setVisibility(View.GONE);
 				holder.name.setTag(Item);
-			}else{
+			} else {
 				holder.name.setVisibility(View.VISIBLE);
 				holder.name.setText(Item.getName());
 				holder.name.setChecked(Item.isSelected());
@@ -632,114 +683,441 @@ public class RecvActivity extends Activity {
 		}
 	}
 
+	private void StartInstall(String packageName, String pwdPath) {
+
+		/* -2 -1인지 파싱하기 */
+		String apkName = ExtractAPKName(packageName, pwdPath);
+		apkName = "file://" + pwdPath + apkName;
+		Log.d("eee", apkName);
+		// Log.d("eee", "합:"+pwdPath+apkName);
+
+		/* APK 실행 */
+		Intent cmdToInstall = new Intent(Intent.ACTION_VIEW).setDataAndType(
+				Uri.parse(apkName), "application/vnd.android.package-archive");
+		startActivity(cmdToInstall);
+		// startActivityForResult(cmdToInstall, 1);
+
+		/* Tar로 묶기 */
+		TarTieDir(packageName, apkName);
+	}
+
+	private void StartInstall2(String packageName, String pwdPath) {
+
+		/* -2 -1인지 파싱하기 */
+		String apkName = packageName;
+		// apkName = "file://"+pwdPath+apkName;
+		Log.d("eee", apkName);
+		// Log.d("eee", "합:"+pwdPath+apkName);
+
+		/* APK 실행 */
+		Intent cmdToInstall = new Intent(Intent.ACTION_VIEW).setDataAndType(
+				Uri.parse("file:///sdcard/" + apkName),
+				"application/vnd.android.package-archive");
+		startActivity(cmdToInstall);
+		// startActivityForResult(cmdToInstall, 1);
+
+		/* Tar로 묶기 */
+		// TarTieDir("com.example.applist", apkName);
+	}
+
+	private void CopyToAppData(String packageName) {
+
+	}
+
+	private String ExtractAPKName(String packageName, String pwdPath) {
+		ArrayList<String> fList = new ArrayList<String>();
+		Process p;
+		String resultAppName = null;
+
+		try {
+			p = new ProcessBuilder("su").start();
+
+			String com2 = "ls -l " + pwdPath + "\n";
+			Log.e("ccc", com2);
+
+			p.getOutputStream().write(com2.getBytes());
+
+			p.getOutputStream().write("exit\n".getBytes());
+			p.getOutputStream().flush();
+
+			BufferedReader br = new BufferedReader(new InputStreamReader(
+					p.getInputStream()));
+
+			String line = null;
+			while (true) {
+				line = br.readLine();
+				if (line == null) {
+					break;
+				}
+				if (line.substring(0, 1).equals("-"))
+					fList.add(line);
+
+				System.out.println(line);
+
+			}
+			p.waitFor();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		for (String s : fList) {
+
+			// Log.d("APP", s);
+			if (s.length() != 0) {
+
+				String[] info = s.split(" ");
+				// Log.d("ddd", Integer.toString(info.length) );
+				ArrayList<String> splitedInfo = new ArrayList<String>();
+
+				for (String ss : info) {
+					ss = ss.trim(); // 공백제거
+					if (ss.length() != 0)
+						splitedInfo.add(ss);
+				}
+
+				FileInfo fi;
+				// split 결과는 실제 파일의 정보 , 하위 디렉토리 이름 으로 나누어짐.
+				// 하위디렉토리 이름은 무시한다
+				int idx = 0;
+
+				char fileType = ' ';
+
+				if (splitedInfo.size() != 0) { // 한 라인의 가장 첫번째 문자는 파일
+												// 형식을
+												// 나타냄..
+					fileType = splitedInfo.get(0).charAt(0);
+					// Log.d("lvm", "("+String.valueOf(fileType)+")");
+
+					if (fileType == '-') { // general files
+						// general file에는 용량정보까지 포함 됨.
+
+						StringBuffer fileName = new StringBuffer();
+						int maxIdx = splitedInfo.size();
+
+						for (int i = 6; i < maxIdx; i++) {
+							if (i == 6)
+								fileName.append(splitedInfo.get(i));
+							else
+								fileName.append(" " + splitedInfo.get(i));
+						}
+
+						if (fileName.toString().contains(packageName)) {
+							resultAppName = fileName.toString();
+						}
+
+						fi = new FileInfo(String.valueOf(fileType), splitedInfo
+								.get(0).substring(1), splitedInfo.get(3),
+								splitedInfo.get(4), splitedInfo.get(5),
+								fileName.toString());
+
+						// Log.v("ddd", splitedInfo.get(6));
+
+						// fiList.add(fi); // fiList 에 등록
+					} else { // directory 정보는 객체를 따로 저장하지 않음.
+						fi = new FileInfo(String.valueOf(fileType),
+								splitedInfo.get(0));
+						// fiList.add(fi); // fiList 에 등록
+					}
+
+				}
+			}
+		}
+		Log.d("APP", "searched Apk : " + resultAppName);
+
+		return resultAppName;
+
+	}
+
+	private int TarTieDir(String packageName, String apkName) {
+		String command = "tar -cvf "
+				+ Environment.getExternalStorageDirectory() + "/cp/"
+				+ packageName + ".tar" + " " + "/data/data/" + packageName
+				+ " " + "/data/app/" + apkName + "\n";
+
+		// apk 추가
+		// command += " "+ "/data/app/"+apkName;
+		Process p;
+
+		try {
+			p = new ProcessBuilder("su").start();
+
+			p.getOutputStream().write(command.getBytes());
+
+			Log.e("APP", "tar command : " + command);
+
+			p.getOutputStream().write("exit\n".getBytes());
+			p.getOutputStream().flush();
+
+			BufferedReader br = new BufferedReader(new InputStreamReader(
+					p.getInputStream()));
+
+			String line = null;
+			while (true) {
+				line = br.readLine();
+				if (line == null) {
+					break;
+				}
+
+				System.out.println(line);
+			}
+
+			p.waitFor();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return -1;
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return -1;
+		}
+
+		return 0;
+
+	}
+
 	public void mOnClick(View v) {
 		switch (v.getId()) {
 		case R.id.startRecv: // startRecovery
-			
-			final ArrayList<Item> ItemList = dataAdapter.ItemList; // checkbox 선택 리스트
-			
+
+			final ArrayList<Item> ItemList = dataAdapter.ItemList; // checkbox
+																	// 선택 리스트
+
 			AlertDialog.Builder adb = new AlertDialog.Builder(this);
 			adb.setTitle("Notice");
 			adb.setMessage("복원을 진행하시겠습니까?");
 			final Dialog mDialog = adb.create();
 
-			
-			final Thread recovProcess = new Thread(){
-				
-				@Override
-				public void run(){
-					ProgressDialog progressDialog;
-					progressDialog = new ProgressDialog(RecvActivity.this);
-					progressDialog
-							.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-					progressDialog.setMax(ItemList.size());
-					progressDialog.setMessage("파일 복원 중 입니다...");
+			switch (func_code) {
+			case RECV_APP:
+				recovProcess = new Thread() {
 
-					progressDialog.setCancelable(true);
-					progressDialog.show();
-					
-					for (int i = 0; i < ItemList.size(); i++) {
-						Item Item = ItemList.get(i);
-						
-						if(Item.isSelected()){
-							String finalPath =  Item.getPath().replace(sName+"/0/", "/sdcard/");
-							Log.v("eee", Item.getPath().replace(sName+"/0/", "/sdcard/") ); // 실제 경로
-							
-							progressDialog.setProgress(i);
-							
-							// 마운트 진행 후 파일을 옮긴다. ( Sdcard 혹은 Server로 전송 )
-							try {
-								p = new ProcessBuilder("su").start();
+					@Override
+					public void run() {
+						ProgressDialog progressDialog;
+						progressDialog = new ProgressDialog(RecvActivity.this);
+						progressDialog
+								.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+						progressDialog.setMax(ItemList.size());
+						progressDialog.setMessage("파일 복원 중 입니다...");
 
-								
-								String mountCom = "mount -t ext4 /dev/vg/" + sName
-										+ " /sdcard/ssDir/" + sName + "\n";
-								
-								Log.v("eee", mountCom );
-								
-								p.getOutputStream().write(mountCom.getBytes());
+						progressDialog.setCancelable(true);
+						progressDialog.show();
 
-								String com = "ls -l /sdcard/ssDir/" + Item.getPath().substring(0, Item.getPath().lastIndexOf("/")) + " | grep \""+Item.getPath().substring(Item.getPath().lastIndexOf("/")+2,Item.getPath().length()-1)+"\" \n";
+						for (int i = 0; i < ItemList.size(); i++) {
+							Item Item = ItemList.get(i);
 
-								Log.v("eee", com );
-								
-								//p.getOutputStream().write(com.getBytes());
-								
-								// dd 로 obs
-								
-								//Socket sc = new Socket(MainActivity.srvIp,MainActivity.srvPort);
-								String sendToSocket = "dd if=/sdcard/ssDir/"+Item.getPath()+" obs=512k \n";
-								Log.v("eee", sendToSocket );
-								/*
-								ObjectOutputStream oos = new ObjectOutputStream(sc.getOutputStream());
-								
-								Payload pl = new Payload(8, MainActivity.rd.getUserCode());
-								oos.writeObject(pl); // code 8 번은 임시파일 전송
-								*/
-								
-								// 복사 명령어 실행
-								p.getOutputStream().write(sendToSocket.getBytes());
-								
-								byte buffer[] = new byte[1024*512]; // 512k
-								int size = 0;
-								long totalSize = 0;
-								
-								
-								mountCom = "umount /sdcard/ssDir/" + sName + "\n";
-								
-								//p.getOutputStream().write(mountCom.getBytes());
+							if (Item.isSelected()) {
+								/* /data/data영역 체크 */
+								String dataCoverPath = Item.getPath().replace(
+										sName, "/sdcard/");
+								String apkCoverPath = null;
+								// TODO : 경로체크 필요
 
-								p.getOutputStream().write("exit\n".getBytes());
-								p.getOutputStream().flush();
-								
-								/*while( (size =  p.getInputStream().read(buffer)) > 0){
-									//Log.i("eee", Integer.toString(size));
-									totalSize += size;
-								}*/
-								
-								AsyncFileSender afs = new AsyncFileSender(p.getInputStream(),null,null);
-								afs.execute();
-								
-								/*Log.i("eee", "total : " + Long.toString(totalSize)+" stream complete");
-								FileSender fs = new FileSender();
-								fs.SendFile(totalSize);
-								*/
-								
-							} catch (IOException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							} 
+								Log.v("path",
+										Item.getPath().replace(sName, "/data")); // 실제
+																					// 경로
+																					// 경로체크
+
+								progressDialog.setProgress(i);
+
+								// 마운트 진행 후 파일을 옮긴다. ( Sdcard 혹은 Server로 전송 )
+								try {
+									p = new ProcessBuilder("su").start();
+
+									String mountCom = "mount -t ext4 /dev/vg/"
+											+ sName + " /sdcard/ssDir/" + sName
+											+ "\n";
+
+									Log.v("eee", mountCom);
+
+									p.getOutputStream().write(
+											mountCom.getBytes());
+
+									/*
+									 * pName-1.apk가 없으면 pName-2.apk로 해준다.
+									 */
+
+									String apkName = ExtractAPKName(Item
+											.getPath().replace(sName, "")
+											.replace("/app/", ""),
+											"/sdcard/ssDir/" + sName + "/app/");
+									String cpCom = "cp /sdcard/ssDir/" + sName
+											+ "/app/" + apkName + " "
+											+ "/sdcard/" + "\n";
+
+									p.getOutputStream().write(cpCom.getBytes());
+
+									String modCom = "chmod 777 /sdcard/"
+											+ apkName;
+
+									p.getOutputStream()
+											.write(modCom.getBytes());
+
+									p.getOutputStream().write(
+											"exit\n".getBytes());
+									p.getOutputStream().flush();
+
+									Log.d("APP",
+											Item.getPath().replace(sName, "")
+													.replace("/app/", ""));
+
+									// ExtractAPKName(Item.getPath().replace(sName,
+									// "").replace("/app/", ""),
+									// "/sdcard/ssDir/" + sName);
+									StartInstall2(apkName, "/sdcard/");
+
+									mountCom = "umount /sdcard/ssDir/" + sName
+											+ "\n";
+
+									p.getOutputStream().write(
+											mountCom.getBytes());
+
+									p.getOutputStream().write(
+											"exit\n".getBytes());
+									p.getOutputStream().flush();
+
+								} catch (IOException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+							}
 						}
+						progressDialog.dismiss();
 					}
-					progressDialog.dismiss();
-				}	
-			};
-			
+				};
+				break;
+			case RECV_USER_DATA:
+				recovProcess = new Thread() {
+
+					@Override
+					public void run() {
+						ProgressDialog progressDialog;
+						progressDialog = new ProgressDialog(RecvActivity.this);
+						progressDialog
+								.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+						progressDialog.setMax(ItemList.size());
+						progressDialog.setMessage("파일 복원 중 입니다...");
+
+						progressDialog.setCancelable(true);
+						progressDialog.show();
+
+						for (int i = 0; i < ItemList.size(); i++) {
+							Item Item = ItemList.get(i);
+
+							if (Item.isSelected()) {
+								String finalPath = Item.getPath().replace(
+										sName + "/0/", "/sdcard/");
+								Log.v("eee",
+										Item.getPath().replace(sName + "/0/",
+												"/sdcard/")); // 실제 경로
+
+								progressDialog.setProgress(i);
+
+								// 마운트 진행 후 파일을 옮긴다. ( Sdcard 혹은 Server로 전송 )
+								try {
+									p = new ProcessBuilder("su").start();
+
+									String mountCom = "mount -t ext4 /dev/vg/"
+											+ sName + " /sdcard/ssDir/" + sName
+											+ "\n";
+
+									Log.v("eee", mountCom);
+
+									p.getOutputStream().write(
+											mountCom.getBytes());
+
+									String com = "ls -l /sdcard/ssDir/"
+											+ Item.getPath().substring(
+													0,
+													Item.getPath().lastIndexOf(
+															"/"))
+											+ " | grep \""
+											+ Item.getPath()
+													.substring(
+															Item.getPath()
+																	.lastIndexOf(
+																			"/") + 2,
+															Item.getPath()
+																	.length() - 1)
+											+ "\" \n";
+
+									Log.v("eee", com);
+
+									// p.getOutputStream().write(com.getBytes());
+
+									// dd 로 obs
+
+									// Socket sc = new
+									// Socket(MainActivity.srvIp,MainActivity.srvPort);
+									String sendToSocket = "dd if=/sdcard/ssDir/"
+											+ Item.getPath() + " obs=512k \n";
+									Log.v("eee", sendToSocket);
+									/*
+									 * ObjectOutputStream oos = new
+									 * ObjectOutputStream(sc.getOutputStream());
+									 * 
+									 * Payload pl = new Payload(8,
+									 * MainActivity.rd.getUserCode());
+									 * oos.writeObject(pl); // code 8 번은 임시파일 전송
+									 */
+
+									// 복사 명령어 실행
+									p.getOutputStream().write(
+											sendToSocket.getBytes());
+
+									byte buffer[] = new byte[1024 * 512]; // 512k
+									int size = 0;
+									long totalSize = 0;
+
+									mountCom = "umount /sdcard/ssDir/" + sName
+											+ "\n";
+
+									// p.getOutputStream().write(mountCom.getBytes());
+
+									p.getOutputStream().write(
+											"exit\n".getBytes());
+									p.getOutputStream().flush();
+
+									/*
+									 * while( (size =
+									 * p.getInputStream().read(buffer)) > 0){
+									 * //Log.i("eee", Integer.toString(size));
+									 * totalSize += size; }
+									 */
+
+									// AsyncFileSender afs = new
+									// AsyncFileSender(p.getInputStream(),null,null);
+									// afs.execute();
+
+									/*
+									 * Log.i("eee", "total : " +
+									 * Long.toString(totalSize
+									 * )+" stream complete"); FileSender fs =
+									 * new FileSender(); fs.SendFile(totalSize);
+									 */
+
+								} catch (IOException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+							}
+						}
+						progressDialog.dismiss();
+					}
+				};
+				break;
+			}
+
 			adb.setPositiveButton("복원시작", new OnClickListener() {
 				@Override
 				public void onClick(DialogInterface arg0, int arg1) {
 					// TODO Auto-generated method stub
-					//mDialog.dismiss();
+					// mDialog.dismiss();
 					recovProcess.run();
 				}
 			});
@@ -757,20 +1135,28 @@ public class RecvActivity extends Activity {
 		}
 
 	}
-	
-	
+
 	class Item {
-		
+
 		String code = null;
 		String name = null;
 		String path = null;
-		
+		String pname = null;
+
 		boolean selected = false;
 
 		public Item(String code, String name, boolean selected) {
 			super();
 			this.code = code;
 			this.name = name;
+			this.selected = selected;
+		}
+
+		public Item(String code, String name, String pname, boolean selected) {
+			super();
+			this.code = code;
+			this.name = name;
+			this.pname = pname;
 			this.selected = selected;
 		}
 
@@ -786,27 +1172,39 @@ public class RecvActivity extends Activity {
 			return name;
 		}
 
+		public String getPackName() {
+			return pname;
+		}
+
 		public void setName(String name) {
 			this.name = name;
+		}
+
+		public void setPackName(String pname) {
+			this.pname = pname;
 		}
 
 		public boolean isSelected() {
 			return selected;
 		}
 
-		public void setSelected(boolean selected, String path , String fileName) {
+		public void setSelected(boolean selected, String path, String fileName,
+				int func_code) {
 			this.selected = selected;
-			this.path  = path +"/\""+ fileName+"\"";
+			if (func_code == RECV_USER_DATA)
+				this.path = path + "/\"" + fileName + "\"";
+			else if (func_code == RECV_APP)
+				this.path = path + "/app/" + fileName;
 		}
-		
-		public String getPath(){
+
+		public String getPath() {
 			return this.path;
 		}
-		
-		public void setPath(String path){
+
+		public void setPath(String path) {
 			this.path = path;
 		}
-		
+
 	}
 
 }

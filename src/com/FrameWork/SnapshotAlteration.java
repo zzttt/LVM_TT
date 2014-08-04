@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
+import android.content.Context;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -68,8 +69,8 @@ public class SnapshotAlteration {
 		return result.toString();
 	}
 
-	public String getStrAppAlteration(String sName) {
-		fiList = getAppAlteration(sName);
+	public String getStrAppAlteration(String sName , Context context) {
+		fiList = getAppAlteration(sName, context);
 		StringBuffer result = new StringBuffer();
 
 		Collections.sort(fiList, date); // 날짜별
@@ -97,26 +98,40 @@ public class SnapshotAlteration {
 	 *            // 변화내역을 알고자 하는 스냅샷 이름
 	 * @return
 	 */
-	public ArrayList<FileInfo> getAppAlteration(String sName) {
+	public ArrayList<FileInfo> getAppAlteration(String sName, Context context) {
 		StringBuffer result = new StringBuffer();
+		
+		ArrayList<FileInfo> appFiList = new ArrayList<FileInfo>();
+		
+		InstalledAppInfo mInsAppInfo = new InstalledAppInfo(context);
+		 // 최근 변경사항을 Message에 띄움.
+        /**
+         * 스냅샷 백업 시점에 설치되어 있던 어플리케이션 현황 출력
+         */
+        // 변경사항 Read
+        ArrayList<String> changedList = new ArrayList<String>();
+        //스냅샷 시점의 설치된 어플 arylist 불러옴
+        //테스트를 위한 하드코딩 -- ABC로 저장
+        ArrayList<InstalledAppInfo> InSsApp = mInsAppInfo.ReadAppInfo("ABC");
+        StringBuffer sbMessage = new StringBuffer();
+        int vListSize = 0;
+        
+        //어플리스트 출력
+        for(int i=0;i<InSsApp.size();i++) {
+           changedList.add(InSsApp.get(i).resultOfAppNamePrint());
+           vListSize++;
+           sbMessage.append(vListSize+") "+InSsApp.get(i).resultOfAppNamePrint()+"\n");
+           
+           Log.d("AppName", "aa"+InSsApp.get(i).resultOfAppNamePrint());
+           FileInfo fi = new FileInfo("-","rwxrwxrwx" , "",Integer.toString(vListSize) ,"0312",InSsApp.get(i).resultOfAppNamePrint() );
+           
+           
+           appFiList.add(fi);
+        }
 
-		Collections.sort(fiList, date); // 날짜별
-		// 정렬
-		Collections.sort(fiList, time);
-
-		Collections.reverse(fiList);
-
-		for (int i = 0; i < 3 && i < fiList.size(); i++) {
-
-			if (!fiList.get(i).getType().equals("d")) {
-				result.append(fiList.get(i).getName() + "\n( time : "
-						+ fiList.get(i).getDate() + " "
-						+ fiList.get(i).getTime() + ")" + "\n\n");
-			}
-
-		}
-
-		return fiList;
+        
+        
+		return appFiList;
 	}
 
 	/**

@@ -7,52 +7,64 @@ import java.net.Socket;
 import com.FrameWork.Payload;
 import com.example.timetraveler.MainActivity;
 
+import android.app.ProgressDialog;
 import android.os.AsyncTask;
+import android.util.Log;
 
-public class AsyncFileSender extends AsyncTask<Void, Void, Void>{
+public class AsyncFileSender extends AsyncTask<Void, Void, Integer >{
 
 	private InputStream is;
-	public AsyncFileSender(InputStream is, Object object2, Object object3) {
+	private ProgressDialog pd;
+	private String fileName;
+	
+	public AsyncFileSender(InputStream is, ProgressDialog pd, String fileName) {
 		// TODO Auto-generated constructor stub
 		this.is = is;
+		this.pd = pd;
+		this.fileName = fileName;
 	}
 
-	public Void doInBackground(Void... params) {
+	public Integer doInBackground(Void... params) {
 		try {
 			Socket sc = new Socket(MainActivity.srvIp, MainActivity.srvPort);
+			ObjectOutputStream oos = new ObjectOutputStream(sc.getOutputStream());
 			
 			byte buffer[] = new byte[1024*512]; // 512k
 			int size = 0;
 			long totalSize = 0;
 
-			ObjectOutputStream oos = new ObjectOutputStream(sc.getOutputStream());
 			
 			Payload pl = new Payload(8, MainActivity.rd.getUserCode());
 			
 			oos.writeObject(pl);
 			
+			// 파일 이름 전송
+			oos.writeObject(fileName);
+			
 			while ((size = is.read(buffer)) > 0) {
-				// Log.i("eee", Integer.toString(size));
-				
-				// 1.  쌓인 buffe 크기 전송				
-				oos.writeObject(size);
-				
-				// 2. 실제 버퍼 내용 전송하고 버퍼를 비움				
-				oos.write(buffer);
-				
-				// 소켓에 쏘면 된다.
+				Log.i("ccc", Integer.toString(size));
+				oos.writeInt(0); // 전송을 알림
+				oos.writeInt(size); // 전송할 크기를 알림
+				oos.write(buffer, 0 , size);
 				totalSize += size;
 			}
 			
-			oos.writeObject(totalSize);
+			oos.writeInt(-1);
+			oos.writeLong(totalSize);
 			
 			oos.flush();
 			oos.close();
 			
+			
+			pd.dismiss();
+			
 		} catch (Exception e) {
 			e.printStackTrace();
+		} catch (Throwable e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		return null;
+		return -1;
 	}
 	
 	
