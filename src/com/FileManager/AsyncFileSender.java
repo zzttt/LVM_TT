@@ -34,9 +34,13 @@ public class AsyncFileSender extends AsyncTask<Void, Void, Void>{
 			while ((size = is.read(buffer)) > 0) {
 				// Log.i("eee", Integer.toString(size));
 				
-
-				// 소켓에 쏘면 된다.
+				// 1.  쌓인 buffe 크기 전송				
+				oos.writeObject(size);
 				
+				// 2. 실제 버퍼 내용 전송하고 버퍼를 비움				
+				oos.write(buffer);
+				
+				// 소켓에 쏘면 된다.
 				totalSize += size;
 			}
 			

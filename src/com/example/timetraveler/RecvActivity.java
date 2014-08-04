@@ -63,7 +63,9 @@ public class RecvActivity extends Activity {
 	private int func_code = 0;
 	private Process p = null;
 	private String sName = null;
+	private String mName = null;
 	private String loc = null;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -75,9 +77,23 @@ public class RecvActivity extends Activity {
 		loc = getIntent().getStringExtra("loc"); // 데이터 위치 ( dev : 장치 내 ,
 														// srv : 서버 )
 		
-		if(loc.equals("dev"))
+		mName = getIntent().getStringExtra("mName");
+		
+		if (mName.equals("어플리케이션")) { // 어플리케이션 복원
+			func_code = RECV_APP;
+		} else if (mName.equals("사용자 데이터")) { // 사용자 데이터 복원
+			func_code = RECV_USER_DATA;
+		} else if (mName.equals("전화번호부, SMS, 설정 복원")) { // 전화, sms , 설정 복원
+			func_code = RECV_SETTINGS;
+		} else { // 전체 복원
+			func_code = RECV_ALL;
+		}
+		
+		if(loc.equals("dev") && func_code == RECV_APP)
+			displayListView(sName, sName); //스냅샷 위치가 device 일 경우
+		else if(loc.equals("dev") && func_code == RECV_USER_DATA){
 			displayListView(sName, sName+"/0/"); //스냅샷 위치가 device 일 경우
-		else{
+		}else{
 			
 		}
 		
@@ -91,29 +107,18 @@ public class RecvActivity extends Activity {
 	public void displayListView(String sName, String subDir) {
 		// TODO Auto-generated method stub
 		// Array list of countries
-		ArrayList<Country> countryList = new ArrayList<Country>();
-	/*	Country country = new Country("AFG", "Afghanistan", false);
-		countryList.add(country);
+		ArrayList<Item> ItemList = new ArrayList<Item>();
+	/*	Item Item = new Item("AFG", "Afghanistan", false);
+		ItemList.add(Item);
 	*/
 		cur_Loc = subDir; // current Location
 		//Log.i("ddd", subDir);
 		
-		
-		String mName = getIntent().getStringExtra("mName");
 		/*
 		 * sName ( snapshot name ) mName ( selected menu name ) sName 데이터에서
 		 * mName 에 해당하는 데이터를 읽어온다.*/
 		 
 
-		if (mName.equals("어플리케이션")) { // 어플리케이션 복원
-			func_code = RECV_APP;
-		} else if (mName.equals("사용자 데이터")) { // 사용자 데이터 복원
-			func_code = RECV_USER_DATA;
-		} else if (mName.equals("전화번호부, SMS, 설정 복원")) { // 전화, sms , 설정 복원
-			func_code = RECV_SETTINGS;
-		} else { // 전체 복원
-			func_code = RECV_ALL;
-		}
 
 		switch (func_code) {
 		case RECV_ALL:
@@ -128,7 +133,169 @@ public class RecvActivity extends Activity {
 
 			break;
 		case RECV_APP:
+			try {
+				p = new ProcessBuilder("su").start();
 
+				String mountCom = "mount -t ext4 /dev/vg/" + sName
+						+ " /sdcard/ssDir/" + sName + "\n";
+
+				p.getOutputStream().write(mountCom.getBytes());
+
+				String com = "ls -l /sdcard/ssDir/" + subDir + "/data/\n";
+
+				Log.e("ccc", com);
+				
+				p.getOutputStream().write(com.getBytes());
+				
+				mountCom = "umount /sdcard/ssDir/" + sName + "\n";
+				
+				Log.e("ccc", mountCom);
+				
+				p.getOutputStream().write(mountCom.getBytes());
+
+				p.getOutputStream().write("exit\n".getBytes());
+				p.getOutputStream().flush();
+				
+				try {
+					p.waitFor();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				
+				BufferedReader br = new BufferedReader(new InputStreamReader(
+						p.getInputStream()));
+
+				String line = null;
+
+				
+				
+				// List View , adapter ----------------------------------------------- 리스트 추가부분
+				ListView lv = (ListView) findViewById(R.id.lv_recvList);
+				ArrayList<String> fList = new ArrayList<String>();
+				ArrayList<FileInfo> fiList = new ArrayList<FileInfo>();
+
+				while ((line = br.readLine()) != null) {
+					Log.e("lvm2", line);
+					fList.add(line);
+				}
+
+				for (String s : fList) {
+					if (s.length() != 0) {
+
+						String[] info = s.split(" ");
+						//Log.d("ddd", Integer.toString(info.length) );
+						ArrayList<String> splitedInfo = new ArrayList<String>();
+
+						for (String ss : info) {
+							ss = ss.trim(); // 공백제거
+							if (ss.length() != 0)
+								splitedInfo.add(ss);
+						}
+
+						FileInfo fi;
+						// split 결과는 실제 파일의 정보 , 하위 디렉토리 이름 으로 나누어짐.
+						// 하위디렉토리 이름은 무시한다
+						int idx = 0;
+
+						char fileType = ' ';
+
+						if (splitedInfo.size() != 0) { // 한 라인의 가장 첫번째 문자는 파일
+														// 형식을
+														// 나타냄..
+							fileType = splitedInfo.get(0).charAt(0);
+							// Log.d("lvm", "("+String.valueOf(fileType)+")");
+
+							if (fileType == 'l') { // 링크파일의 경우 파일명 수정 필요 ( idx 5
+													// 부터
+													// fileName.. 5 이후 문자열을 통합 )
+								String fName = splitedInfo.get(5)
+										+ splitedInfo.get(6)
+										+ splitedInfo.get(7);
+								splitedInfo.set(5, fName);
+								splitedInfo.remove(7);
+								splitedInfo.remove(6);
+							}
+						}
+
+						if (fileType == 'd' || fileType == 'b'
+								|| fileType == 'c' || fileType == 'p'
+								|| fileType == 'l' || fileType == 's') { // special
+																			// files
+							// b(Block file(b) , Character device file(c) ,
+							// Named
+							// pipe file or just a pipe file(p)
+							// Symbolic link file(l), Socket file(s)
+
+							fi = new FileInfo(String.valueOf(fileType),
+									splitedInfo.get(0).substring(1),
+									splitedInfo.get(3), splitedInfo.get(4),
+									splitedInfo.get(5));
+							fiList.add(fi); // fiList 에 등록
+						} else if (fileType == '-') { // general files
+							// general file에는 용량정보까지 포함 됨.
+							
+							StringBuffer fileName = new StringBuffer();
+							int maxIdx = splitedInfo.size();
+							
+							for(int i = 6 ; i < maxIdx ; i++){
+								if( i == 6)
+									fileName.append(splitedInfo.get(i));
+								else
+									fileName.append(" "+splitedInfo.get(i));
+							}
+							
+							
+							fi = new FileInfo(String.valueOf(fileType),
+									splitedInfo.get(0).substring(1),
+									splitedInfo.get(3), splitedInfo.get(4),
+									splitedInfo.get(5), fileName.toString());
+							
+							//Log.v("ddd", splitedInfo.get(6));
+							
+							fiList.add(fi); // fiList 에 등록
+						} else { // directory 정보는 객체를 따로 저장하지 않음.
+							fi = new FileInfo(String.valueOf(fileType),
+									splitedInfo.get(0));
+							fiList.add(fi); // fiList 에 등록
+						}
+
+					}
+				}
+				Log.d("lvm", "file count : " + Integer.toString(fiList.size()));
+
+				fList.clear();
+
+						
+				for (int i = 0; i < fiList.size(); i++) {
+					if (fiList.get(i).getName().contains(":") && i != 0) { // 하위
+																			// 디렉터리
+						//fList.add(" ");
+						//fList.add("[Dir]  " + fiList.get(i).getName());
+						Item Item = new Item("row", ">  " + fiList.get(i).getName(), false);
+						ItemList.add(Item);
+					} else if (fiList.get(i).getType().equals("d") ) { // 해당
+																		// 디렉토리
+																		// 내의 파일
+						//fList.add(fiList.get(i).getName());
+						Item Item = new Item("row", fiList.get(i).getName(), false);
+						ItemList.add(Item);
+					}else{
+						Item Item = new Item("row", ">  " + fiList.get(i).getName(), false);
+						ItemList.add(Item);
+					}
+
+				}
+
+				
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			
+			
 			break;
 		case RECV_USER_DATA:
 			// 사용자 데이터 백업
@@ -266,8 +433,8 @@ public class RecvActivity extends Activity {
 
 				if(!subDir.equals(sName+"/0/")){ // 최 상단 디렉토리가 아닌경우
 					// 상위메뉴를 만들어 줌
-					Country country = new Country("row", "..", false);
-					countryList.add(country);
+					Item Item = new Item("row", "..", false);
+					ItemList.add(Item);
 				}
 				
 				for (int i = 0; i < fiList.size(); i++) {
@@ -275,17 +442,17 @@ public class RecvActivity extends Activity {
 																			// 디렉터리
 						//fList.add(" ");
 						//fList.add("[Dir]  " + fiList.get(i).getName());
-						Country country = new Country("row", ">  " + fiList.get(i).getName(), false);
-						countryList.add(country);
+						Item Item = new Item("row", ">  " + fiList.get(i).getName(), false);
+						ItemList.add(Item);
 					} else if (!fiList.get(i).getType().equals("d") ) { // 해당
 																		// 디렉토리
 																		// 내의 파일
 						//fList.add(fiList.get(i).getName());
-						Country country = new Country("row", fiList.get(i).getName(), false);
-						countryList.add(country);
+						Item Item = new Item("row", fiList.get(i).getName(), false);
+						ItemList.add(Item);
 					}else if ( fiList.get(i).getType().equals("d") && !fiList.get(i).getName().contains("ssDir") && !fiList.get(i).getName().contains("Android")  ){
-						Country country = new Country("row", ">  " + fiList.get(i).getName(), false);
-						countryList.add(country);
+						Item Item = new Item("row", ">  " + fiList.get(i).getName(), false);
+						ItemList.add(Item);
 					}
 
 				}
@@ -305,7 +472,7 @@ public class RecvActivity extends Activity {
 		}
 
 		// create an ArrayAdaptar from the String Array
-		dataAdapter = new MyCustomAdapter(this, R.layout.file_info, countryList);
+		dataAdapter = new MyCustomAdapter(this, R.layout.file_info, ItemList);
 		ListView listView = (ListView) findViewById(R.id.lv_recvList);
 		// Assign adapter to ListView
 		listView.setAdapter(dataAdapter);
@@ -314,9 +481,9 @@ public class RecvActivity extends Activity {
 			public void onItemClick(AdapterView parent, View view,
 					int position, long id) {
 				// When clicked, show a toast with the TextView text
-				Country country = (Country) parent.getItemAtPosition(position);
+				Item Item = (Item) parent.getItemAtPosition(position);
 				Toast.makeText(getApplicationContext(),
-						"Clicked on Row: " + country.getName(),
+						"Clicked on Row: " + Item.getName(),
 						Toast.LENGTH_LONG).show();
 			}
 		});*/
@@ -369,14 +536,14 @@ public class RecvActivity extends Activity {
 
 	}
 
-	private class MyCustomAdapter extends ArrayAdapter<Country> {
-		private ArrayList<Country> countryList;
+	private class MyCustomAdapter extends ArrayAdapter<Item> {
+		private ArrayList<Item> ItemList;
 
 		public MyCustomAdapter(Context context, int textViewResourceId,
-				ArrayList<Country> countryList) {
-			super(context, textViewResourceId, countryList);
-			this.countryList = new ArrayList<Country>();
-			this.countryList.addAll(countryList);
+				ArrayList<Item> ItemList) {
+			super(context, textViewResourceId, ItemList);
+			this.ItemList = new ArrayList<Item>();
+			this.ItemList.addAll(ItemList);
 		}
 
 		private class ViewHolder {
@@ -431,13 +598,13 @@ public class RecvActivity extends Activity {
 				holder.name.setOnClickListener(new View.OnClickListener() {
 					public void onClick(View v) {
 						CheckBox cb = (CheckBox) v;
-						Country country = (Country) cb.getTag();
+						Item Item = (Item) cb.getTag();
 						Toast.makeText(
 								getApplicationContext(),
 								"Clicked on Checkbox: " + cur_Loc+"/"+cb.getText() + " is "
 										+ cb.isChecked(), Toast.LENGTH_LONG)
 								.show();
-						country.setSelected(cb.isChecked(),cur_Loc,cb.getText().toString()); // 선택됨을 체크  (선택 시 해당 경로와 이름을 저장 )
+						Item.setSelected(cb.isChecked(),cur_Loc,cb.getText().toString()); // 선택됨을 체크  (선택 시 해당 경로와 이름을 저장 )
 						
 					}
 				});
@@ -445,19 +612,19 @@ public class RecvActivity extends Activity {
 				holder = (ViewHolder) convertView.getTag();
 			}
 
-			Country country = countryList.get(position);
+			Item Item = ItemList.get(position);
 		
 			
-			if(country.getName().contains(">") || country.getName().equals("..")){
-				holder.code.setText(country.getName());
+			if(Item.getName().contains(">") || Item.getName().equals("..")){
+				holder.code.setText(Item.getName());
 				holder.code.setGravity(Gravity.CENTER_VERTICAL);
 				holder.name.setVisibility(View.GONE);
-				holder.name.setTag(country);
+				holder.name.setTag(Item);
 			}else{
 				holder.name.setVisibility(View.VISIBLE);
-				holder.name.setText(country.getName());
-				holder.name.setChecked(country.isSelected());
-				holder.name.setTag(country);
+				holder.name.setText(Item.getName());
+				holder.name.setChecked(Item.isSelected());
+				holder.name.setTag(Item);
 				holder.name.setGravity(Gravity.CENTER_VERTICAL);
 			}
 			return convertView;
@@ -469,8 +636,7 @@ public class RecvActivity extends Activity {
 		switch (v.getId()) {
 		case R.id.startRecv: // startRecovery
 			
-			final ArrayList<Country> countryList = dataAdapter.countryList; // checkbox 선택 리스트
-		
+			final ArrayList<Item> ItemList = dataAdapter.ItemList; // checkbox 선택 리스트
 			
 			AlertDialog.Builder adb = new AlertDialog.Builder(this);
 			adb.setTitle("Notice");
@@ -486,18 +652,18 @@ public class RecvActivity extends Activity {
 					progressDialog = new ProgressDialog(RecvActivity.this);
 					progressDialog
 							.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-					progressDialog.setMax(countryList.size());
+					progressDialog.setMax(ItemList.size());
 					progressDialog.setMessage("파일 복원 중 입니다...");
 
 					progressDialog.setCancelable(true);
 					progressDialog.show();
 					
-					for (int i = 0; i < countryList.size(); i++) {
-						Country country = countryList.get(i);
+					for (int i = 0; i < ItemList.size(); i++) {
+						Item Item = ItemList.get(i);
 						
-						if(country.isSelected()){
-							String finalPath =  country.getPath().replace(sName+"/0/", "/sdcard/");
-							Log.v("eee", country.getPath().replace(sName+"/0/", "/sdcard/") ); // 실제 경로
+						if(Item.isSelected()){
+							String finalPath =  Item.getPath().replace(sName+"/0/", "/sdcard/");
+							Log.v("eee", Item.getPath().replace(sName+"/0/", "/sdcard/") ); // 실제 경로
 							
 							progressDialog.setProgress(i);
 							
@@ -513,7 +679,7 @@ public class RecvActivity extends Activity {
 								
 								p.getOutputStream().write(mountCom.getBytes());
 
-								String com = "ls -l /sdcard/ssDir/" + country.getPath().substring(0, country.getPath().lastIndexOf("/")) + " | grep \""+country.getPath().substring(country.getPath().lastIndexOf("/")+2,country.getPath().length()-1)+"\" \n";
+								String com = "ls -l /sdcard/ssDir/" + Item.getPath().substring(0, Item.getPath().lastIndexOf("/")) + " | grep \""+Item.getPath().substring(Item.getPath().lastIndexOf("/")+2,Item.getPath().length()-1)+"\" \n";
 
 								Log.v("eee", com );
 								
@@ -522,7 +688,7 @@ public class RecvActivity extends Activity {
 								// dd 로 obs
 								
 								//Socket sc = new Socket(MainActivity.srvIp,MainActivity.srvPort);
-								String sendToSocket = "dd if=/sdcard/ssDir/"+country.getPath()+" obs=512k \n";
+								String sendToSocket = "dd if=/sdcard/ssDir/"+Item.getPath()+" obs=512k \n";
 								Log.v("eee", sendToSocket );
 								/*
 								ObjectOutputStream oos = new ObjectOutputStream(sc.getOutputStream());
@@ -540,7 +706,6 @@ public class RecvActivity extends Activity {
 								
 								
 								mountCom = "umount /sdcard/ssDir/" + sName + "\n";
-
 								
 								//p.getOutputStream().write(mountCom.getBytes());
 
@@ -594,7 +759,7 @@ public class RecvActivity extends Activity {
 	}
 	
 	
-	class Country {
+	class Item {
 		
 		String code = null;
 		String name = null;
@@ -602,7 +767,7 @@ public class RecvActivity extends Activity {
 		
 		boolean selected = false;
 
-		public Country(String code, String name, boolean selected) {
+		public Item(String code, String name, boolean selected) {
 			super();
 			this.code = code;
 			this.name = name;
