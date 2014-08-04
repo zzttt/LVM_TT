@@ -136,6 +136,16 @@ public class InstalledAppInfo implements Serializable {
     	 return appname;
      }
      
+     public String resultOfPackagesNamePrint() {
+    	 return pname;
+     }
+     
+     public String getAppNameFromPName(String pname) {
+    	 if(pname == this.pname)
+    		 return appname;
+		return "None";
+     }
+     
      private ArrayList<InstalledAppInfo> getPackages() {
          ArrayList<InstalledAppInfo> apps = getInstalledApps(false); /* false = no system packages */
          final int max = apps.size();
