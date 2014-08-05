@@ -17,6 +17,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+import net.kkangsworld.lvmexec.pipeWithLVM;
+
 import com.FileManager.AsyncFileSender;
 //import com.FileManager.AsyncFileSender;
 import com.FileManager.FileInfo;
@@ -42,6 +44,7 @@ import android.opengl.Visibility;
 import android.os.Bundle;
 import android.os.AsyncTask.Status;
 import android.os.Environment;
+import android.os.Handler;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -97,9 +100,6 @@ public class RecvActivity extends Activity {
 
 		mName = getIntent().getStringExtra("mName");
 		
-
-		
-
 		if (mName.equals("어플리케이션")) { // 어플리케이션 복원
 			func_code = RECV_APP;
 		} else if (mName.equals("사용자 데이터")) { // 사용자 데이터 복원
@@ -109,8 +109,12 @@ public class RecvActivity extends Activity {
 		} else { // 전체 복원
 			func_code = RECV_ALL;
 		}
+		
+		Log.v("lll", ""+func_code);
 
-		if (loc.equals("dev") && func_code == RECV_APP)
+		if(func_code == RECV_ALL){
+			displayListView(sName, sName); // 스냅샷 위치가 device 일 경우
+		}else if (loc.equals("dev") && func_code == RECV_APP)
 			displayListView(sName, sName); // 스냅샷 위치가 device 일 경우
 		else if (loc.equals("dev") && func_code == RECV_USER_DATA) {
 			displayListView(sName, sName + "/0/"); // 스냅샷 위치가 device 일 경우
@@ -138,14 +142,55 @@ public class RecvActivity extends Activity {
 		switch (func_code) {
 		case RECV_ALL:
 			// 전체 복원 , 바로 lvconvert 수행
+		
+			
+			Handler tmpHandler = new Handler(){
+					
+			};
+				
+			pipeWithLVM pwl = new pipeWithLVM(tmpHandler);
 
+			
 			try {
-				p = new ProcessBuilder("su").start();
+				Thread.sleep(500);
+				pwl.ActionWritePipe("lvconvert --merge /dev/vg/" + sName
+						+ "_userdata");
+
+				Thread.sleep(500);
+
+				pwl.ActionWritePipe("lvconvert --merge /dev/vg/" + sName
+						+ "_usersdcard");
+				Thread.sleep(500);
+				pwl.ActionWritePipe("lvconvert --merge /dev/vg/" + sName
+						+ "_usersystem");
+				Thread.sleep(500);
+			} catch (InterruptedException e2) {
+				// TODO Auto-generated catch block
+				e2.printStackTrace();
+			}
+			
+			
+			Log.d("lll", "lvconvert end");
+			
+			
+			try {
+				
+				p = Runtime.getRuntime().exec("su -c reboot"); 
+				BufferedReader in = new BufferedReader(  
+						new InputStreamReader(
+						p.getInputStream()));
+				String line = null;
+				while ((line = in.readLine()) != null) {
+					Log.d("lll", line);
+				}
+				
+				
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
-
+			
+			
 			break;
 		case RECV_APP:
 			try {

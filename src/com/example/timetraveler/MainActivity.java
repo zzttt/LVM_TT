@@ -415,8 +415,22 @@ public class MainActivity extends Activity implements OnClickListener {
 									.getTime()));
 							
 							pl = new pipeWithLVM(rh);
-							pl.ActionWritePipe("lvcreate -s -L 1G -n "+today+" /dev/vg/usersdcard");
-							
+							try {
+								pl.ActionWritePipe("lvcreate -s -L 1G -n "
+										+ today + "_userdata /dev/vg/userdata");
+
+								Thread.sleep(500);
+
+								pl.ActionWritePipe("lvcreate -s -L 1G -n "
+										+ today + "_usersdcard /dev/vg/usersdcard");
+								Thread.sleep(500);
+								pl.ActionWritePipe("lvcreate -s -L 100M -n "
+										+ today + "_usersystem /dev/vg/usersystem");
+								
+							} catch (InterruptedException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
 							try {
 								Thread.sleep(300);
 							} catch (InterruptedException e) {
@@ -433,9 +447,9 @@ public class MainActivity extends Activity implements OnClickListener {
 							 * HashMap형태로 저장한다. 
 							 * today를 key로 저장 */
 							
-							mInsAppInfo.resultToSaveFile("ABC");
+							mInsAppInfo.resultToSaveFile(today);
 
-							mInsAppInfo.ReadAppInfo("ABC");
+							mInsAppInfo.ReadAppInfo(today);
 							mInsAppInfo.resultPrint();
 							
 							//mInsAppInfo.ReadAppInfo(today);
@@ -899,7 +913,7 @@ public class MainActivity extends Activity implements OnClickListener {
 							}else if(mName.equals("Contacts, Settings")){
 								fiList.addAll(sa.getSettingAlteration(sName));
 							}else{ //전체복원
-								 
+								
 							}
 							
 							// ------------ 읽어온 리스트를 정렬한다 --------------
@@ -985,16 +999,22 @@ public class MainActivity extends Activity implements OnClickListener {
 												+ "\n\n");
 									}
 								}
+								
+								
+								
+								if(mName.equals("전체 복원")){
+									sbMessage.append("전체복원이 시작되면 자동으로 재부팅 됩니다.");									
+								}
 
 								ab.setMessage(sbMessage);
-
+								
 								ab.setCancelable(false); // Cancelable
 
 								// custom view 필요
 								final String f_sName = sName;
 								final String f_mName = mName;
 
-								ab.setPositiveButton(mName + " 복원",
+								ab.setPositiveButton("복원시작",
 										new DialogInterface.OnClickListener() {
 											@Override
 											public void onClick(
@@ -1105,7 +1125,7 @@ public class MainActivity extends Activity implements OnClickListener {
 										
 										// custom view 필요
 
-										ab.setPositiveButton(mName_f + " 복원",
+										ab.setPositiveButton("복원시작",
 												new DialogInterface.OnClickListener() {
 													@Override
 													public void onClick(
