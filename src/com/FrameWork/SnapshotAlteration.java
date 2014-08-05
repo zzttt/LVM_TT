@@ -112,7 +112,7 @@ public class SnapshotAlteration {
         ArrayList<String> changedList = new ArrayList<String>();
         //스냅샷 시점의 설치된 어플 arylist 불러옴
         //테스트를 위한 하드코딩 -- ABC로 저장
-        ArrayList<InstalledAppInfo> InSsApp = mInsAppInfo.ReadAppInfo("ABC");
+        ArrayList<InstalledAppInfo> InSsApp = mInsAppInfo.ReadAppInfo(sName);
         StringBuffer sbMessage = new StringBuffer();
         int vListSize = 0;
         
@@ -147,6 +147,9 @@ public class SnapshotAlteration {
 	public ArrayList<FileInfo> getUserDataAlteration(String sName) {
 		String result = null;
 
+		sName = sName+"_usersdcard";
+		
+		
 		try {
 			Process p = Runtime.getRuntime().exec("su");
 

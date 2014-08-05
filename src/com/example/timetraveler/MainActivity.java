@@ -840,9 +840,10 @@ public class MainActivity extends Activity implements OnClickListener {
 						
 						sName = sName.replace("vg-","").replace("-cow", "");
 						// snapshot File 을 lvm 디렉터리에 mount
-						File f = new File("/sdcard/ssDir/"+sName);
-						
-						if(f.mkdirs())
+						File udF = new File("/sdcard/ssDir/"+sName+"_usersdcard");
+						File usF = new File("/sdcard/ssDir/"+sName+"_usersystem");
+						File uaF = new File("/sdcard/ssDir/"+sName+"_userdata");
+						if(udF.mkdirs() && usF.mkdirs() && uaF.mkdirs() )
 						{
 							Log.i("lvm","created");
 						}else{

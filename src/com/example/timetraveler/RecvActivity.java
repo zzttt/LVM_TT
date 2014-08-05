@@ -45,6 +45,7 @@ import android.os.Bundle;
 import android.os.AsyncTask.Status;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -82,6 +83,8 @@ public class RecvActivity extends Activity {
 	private String loc = null;
 	private Thread recovProcess = null;
 
+	private String pName = "";
+	private String UsedsName = "";
 	private InstalledAppInfo mInsAppInfo = new InstalledAppInfo(this);
 
 	private ArrayList<String> resultAppListByAppName;
@@ -114,12 +117,14 @@ public class RecvActivity extends Activity {
 
 		if(func_code == RECV_ALL){
 			displayListView(sName, sName); // 스냅샷 위치가 device 일 경우
-		}else if (loc.equals("dev") && func_code == RECV_APP)
+		}else if (loc.equals("dev") && func_code == RECV_APP){
+			sName = sName + "_userdata";
 			displayListView(sName, sName); // 스냅샷 위치가 device 일 경우
-		else if (loc.equals("dev") && func_code == RECV_USER_DATA) {
+		}else if (loc.equals("dev") && func_code == RECV_USER_DATA) {
+			sName = sName + "_usersdcard";
 			displayListView(sName, sName + "/0/"); // 스냅샷 위치가 device 일 경우
 		} else {
-
+			sName = sName + "_usersystem";
 		}
 
 	}
@@ -149,15 +154,12 @@ public class RecvActivity extends Activity {
 			};
 				
 			pipeWithLVM pwl = new pipeWithLVM(tmpHandler);
-
 			
 			try {
 				Thread.sleep(500);
 				pwl.ActionWritePipe("lvconvert --merge /dev/vg/" + sName
 						+ "_userdata");
-
 				Thread.sleep(500);
-
 				pwl.ActionWritePipe("lvconvert --merge /dev/vg/" + sName
 						+ "_usersdcard");
 				Thread.sleep(500);
@@ -168,7 +170,6 @@ public class RecvActivity extends Activity {
 				// TODO Auto-generated catch block
 				e2.printStackTrace();
 			}
-			
 			
 			Log.d("lll", "lvconvert end");
 			
@@ -327,7 +328,7 @@ public class RecvActivity extends Activity {
 
 				/* AppList 추출 */
 				ArrayList<InstalledAppInfo> appList = new ArrayList<InstalledAppInfo>();
-				appList = mInsAppInfo.ReadAppInfo("ABC");
+				appList = mInsAppInfo.ReadAppInfo(sName.replace("_userdata", ""));
 
 				HashMap<String, String> appmap = new HashMap<String, String>();
 				HashMap<String, String> appmapByPack = new HashMap<String, String>();
@@ -551,6 +552,9 @@ public class RecvActivity extends Activity {
 
 			break;
 		case RECV_SETTINGS:
+			
+			
+			
 			break;
 		}
 
@@ -735,46 +739,120 @@ public class RecvActivity extends Activity {
 
 		}
 	}
-
+/*
 	private void StartInstall(String packageName, String pwdPath) {
 
-		/* -2 -1인지 파싱하기 */
+		 -2 -1인지 파싱하기 
 		String apkName = ExtractAPKName(packageName, pwdPath);
+		
 		apkName = "file://" + pwdPath + apkName;
 		Log.d("eee", apkName);
 		// Log.d("eee", "합:"+pwdPath+apkName);
 
-		/* APK 실행 */
+		 APK 실행 
 		Intent cmdToInstall = new Intent(Intent.ACTION_VIEW).setDataAndType(
 				Uri.parse(apkName), "application/vnd.android.package-archive");
 		startActivity(cmdToInstall);
 		// startActivityForResult(cmdToInstall, 1);
 
-		/* Tar로 묶기 */
+		 Tar로 묶기 
 		TarTieDir(packageName, apkName);
 	}
-
-	private void StartInstall2(String packageName, String pwdPath) {
+*/
+	private void StartInstall2(String packageName, String pwdPath, String sName) {
 
 		/* -2 -1인지 파싱하기 */
 		String apkName = packageName;
 		// apkName = "file://"+pwdPath+apkName;
-		Log.d("eee", apkName);
+		Log.d("eee", "apk"+apkName);
 		// Log.d("eee", "합:"+pwdPath+apkName);
 
-		/* APK 실행 */
-		Intent cmdToInstall = new Intent(Intent.ACTION_VIEW).setDataAndType(
-				Uri.parse("file:///sdcard/" + apkName),
-				"application/vnd.android.package-archive");
-		startActivity(cmdToInstall);
-		// startActivityForResult(cmdToInstall, 1);
+		pName = packageName;
+		UsedsName = sName;
 
+		/* APK 실행 */
+		Intent cmdToInstall = new Intent(Intent.ACTION_VIEW).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK).setDataAndType(
+				Uri.parse("file:///sdcard/" + apkName),"application/vnd.android.package-archive");
+		//startActivity(cmdToInstall);
+		
+	
+		//startActivityForResult(cmdToInstall, 1);
+
+		/*
+		Bundle tempBundle = new Bundle();
+
+		
+		tempBundle.putString("pName", packageName);
+		tempBundle.putString("sName", sName);*/
+		
+		startActivityForResult(cmdToInstall, 1);
+		
+
+		//CopyToAppData(packageName, sName);
+		
+		
+		
+		
 		/* Tar로 묶기 */
 		// TarTieDir("com.example.applist", apkName);
 	}
 
-	private void CopyToAppData(String packageName) {
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		switch (requestCode) {
+		   case 1:
+			   CopyToAppData(pName, UsedsName);
+			   Log.v("lll", "ddododododododod");
+		////////////////////////////
+		//B의 신호를 받아 실행할 작업
+		////////////////////////////
+		   break;
 
+		default:
+		   break;
+		}
+		}
+	
+	private void CopyToAppData(String packageName,  String sName) {
+		try {
+			Process p = new ProcessBuilder("su").start();
+			
+			Log.v("lll", sName+","+packageName);
+			String mountCom = "mount -t ext4 /dev/vg/" + sName
+					+ " /sdcard/ssDir/" + sName + "\n";
+
+			p.getOutputStream().write(mountCom.getBytes());
+
+			
+			String packageDirectory = packageName.substring(0, packageName.indexOf("-"));
+			// /data/data영역
+			String com = "cp -r /sdcard/ssDir/" + sName + "/data/"+packageDirectory+" /data/data/\n";
+			
+			//String com = "ls -l /sdcard/ssDir/" + sName + "/data/\n";
+
+			Log.e("lll", com);
+
+			p.getOutputStream().write(com.getBytes());
+
+			mountCom = "umount /sdcard/ssDir/" + sName + "\n";
+
+			Log.e("ccc", mountCom);
+
+			p.getOutputStream().write(mountCom.getBytes());
+
+			p.getOutputStream().write("exit\n".getBytes());
+			p.getOutputStream().flush();
+
+			// 마운트 경로 -> /data/data
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		
 	}
 
 	private String ExtractAPKName(String packageName, String pwdPath) {
@@ -786,7 +864,7 @@ public class RecvActivity extends Activity {
 			p = new ProcessBuilder("su").start();
 
 			String com2 = "ls -l " + pwdPath + "\n";
-			Log.e("ccc", com2);
+			Log.e("ccc", "command "+com2);
 
 			p.getOutputStream().write(com2.getBytes());
 
@@ -802,10 +880,12 @@ public class RecvActivity extends Activity {
 				if (line == null) {
 					break;
 				}
-				if (line.substring(0, 1).equals("-"))
+				if (line.substring(0, 1).equals("-")){
+					Log.d("ccc", line);
 					fList.add(line);
+				}
 
-				System.out.println(line);
+				//System.out.println(line);
 
 			}
 			p.waitFor();
@@ -1003,10 +1083,11 @@ public class RecvActivity extends Activity {
 											+ "/app/" + apkName + " "
 											+ "/sdcard/" + "\n";
 
+									
 									p.getOutputStream().write(cpCom.getBytes());
 
 									String modCom = "chmod 777 /sdcard/"
-											+ apkName;
+											+ apkName+"\n";
 
 									p.getOutputStream()
 											.write(modCom.getBytes());
@@ -1022,7 +1103,7 @@ public class RecvActivity extends Activity {
 									// ExtractAPKName(Item.getPath().replace(sName,
 									// "").replace("/app/", ""),
 									// "/sdcard/ssDir/" + sName);
-									StartInstall2(apkName, "/sdcard/");
+									StartInstall2(apkName, "/sdcard/", sName);
 
 									mountCom = "umount /sdcard/ssDir/" + sName
 											+ "\n";
