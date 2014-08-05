@@ -16,9 +16,11 @@ public class AsyncFileSender extends AsyncTask<Void, Void, Integer >{
 	private InputStream is;
 	private ProgressDialog pd;
 	private String fileName;
+	private Socket sc;
 	
-	public AsyncFileSender(InputStream is, ProgressDialog pd, String fileName) {
+	public AsyncFileSender(Socket sc ,InputStream is, ProgressDialog pd, String fileName) {
 		// TODO Auto-generated constructor stub
+		this.sc = sc;
 		this.is = is;
 		this.pd = pd;
 		this.fileName = fileName;
@@ -26,7 +28,6 @@ public class AsyncFileSender extends AsyncTask<Void, Void, Integer >{
 
 	public Integer doInBackground(Void... params) {
 		try {
-			Socket sc = new Socket(MainActivity.srvIp, MainActivity.srvPort);
 			ObjectOutputStream oos = new ObjectOutputStream(sc.getOutputStream());
 			
 			byte buffer[] = new byte[1024*512]; // 512k
@@ -59,7 +60,7 @@ public class AsyncFileSender extends AsyncTask<Void, Void, Integer >{
 			pd.dismiss();
 			
 		} catch (Exception e) {
-			e.printStackTrace();
+
 		} catch (Throwable e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

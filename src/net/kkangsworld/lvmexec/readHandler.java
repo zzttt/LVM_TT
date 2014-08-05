@@ -5,7 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 
-import com.FrameWork.ConnServer;
+import com.FrameWork.ConnectionManager;
 import com.FrameWork.SnapshotImageMaker;
 import com.example.timetraveler.MainActivity;
 import com.example.timetraveler.SrvBackupActivity;

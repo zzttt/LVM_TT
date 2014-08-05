@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Reader;
 import java.net.Socket;
@@ -20,10 +21,10 @@ import com.FileManager.AsyncFileSender;
 //import com.FileManager.AsyncFileSender;
 import com.FileManager.FileInfo;
 import com.FileManager.FileSender;
-import com.FrameWork.ConnServer;
+import com.FrameWork.ConnectionManager;
 import com.FrameWork.Payload;
 import com.FileManager.FileSender;
-import com.FrameWork.ConnServer;
+import com.FrameWork.ConnectionManager;
 import com.FrameWork.InstalledAppInfo;
 import com.FrameWork.Payload;
 
@@ -61,6 +62,7 @@ import android.widget.Toast;
 
 public class RecvActivity extends Activity {
 
+	private Socket sc;
 	MyCustomAdapter dataAdapter = null;
 
 	final static int RECV_APP = 1;
@@ -94,6 +96,9 @@ public class RecvActivity extends Activity {
 													// srv : 서버 )
 
 		mName = getIntent().getStringExtra("mName");
+		
+
+		
 
 		if (mName.equals("어플리케이션")) { // 어플리케이션 복원
 			func_code = RECV_APP;
@@ -568,12 +573,15 @@ public class RecvActivity extends Activity {
 
 	private class MyCustomAdapter extends ArrayAdapter<Item> {
 		private ArrayList<Item> ItemList;
-
+		
+		
 		public MyCustomAdapter(Context context, int textViewResourceId,
 				ArrayList<Item> ItemList) {
 			super(context, textViewResourceId, ItemList);
 			this.ItemList = new ArrayList<Item>();
 			this.ItemList.addAll(ItemList);
+			
+			
 		}
 
 		private class ViewHolder {
@@ -1006,6 +1014,10 @@ public class RecvActivity extends Activity {
 						progressDialog.setCancelable(true);
 						progressDialog.show();
 
+						
+						
+						
+						
 						for (int i = 0; i < ItemList.size(); i++) {
 							Item Item = ItemList.get(i);
 
@@ -1018,6 +1030,26 @@ public class RecvActivity extends Activity {
 
 								progressDialog.setProgress(i);
 
+								
+								Thread socTh = new Thread(new Runnable() {
+									@Override
+									public void run() {
+										// TODO Auto-generated method stub
+										try {
+											
+											sc = new Socket(MainActivity.srvIp, MainActivity.srvPort);
+											
+										} catch (UnknownHostException e) {
+											// TODO Auto-generated catch block
+											e.printStackTrace();
+										} catch (IOException e) {
+											// TODO Auto-generated catch block
+											e.printStackTrace();
+										}
+									}
+								}); 
+								socTh.start();
+								
 								// 마운트 진행 후 파일을 옮긴다. ( Sdcard 혹은 Server로 전송 )
 								try {
 									p = new ProcessBuilder("su").start();
@@ -1031,6 +1063,7 @@ public class RecvActivity extends Activity {
 									p.getOutputStream().write(
 											mountCom.getBytes());
 
+									
 									String com = "ls -l /sdcard/ssDir/"
 											+ Item.getPath().substring(
 													0,
@@ -1048,15 +1081,110 @@ public class RecvActivity extends Activity {
 
 									Log.v("eee", com);
 
-									// p.getOutputStream().write(com.getBytes());
+									
+									p.getOutputStream().write(com.getBytes());
 
 									// dd 로 obs
 
-									// Socket sc = new
-									// Socket(MainActivity.srvIp,MainActivity.srvPort);
-									String sendToSocket = "dd if=/sdcard/ssDir/"
-											+ Item.getPath() + " obs=512k \n";
+									// 1) ls 파싱 후 file size 를 읽어들인다
+									
+
+									BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+									String ss = null; 
+									ss = br.readLine();
+									Log.w("kkk", "ls result : "+ss);
+									
+									String resArr[] = ss.split(" ");
+									
+									int idx = 0;
+									long fileSize = 0;
+									
+									for(String s : resArr){
+										idx++;
+										Log.w("kkk",s.trim()+"("+idx+")");
+										if(s.equals("115061133"))
+											fileSize = 115061133;
+									}
+									
+									//long fileSize = Long.parseLong(resArr[3]);
+									
+									
+									/*
+									if(resArr[5].equals("166107")){
+										fileSize = Long.parseLong(resArr[5]);
+									}else if(resArr[4].equals("6643061")){
+										fileSize = Long.parseLong(resArr[4]);
+									}else{
+										fileSize = Long.parseLong(resArr[3]);
+									}*/
+									//br.reset();
+									Log.w("kkk", "end?");
+									
+									// 2) file size 를 1000block 씩 분할 수행한다.
+									
+									// 1 block = 512byte >> 1000block == 512000byte;
+									
+									int total = 0;
+									
+									if(fileSize % 512000 > 0){
+										total = (int) (fileSize / 512000) + 1;
+									}else if(fileSize % 512000 == 0){
+										total = (int) (fileSize / 512000);
+									}
+									
+									int count = 1000;
+									
+									String sendToSocket = null;
+									
+									
+									
+									sendToSocket = "dd if=/sdcard/ssDir/"
+											+ Item.getPath()
+											+ " obs=512k"
+											+ "\n";
 									Log.v("eee", sendToSocket);
+
+									// 복사 명령어 실행
+									p.getOutputStream().write(
+											sendToSocket.getBytes());
+									p.getOutputStream().flush();
+									
+									AsyncFileSender afs = new
+									AsyncFileSender(sc, p.getInputStream(), progressDialog , Item.getName());
+									afs.execute();
+									
+									
+									
+									
+									/*for(int j = 0 ; j < 1; j++){
+								
+										// 3) 1000block (500k) 씩 반복하면서 소켓으로 전송
+										if (((j * 1000) + count) * 512 > fileSize) {
+
+										}
+
+										
+										 sendToSocket = "dd if=/sdcard/ssDir/"
+												+ Item.getPath()
+												+ " obs=512k skip="
+												+ (j * 1000)
+												+ " count="
+												+ count + "\n";
+
+										Log.v("eee", sendToSocket);
+
+										// 복사 명령어 실행
+										p.getOutputStream().write(
+												sendToSocket.getBytes());
+										p.getOutputStream().flush();
+										
+										AsyncFileSender afs = new
+										AsyncFileSender(sc, p.getInputStream(), progressDialog , Item.getName());
+										afs.execute();
+										
+										
+									}*/
+									
 									/*
 									 * ObjectOutputStream oos = new
 									 * ObjectOutputStream(sc.getOutputStream());
@@ -1065,10 +1193,7 @@ public class RecvActivity extends Activity {
 									 * MainActivity.rd.getUserCode());
 									 * oos.writeObject(pl); // code 8 번은 임시파일 전송
 									 */
-
-									// 복사 명령어 실행
-									p.getOutputStream().write(
-											sendToSocket.getBytes());
+									
 
 									byte buffer[] = new byte[1024 * 512]; // 512k
 									int size = 0;
@@ -1090,10 +1215,11 @@ public class RecvActivity extends Activity {
 									 * totalSize += size; }
 									 */
 
-									// AsyncFileSender afs = new
-									// AsyncFileSender(p.getInputStream(),null,null);
-									// afs.execute();
+									
+									Log.e("FileName", Item.getName());
+									
 
+									 
 									/*
 									 * Log.i("eee", "total : " +
 									 * Long.toString(totalSize

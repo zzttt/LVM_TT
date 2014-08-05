@@ -35,10 +35,9 @@ import com.Authorization.CodeGenerator;
 import com.Authorization.RegistrationDevice;
 import com.FileManager.FileInfo;
 import com.FileManager.SnapshotDiskManager;
-import com.FrameWork.ConnServer;
+import com.FrameWork.ConnectionManager;
 import com.FrameWork.SnapshotAlteration;
 import com.FrameWork.InstalledAppInfo;
-import com.FrameWork.opSwitch;
 
 import android.R.color;
 import android.app.Activity;
@@ -118,7 +117,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	NetworkInfo wifi;
 	
 	
-	private ConnServer conn;
+	private ConnectionManager conn;
 	
 	public static String srvIp = "211.189.19.45";
 	public static int srvPort = 12345 ;
@@ -192,7 +191,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		snapshotListInDev = sList; // 장치내의 리스트 가져옴
 		
 		// 2. Load Server List on Server
-		conn = new ConnServer(this.srvIp, 12345, 0, rd.getUserCode(),
+		conn = new ConnectionManager(this.srvIp, 12345, 0, rd.getUserCode(),
 				handler);
 		conn.start();
 
@@ -228,7 +227,7 @@ public class MainActivity extends Activity implements OnClickListener {
 			snapshotListInDev = sList; // 장치내의 리스트 가져옴
 
 			// 2. Load Server List on Server
-			ConnServer conn = new ConnServer("211.189.19.45", 12345, 0, rd.getUserCode(),
+			ConnectionManager conn = new ConnectionManager("211.189.19.45", 12345, 0, rd.getUserCode(),
 					handler);
 			conn.start();
 			
@@ -416,7 +415,7 @@ public class MainActivity extends Activity implements OnClickListener {
 									.getTime()));
 							
 							pl = new pipeWithLVM(rh);
-							//pl.ActionWritePipe("lvcreate -s -L 1G -n "+today+" /dev/vg/usersdcard");
+							pl.ActionWritePipe("lvcreate -s -L 1G -n "+today+" /dev/vg/usersdcard");
 							
 							try {
 								Thread.sleep(300);
@@ -1156,7 +1155,7 @@ public class MainActivity extends Activity implements OnClickListener {
 							};
 							
 							// 스냅샷 정보를 읽어들임 
-							ConnServer cs = new ConnServer( srvIp , 12345 , 7 ,  rd.getUserCode() , sName, mName, mHandler); 
+							ConnectionManager cs = new ConnectionManager( srvIp , 12345 , 7 ,  rd.getUserCode() , sName, mName, mHandler); 
 							cs.start();
 							
 							try {

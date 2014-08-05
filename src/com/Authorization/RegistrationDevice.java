@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.StreamCorruptedException;
 
-import com.FrameWork.ConnServer;
+import com.FrameWork.ConnectionManager;
 import com.FrameWork.Payload;
 import com.example.timetraveler.MainActivity;
 
@@ -50,7 +50,7 @@ public class RegistrationDevice {
 		userCode = this.getUserCode(); // 기기코드
 
 		// 사용자 확인 . opcode 3
-		ConnServer conn = new ConnServer(MainActivity.srvIp, 12345, 3, userCode , handler);
+		ConnectionManager conn = new ConnectionManager(MainActivity.srvIp, 12345, 3, userCode , handler);
 		conn.start();
 		
 
@@ -87,7 +87,7 @@ public class RegistrationDevice {
 	 */
 	public void createUser() { // 사용자 정보 생성
 		
-		ConnServer conn = new ConnServer(MainActivity.srvIp , 12345 , 4 , userCode, handler);
+		ConnectionManager conn = new ConnectionManager(MainActivity.srvIp , 12345 , 4 , userCode, handler);
 		conn.start();
 
 	}
@@ -96,7 +96,7 @@ public class RegistrationDevice {
 	 * 사용자 정보 읽기
 	 */
 	public void getUserInfo() {
-		ConnServer conn = new ConnServer(MainActivity.srvIp , 12345 , 5, userCode, handler);
+		ConnectionManager conn = new ConnectionManager(MainActivity.srvIp , 12345 , 5, userCode, handler);
 		conn.start();
 	}
 
