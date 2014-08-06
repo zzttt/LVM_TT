@@ -2,37 +2,52 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
+    android:background="#2E2E2E"
     >
     
     <LinearLayout
         android:layout_width="fill_parent"
-        android:layout_height="50dip"
+        android:layout_height="74dip"
         android:orientation="horizontal" 
         android:id="@+id/title_layout"
-        android:background="#000000"
+        android:background="#2E2E2E"
         >
 
         <Button
             android:id="@+id/btn_one"
             android:layout_width="0dip"
             android:layout_weight="1"
-            android:layout_height="50dip"
+            android:layout_height="80dip"
             android:text="Back up" 
+            android:background="#5c6666"
+            android:layout_marginRight="5dip"
+            android:textColor="#efefef"
+            android:textSize="25sp"
+            android:padding="3px"
             />
 
         <Button
             android:id="@+id/btn_two"
             android:layout_width="0dip"
             android:layout_weight="1"
-            android:layout_height="50dip"
-            android:text="Restore" />
+            android:layout_height="80dip"
+            android:text="Restore"
+            android:background="#5c6666"
+            android:textColor="#efefef"
+            android:textSize="25sp"
+            android:padding="3px" />
 
         <Button
             android:id="@+id/btn_three"
             android:layout_width="0dip"
             android:layout_weight="1"
-            android:layout_height="50dip"
-            android:text="Settings" />
+            android:layout_height="80dip"
+            android:text="Settings" 
+            android:background="#5c6666"
+           	android:layout_marginLeft="5dip"
+           	android:textColor="#efefef"
+           	android:textSize="25sp"
+            android:padding="3px"/>
     </LinearLayout>
     
 	<android.support.v4.view.ViewPager 
@@ -41,6 +56,8 @@
 	    android:layout_height="match_parent"
         android:layout_above="@+id/bottom"
 	 	android:layout_below="@+id/title_layout"
+	 	android:layout_marginTop="0dip"
+	 	android:background="#2E2E2E"
 	    >
 	
 	    

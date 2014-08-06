@@ -722,6 +722,7 @@ public class RecvActivity extends Activity {
 							targetText = (String) cb.getText();
 							break;
 						case RECV_SETTINGS:
+							targetText = (String) cb.getText();
 							if (cb.getText().toString().contains("전화번호부")) {
 								if (CONTACTS == 1)
 									CONTACTS = 0;
@@ -749,16 +750,19 @@ public class RecvActivity extends Activity {
 							
 							break;
 						}
-
+/*
 						Toast.makeText(
 								getApplicationContext(),
 								"Clicked on Checkbox: " + cur_Loc + "/"
 										+ targetText + " is " + cb.isChecked(),
 								Toast.LENGTH_LONG).show();
-						Item.setSelected(cb.isChecked(), cur_Loc,targetText.toString(), func_code); // 선택됨을 체크
-																	// (선택 시 해당
-																	// 경로와 이름을
-																	// 저장 )
+						*/
+						if(func_code != RECV_SETTINGS){
+							Item.setSelected(cb.isChecked(), cur_Loc,targetText.toString(), func_code); // 선택됨을 체크
+																		// (선택 시 해당
+																		// 경로와 이름을
+																		// 저장 )
+						}
 
 					}
 				});
@@ -844,8 +848,6 @@ public class RecvActivity extends Activity {
 		switch (requestCode) {
 		case 1:
 			CopyToAppData(pName, UsedsName);
-			Log.v("lll", "ddododododododod");
-			
 			
 			break;
 
@@ -1060,7 +1062,6 @@ public class RecvActivity extends Activity {
 	
 
 	
-	
 	public void mOnClick(View v) {
 		switch (v.getId()) {
 		case R.id.startRecv: // startRecovery
@@ -1074,155 +1075,205 @@ public class RecvActivity extends Activity {
 			final Dialog mDialog = adb.create();
 
 			switch (func_code) {
+			case RECV_SETTINGS:
+				recovProcess = new Thread() {
+
+					@Override
+					public void run() {
+						// try {
+						// p.getOutputStream().write(("mount -t ext4 /dev/vg/"+sName+"_usersystem /sdcard/ssDir/"+sName+"_usersystem\n").getBytes());
+						// } catch (IOException e1) {
+						// // TODO Auto-generated catch block
+						// e1.printStackTrace();
+						// }
+						try {
+							p = new ProcessBuilder("su").start();
+							
+							p.getOutputStream().write(("mount -t ext4 /dev/vg/"+sName+" /sdcard/ssDir/"+sName+"\n").getBytes());
+							
+							Log.i("lvm2", "mount -t ext4 /dev/vg/"+sName+" /sdcard/ssDir/"+sName+"\n");
+							
+						if (CONTACTS == 1) {
+							// 전화번호부 복원루틴 수행
+						}
+						if (PASSWORD == 1) {
+							// 비밀번호 복원 루틴 수행
+							String copy_password = "cp /sdcard/ssDir/"
+									+ sName+"/system/password.key /data/system/password.key\n";
+							Log.v("lvm2","pw : "+copy_password);
+							
+							try {
+								p.getOutputStream().write(
+										copy_password.getBytes());
+								
+								copy_password = "rm /sdcard/ssDir/"
+										+ sName+"/system/password.key";
+								
+								p.getOutputStream().write(
+										copy_password.getBytes());
+								
+								
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+						if (WIFI == 1) {
+							// 와이파이 복원 루틴 수행
+							String copy_wifi = "cp /sdcard/ssDir/"
+									+ sName
+									+ "/misc/wifi/wpa_supplicant.conf /data/misc/wifi/wpa_supplicant.conf\n";
+							try {
+								p.getOutputStream().write(copy_wifi.getBytes());
+								
+								copy_wifi = "rm /sdcard/ssDir/"
+									+ sName
+									+ "/misc/wifi/wpa_supplicant.conf";
+								
+								p.getOutputStream().write(
+										copy_wifi.getBytes());
+								
+								
+								
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+						if (GESTURE == 1) {
+							// 패턴 복원 루틴 수행
+							String copy_gesture = "cp /sdcard/ssDir/"
+									+ sName
+									+ "/system/gesture.key /data/system/gesture.key\n";
+							try {
+									p.getOutputStream().write(
+											copy_gesture.getBytes());
+
+									copy_gesture = "rm /sdcard/ssDir/" + sName
+											+ "/system/gesture.key";
+
+									p.getOutputStream().write(
+											copy_gesture.getBytes());
+
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+						
+							p.getOutputStream().write(("umount /sdcard/ssDir/"+sName+"_usersystem\n").getBytes());
+							
+							p.getOutputStream().write("exit\n".getBytes());
+							p.getOutputStream().flush();
+							p.getOutputStream().close();
+
+						} catch (IOException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+					}
+
+				};
+				break;
 			case RECV_APP:
 				recovProcess = new Thread() {
 
 					@Override
 					public void run() {
-						
-						if(func_code == RECV_SETTINGS ){
-//							try {
-//								p.getOutputStream().write(("mount -t ext4 /dev/vg/"+sName+"_usersystem /sdcard/ssDir/"+sName+"_usersystem\n").getBytes());
-//							} catch (IOException e1) {
-//								// TODO Auto-generated catch block
-//								e1.printStackTrace();
-//							}
-							
-							SystemSetting ss = new SystemSetting();
-							ss.set_permission();   // root 권한 및 경로에 777권한 부여 
-			                  
-			                  if(CONTACTS == 1){
-			                     // 전화번호부 복원루틴 수행
-			                  }
-			                  if(PASSWORD == 1){
-			                     // 비밀번호 복원 루틴 수행
-			                	  String copy_password = "cp /sdcard/ssDir/"+sName+"_usersystem/system/password.key /sdcard/password.key\n";
-			                	  try {
-									p.getOutputStream().write(copy_password.getBytes());
-								} catch (IOException e) {
-									// TODO Auto-generated catch block
-									e.printStackTrace();
-								}
-			                  }
-			                  if(WIFI == 1){
-			                     // 와이파이 복원 루틴 수행                  
-					        		String copy_wifi = "cp /sdcard/ssDir/"+sName+"_usersystem/misc/wifi/wpa_supplicant.conf /sdcard/wpa_supplicant.conf\n";
-					        		try {
-										p.getOutputStream().write(copy_wifi.getBytes());
-									} catch (IOException e) {
-										// TODO Auto-generated catch block
-										e.printStackTrace();
-									}
-			                  }
-			                  if(GESTURE == 1){
-			                     // 패턴 복원 루틴 수행
-								String copy_gesture = "cp /sdcard/ssDir/"+sName+"_usersystem/system/gesture.key /sdcard/gesture.key\n";
+
+						ProgressDialog progressDialog;
+						progressDialog = new ProgressDialog(RecvActivity.this);
+						progressDialog
+								.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+						progressDialog.setMax(ItemList.size());
+						progressDialog.setMessage("파일 복원 중 입니다...");
+
+						progressDialog.setCancelable(true);
+						progressDialog.show();
+
+						for (int i = 0; i < ItemList.size(); i++) {
+							Item Item = ItemList.get(i);
+
+							if (Item.isSelected()) {
+								/* /data/data영역 체크 */
+								String dataCoverPath = Item.getPath().replace(
+										sName, "/sdcard/");
+								String apkCoverPath = null;
+								// TODO : 경로체크 필요
+
+								Log.v("path",
+										Item.getPath().replace(sName, "/data")); // 실제
+																					// 경로
+																					// 경로체크
+
+								progressDialog.setProgress(i);
+
+								// 마운트 진행 후 파일을 옮긴다. ( Sdcard 혹은 Server로 전송 )
 								try {
-									p.getOutputStream().write(copy_gesture.getBytes());
+									p = new ProcessBuilder("su").start();
+
+									String mountCom = "mount -t ext4 /dev/vg/"
+											+ sName + " /sdcard/ssDir/" + sName
+											+ "\n";
+
+									Log.v("eee", mountCom);
+
+									p.getOutputStream().write(
+											mountCom.getBytes());
+
+									/*
+									 * pName-1.apk가 없으면 pName-2.apk로 해준다.
+									 */
+
+									String apkName = ExtractAPKName(Item
+											.getPath().replace(sName, "")
+											.replace("/app/", ""),
+											"/sdcard/ssDir/" + sName + "/app/");
+									String cpCom = "cp /sdcard/ssDir/" + sName
+											+ "/app/" + apkName + " "
+											+ "/sdcard/" + "\n";
+
+									p.getOutputStream().write(cpCom.getBytes());
+
+									String modCom = "chmod 777 /sdcard/"
+											+ apkName + "\n";
+
+									p.getOutputStream()
+											.write(modCom.getBytes());
+
+									p.getOutputStream().write(
+											"exit\n".getBytes());
+									p.getOutputStream().flush();
+
+									Log.d("APP",
+											Item.getPath().replace(sName, "")
+													.replace("/app/", ""));
+
+									// ExtractAPKName(Item.getPath().replace(sName,
+									// "").replace("/app/", ""),
+									// "/sdcard/ssDir/" + sName);
+									StartInstall2(apkName, "/sdcard/", sName);
+
+									mountCom = "umount /sdcard/ssDir/" + sName
+											+ "\n";
+
+									p.getOutputStream().write(
+											mountCom.getBytes());
+
+									p.getOutputStream().write(
+											"exit\n".getBytes());
+									p.getOutputStream().flush();
+
 								} catch (IOException e) {
 									// TODO Auto-generated catch block
 									e.printStackTrace();
-								}
-			                  }
-			                  
-						}
-						else{
-							ProgressDialog progressDialog;
-							progressDialog = new ProgressDialog(RecvActivity.this);
-							progressDialog
-									.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-							progressDialog.setMax(ItemList.size());
-							progressDialog.setMessage("파일 복원 중 입니다...");
-
-							progressDialog.setCancelable(true);
-							progressDialog.show();
-
-							for (int i = 0; i < ItemList.size(); i++) {
-								Item Item = ItemList.get(i);
-
-								if (Item.isSelected()) {
-									/* /data/data영역 체크 */
-									String dataCoverPath = Item.getPath().replace(
-											sName, "/sdcard/");
-									String apkCoverPath = null;
-									// TODO : 경로체크 필요
-
-									Log.v("path",
-											Item.getPath().replace(sName, "/data")); // 실제
-																						// 경로
-																						// 경로체크
-
-									progressDialog.setProgress(i);
-
-									// 마운트 진행 후 파일을 옮긴다. ( Sdcard 혹은 Server로 전송 )
-									try {
-										p = new ProcessBuilder("su").start();
-
-										String mountCom = "mount -t ext4 /dev/vg/"
-												+ sName + " /sdcard/ssDir/" + sName
-												+ "\n";
-
-										Log.v("eee", mountCom);
-
-										p.getOutputStream().write(
-												mountCom.getBytes());
-
-										/*
-										 * pName-1.apk가 없으면 pName-2.apk로 해준다.
-										 */
-
-										String apkName = ExtractAPKName(Item
-												.getPath().replace(sName, "")
-												.replace("/app/", ""),
-												"/sdcard/ssDir/" + sName + "/app/");
-										String cpCom = "cp /sdcard/ssDir/" + sName
-												+ "/app/" + apkName + " "
-												+ "/sdcard/" + "\n";
-
-										
-										p.getOutputStream().write(cpCom.getBytes());
-
-										String modCom = "chmod 777 /sdcard/"
-												+ apkName+"\n";
-
-										p.getOutputStream()
-												.write(modCom.getBytes());
-
-										p.getOutputStream().write(
-												"exit\n".getBytes());
-										p.getOutputStream().flush();
-
-										Log.d("APP",
-												Item.getPath().replace(sName, "")
-														.replace("/app/", ""));
-
-										// ExtractAPKName(Item.getPath().replace(sName,
-										// "").replace("/app/", ""),
-										// "/sdcard/ssDir/" + sName);
-										StartInstall2(apkName, "/sdcard/", sName);
-
-										mountCom = "umount /sdcard/ssDir/" + sName
-												+ "\n";
-
-										p.getOutputStream().write(
-												mountCom.getBytes());
-
-										p.getOutputStream().write(
-												"exit\n".getBytes());
-										p.getOutputStream().flush();
-
-									} catch (IOException e) {
-										// TODO Auto-generated catch block
-										e.printStackTrace();
-									}
 								}
 							}
-							progressDialog.dismiss();
-							
 						}
-						
-					
+						progressDialog.dismiss();
+
 					}
+
 				};
 				break;
 			case RECV_USER_DATA:
@@ -1465,7 +1516,7 @@ public class RecvActivity extends Activity {
 				break;
 			}
 
-			adb.setPositiveButton("복원시작", new OnClickListener() {
+			adb.setNegativeButton("복원시작", new OnClickListener() {
 				@Override
 				public void onClick(DialogInterface arg0, int arg1) {
 					// TODO Auto-generated method stub
@@ -1474,7 +1525,7 @@ public class RecvActivity extends Activity {
 				}
 			});
 
-			adb.setNegativeButton("취소", new OnClickListener() {
+			adb.setPositiveButton("취소", new OnClickListener() {
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
 					// TODO Auto-generated method stub

@@ -122,7 +122,7 @@ public class SnapListExpandableAdapter extends BaseExpandableListAdapter {
 			if (menuNumber == 0) { // 0 번 메뉴에서만 사용하는 View
 			} else {
 				viewHolder.tv_groupName.setGravity(Gravity.CENTER_HORIZONTAL);
-				v .setBackgroundColor(Color.BLACK);
+				v .setBackgroundColor(Color.alpha(44000000));
 				viewHolder.tv_description.setVisibility(View.GONE);
 				viewHolder.iv_image.setVisibility(View.GONE);
 			}

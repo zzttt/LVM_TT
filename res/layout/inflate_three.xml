@@ -8,15 +8,15 @@
         android:id="@+id/elv_list3"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:background="#F4FA58"
+        android:background="#2E2E2E"
         android:fillViewport="true" >
 
         <LinearLayout
             android:id="@+id/ll_three"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            android:background="#000000"
-            android:orientation="vertical" >
+            android:orientation="vertical" 
+            >
 
             <TextView
                 android:layout_width="match_parent"

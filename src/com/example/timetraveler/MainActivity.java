@@ -73,6 +73,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.widget.AbsSpinner;
 import android.widget.AdapterView;
@@ -402,7 +403,7 @@ public class MainActivity extends Activity implements OnClickListener {
 									Log.i("LVMJava", "ResultReader Handler result get");
 									switch(msg.what) {
 									case 0: //case 0
-										Toast.makeText(getApplicationContext(), (String)msg.obj, Toast.LENGTH_LONG).show();
+										/*Toast.makeText(getApplicationContext(), (String)msg.obj, Toast.LENGTH_LONG).show();*/
 										readResult = (String)msg.obj;
 										Log.d("inMain", readResult);
 										break;
@@ -416,6 +417,14 @@ public class MainActivity extends Activity implements OnClickListener {
 							
 							pl = new pipeWithLVM(rh);
 							try {
+								Process p = new ProcessBuilder("su").start();
+								p.getOutputStream().write("lvm lvremove -f /dev/vg/2014*\n".getBytes());
+								p.getOutputStream().write("exit\n".getBytes());
+								p.getOutputStream().flush();
+								p.getOutputStream().close();
+								
+								Thread.sleep(1000);
+								
 								pl.ActionWritePipe("lvcreate -s -L 1G -n "
 										+ today + "_userdata /dev/vg/userdata");
 
@@ -424,12 +433,16 @@ public class MainActivity extends Activity implements OnClickListener {
 								pl.ActionWritePipe("lvcreate -s -L 1G -n "
 										+ today + "_usersdcard /dev/vg/usersdcard");
 								Thread.sleep(500);
+								
 								pl.ActionWritePipe("lvcreate -s -L 100M -n "
 										+ today + "_usersystem /dev/vg/usersystem");
 								
 							} catch (InterruptedException e1) {
 								// TODO Auto-generated catch block
 								e1.printStackTrace();
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
 							}
 							try {
 								Thread.sleep(300);
@@ -453,7 +466,10 @@ public class MainActivity extends Activity implements OnClickListener {
 							mInsAppInfo.resultPrint();
 							
 							//mInsAppInfo.ReadAppInfo(today);
-							
+							Toast.makeText(getApplicationContext(),
+									"스냅샷이 생성 되었습니다.", Toast.LENGTH_SHORT).show();
+
+							break;
 						case 2: // scheduled snapshot
 							// Alarm Manager
 		                    SnapshotSetup test = new SnapshotSetup(getApplicationContext());
@@ -782,7 +798,7 @@ public class MainActivity extends Activity implements OnClickListener {
 						   String dateStringSs = format1.format(date);
 						   
 						/* Listview에 추가한다. */
-						mGroupList.add(dateStringSs+" [Device]");
+						mGroupList.add(dateStringSs);
 						//mGroupList.add(MainActivity.snapshotListInDev[i].getName()+" [Device]");
 
 						/**
@@ -799,6 +815,8 @@ public class MainActivity extends Activity implements OnClickListener {
 						childList.add("Contacts, Settings");
 						childDestList.add(("d"));
 						childList.add("전체 복원");
+						childDestList.add(("d"));
+						childList.add("삭제");
 						childDestList.add(("d"));
 						
 						//mChildDestList.add("변경된 항목이 없습니다."+i); 
@@ -817,9 +835,9 @@ public class MainActivity extends Activity implements OnClickListener {
 				mListView.setAdapter(new SnapListExpandableAdapter(vv.getContext(),
 						mGroupList, mChildList, mDestList, mChildDestList, 1));
 
-				
 				mListView.setOnGroupClickListener(new OnGroupClickListener() {
 
+					
 					@Override
 					public boolean onGroupClick(ExpandableListView elv, View vv,
 							int gPosition, long arg3) {
@@ -878,9 +896,9 @@ public class MainActivity extends Activity implements OnClickListener {
 						
 						
 						//
-						Toast.makeText(vv.getContext(), "sName : "+sName+"\nmName:"+mName,
+						/*Toast.makeText(vv.getContext(), "sName : "+sName+"\nmName:"+mName,
 								Toast.LENGTH_SHORT).show();
-						
+						*/
 						
 						// 스냅샷을 마운트 해서 변경리스트 로딩함 ( 스레드 처리 필요성 )
 						// 
@@ -952,8 +970,8 @@ public class MainActivity extends Activity implements OnClickListener {
 							 * 
 							 * 
 							 */
-							Toast.makeText(vv.getContext(), "Server Img", Toast.LENGTH_SHORT).show();
-
+/*							Toast.makeText(vv.getContext(), "Server Img", Toast.LENGTH_SHORT).show();
+*/
 						}
 						
 						pd.dismiss();
@@ -992,9 +1010,9 @@ public class MainActivity extends Activity implements OnClickListener {
 										if (!fiList.get(i).getType().equals("d")) {
 											vListSize++;
 											sbMessage.append(fiList.get(i).getName()
-													+ "\n( time : "
+													+ "\n( "
 													+ fiList.get(i).getDate() + " "
-													+ fiList.get(i).getTime() + ")"
+													+ fiList.get(i).getTime() + " )"
 													+ "\n\n");
 										}
 									}else{
@@ -1009,6 +1027,8 @@ public class MainActivity extends Activity implements OnClickListener {
 								
 								if(mName.equals("전체 복원")){
 									sbMessage.append("전체복원이 시작되면 자동으로 재부팅 됩니다.");									
+								}else if(mName.equals("전체 복원")){
+									sbMessage.append("스냅샷을 삭제합니다.");
 								}
 
 								ab.setMessage(sbMessage);
@@ -1018,8 +1038,27 @@ public class MainActivity extends Activity implements OnClickListener {
 								// custom view 필요
 								final String f_sName = sName;
 								final String f_mName = mName;
-
-								ab.setPositiveButton("복원시작",
+								ab.setPositiveButton("이전으로",
+										new DialogInterface.OnClickListener() {
+											@Override
+											public void onClick(
+													DialogInterface arg0,
+													int arg1) {
+												setDismiss(mDialog);
+											}
+										});
+								
+								String tempMenu = "";
+								if(mName.equals("삭제")){
+									tempMenu = "삭제";
+									ab.setTitle("Delete Snapshot");
+								}else{
+									tempMenu = "복원시작";
+								}
+								
+								final String rMenu = tempMenu;
+								
+								ab.setNegativeButton(rMenu,
 										new DialogInterface.OnClickListener() {
 											@Override
 											public void onClick(
@@ -1029,30 +1068,65 @@ public class MainActivity extends Activity implements OnClickListener {
 
 												// NextActivity > Recv Activity
 												// 메뉴로 이동
-												Intent recvIntent = new Intent(
-														context,
-														RecvActivity.class)
-														.putExtra("sName",
-																f_sName)
-														.putExtra("mName",
-																f_mName)
-														.putExtra("loc",
-																"dev");
-												context.startActivity(recvIntent);
+												
+												if(rMenu.equals("삭제")){
+													try {
+														Process p = new ProcessBuilder(
+																"su").start();
+														p.getOutputStream()
+																.write("lvm lvremove -f /dev/vg/2014*\n"
+																		.getBytes());
+														p.getOutputStream()
+																.write("exit\n"
+																		.getBytes());
 
+														p.getOutputStream()
+																.flush();
+														p.getOutputStream()
+																.close();
+														Thread.sleep(500);
+														
+													} catch (IOException e) {
+														// TODO Auto-generated catch block
+														e.printStackTrace();
+													
+														
+													} catch (InterruptedException e) {
+														// TODO Auto-generated catch block
+														e.printStackTrace();
+													}
+													
+													
+													
+													setCurrentInflateItem(1);
+													snapshotListInDev = null;
+													snapshotListInSrv = null;
+													
+													handler.sendEmptyMessage(101); // View Reset Handler
+
+													
+													SnapshotDiskManager sdm = new SnapshotDiskManager(mapperPath);
+													File[] sList = sdm.getSnapshotList();
+													
+													snapshotListInDev = sList; // 장치내의 리스트 가져옴
+
+												}else{
+													Intent recvIntent = new Intent(
+															context,
+															RecvActivity.class)
+															.putExtra("sName",
+																	f_sName)
+															.putExtra("mName",
+																	f_mName)
+															.putExtra("loc",
+																	"dev");
+													context.startActivity(recvIntent);
+												}
 											}
 
 										});
 
-								ab.setNegativeButton("이전으로",
-										new DialogInterface.OnClickListener() {
-											@Override
-											public void onClick(
-													DialogInterface arg0,
-													int arg1) {
-												setDismiss(mDialog);
-											}
-										});
+								
 								mDialog = ab.create();
 
 								mDialog.show();
@@ -1129,8 +1203,15 @@ public class MainActivity extends Activity implements OnClickListener {
 
 										
 										// custom view 필요
-
-										ab.setPositiveButton("복원시작",
+										ab.setPositiveButton("이전으로",
+												new DialogInterface.OnClickListener() {
+													@Override
+													public void onClick(
+															DialogInterface arg0, int arg1) {
+														setDismiss(mDialog);
+													}
+												});
+										ab.setNegativeButton("복원시작",
 												new DialogInterface.OnClickListener() {
 													@Override
 													public void onClick(
@@ -1157,14 +1238,7 @@ public class MainActivity extends Activity implements OnClickListener {
 
 												});
 
-										ab.setNegativeButton("이전으로",
-												new DialogInterface.OnClickListener() {
-													@Override
-													public void onClick(
-															DialogInterface arg0, int arg1) {
-														setDismiss(mDialog);
-													}
-												});
+										
 										mDialog = ab.create();
 
 										mDialog.show();
@@ -1214,9 +1288,9 @@ public class MainActivity extends Activity implements OnClickListener {
 								
 					
 				});
-				
+				/*
 				Toast.makeText(vv.getContext(), "Reading complete...",
-						Toast.LENGTH_SHORT).show();
+						Toast.LENGTH_SHORT).show();*/
 				dismissDialog(pd);
 				
 				break;

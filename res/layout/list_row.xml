@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent" >
+    android:layout_height="fill_parent" 
+    android:background="#00000000">
 
     <ImageView
         android:id="@+id/iv_image"
@@ -12,6 +13,7 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
+        android:background="#00000000"
          >
 
         <TextView
@@ -20,7 +22,8 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="10dip"
             android:layout_marginTop="15dip"
-            android:textSize="25dip" />
+            android:textSize="25dip" 
+            android:background="#00000000"/>
 
         <TextView
             android:id="@+id/tv_child"
@@ -30,7 +33,8 @@
             android:layout_marginLeft="30dip"
             android:layout_marginTop="15dip"
             android:gravity="center"
-            android:textSize="30dip" />
+            android:textSize="30dip"
+            android:background="#00000000" />
 
         <TextView
             android:id="@+id/tv_desc"
@@ -40,7 +44,8 @@
             android:layout_marginRight="10dip"
             android:layout_marginTop="10dip"
             android:layout_marginBottom="10dip"
-            android:gravity="center" />
+            android:gravity="center"
+            android:background="#00000000" />
     </LinearLayout>
 
 </LinearLayout>

@@ -116,7 +116,7 @@ public class BaseExpandableAdapter extends BaseExpandableListAdapter {
 				viewHolder.iv_image
 						.setLayoutParams(new LinearLayout.LayoutParams(300, 300));
 				
-				v.setBackgroundColor(Color.DKGRAY);
+				v.setBackgroundColor(Color.alpha(00000000));
 			} else {
 				viewHolder.tv_groupName.setGravity(Gravity.CENTER);
 				viewHolder.tv_description.setVisibility(View.GONE);
@@ -187,6 +187,7 @@ public class BaseExpandableAdapter extends BaseExpandableListAdapter {
 			viewHolder.tv_groupName = (TextView) v.findViewById(R.id.tv_group);
 			viewHolder.tv_description = (TextView) v.findViewById(R.id.tv_desc);
 
+			
 			// Child View Text¿« margin - left º≥¡§
 			LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
 					LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -205,7 +206,7 @@ public class BaseExpandableAdapter extends BaseExpandableListAdapter {
 					LayoutParams.WRAP_CONTENT));
 
 			viewHolder.tv_groupName.setVisibility(View.GONE);
-
+			v.setBackgroundColor(Color.parseColor("#424242"));
 			v.setTag(viewHolder);
 		} else {
 			viewHolder = (ViewHolder) v.getTag();

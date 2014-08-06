@@ -10,9 +10,11 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@drawable/ic_launcher"
+        android:icon="@drawable/clock"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
+        android:theme="@android:style/Theme.NoTitleBar" 
+        android:largeHeap="true"
+        >
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name" >
@@ -28,6 +30,22 @@
         </activity>
         <activity android:name=".RecvActivity" >
         </activity>
+          
+        <activity android:name="NotificationMessage"></activity>		
+
+        <receiver android:name="com.example.timetraveler.AlarmBroadcast" android:process=":remote"/>
+        
+        <receiver android:name="com.example.timetraveler.AlarmBroadcast">
+            <intent-filter >
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:name="SnapshotReceiver" />
+        <receiver android:name=".SnapshotReceiver">
+            <intent-filter>
+                <action android:name="SnapshotGenerateStart"/>
+            </intent-filter>
+            </receiver>
     </application>
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
