@@ -29,6 +29,7 @@ import com.FileManager.FileSender;
 import com.FrameWork.ConnectionManager;
 import com.FrameWork.InstalledAppInfo;
 import com.FrameWork.Payload;
+import com.FrameWork.SystemSetting;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -69,6 +70,11 @@ public class RecvActivity extends Activity {
 	private Socket sc;
 	MyCustomAdapter dataAdapter = null;
 
+	static int CONTACTS = 0;
+	static int PASSWORD = 0;
+	static int GESTURE = 0;
+	static int WIFI = 0;
+
 	final static int RECV_APP = 1;
 	final static int RECV_USER_DATA = 2;
 	final static int RECV_SETTINGS = 3;
@@ -107,7 +113,7 @@ public class RecvActivity extends Activity {
 			func_code = RECV_APP;
 		} else if (mName.equals("사용자 데이터")) { // 사용자 데이터 복원
 			func_code = RECV_USER_DATA;
-		} else if (mName.equals("전화번호부, SMS, 설정 복원")) { // 전화, sms , 설정 복원
+		} else if (mName.equals("Contacts, Settings")) { // 전화, sms , 설정 복원
 			func_code = RECV_SETTINGS;
 		} else { // 전체 복원
 			func_code = RECV_ALL;
@@ -115,7 +121,11 @@ public class RecvActivity extends Activity {
 		
 		Log.v("lll", ""+func_code);
 
-		if(func_code == RECV_ALL){
+		if(func_code == RECV_SETTINGS){
+			sName = sName + "_usersystem";
+			displayListView(sName, sName); // 스냅샷 위치가 device 일 경우
+		}
+		else if(func_code == RECV_ALL){
 			displayListView(sName, sName); // 스냅샷 위치가 device 일 경우
 		}else if (loc.equals("dev") && func_code == RECV_APP){
 			sName = sName + "_userdata";
@@ -552,10 +562,18 @@ public class RecvActivity extends Activity {
 
 			break;
 		case RECV_SETTINGS:
-			
-			
-			
+			Log.i("test", "test");
+			Item Item = new Item("contacts", "          전화번호부", false);
+			ItemList.add(Item);
+			Item Item1 = new Item("password", "          비밀번호", false);
+			ItemList.add(Item1);
+			Item Item2 = new Item("gesture", "          패턴lock", false);
+			ItemList.add(Item2);
+			Item Item3 = new Item("wifi", "          WiFi 설정값", false);
+			ItemList.add(Item3);
+
 			break;
+			
 		}
 
 		// create an ArrayAdaptar from the String Array
@@ -693,6 +711,7 @@ public class RecvActivity extends Activity {
 					public void onClick(View v) {
 
 						CheckBox cb = (CheckBox) v;
+
 						Item Item = (Item) cb.getTag();
 						String targetText = null;
 						switch (func_code) {
@@ -702,6 +721,33 @@ public class RecvActivity extends Activity {
 						case RECV_USER_DATA:
 							targetText = (String) cb.getText();
 							break;
+						case RECV_SETTINGS:
+							if (cb.getText().toString().contains("전화번호부")) {
+								if (CONTACTS == 1)
+									CONTACTS = 0;
+								else
+									CONTACTS = 1;
+							} else if (cb.getText().toString().contains("비밀번호")) {
+								if (PASSWORD == 1)
+									PASSWORD = 0;
+								else
+									PASSWORD = 1;
+							} else if (cb.getText().toString()
+									.contains("패턴lock")) {
+								if (GESTURE == 1)
+									GESTURE = 0;
+								else
+									GESTURE = 1;
+							} else if (cb.getText().toString()
+									.contains("WiFi 설정값")) {
+								if (WIFI == 1)
+									WIFI = 0;
+								else
+									WIFI = 1;
+							} else
+								;
+							
+							break;
 						}
 
 						Toast.makeText(
@@ -709,8 +755,7 @@ public class RecvActivity extends Activity {
 								"Clicked on Checkbox: " + cur_Loc + "/"
 										+ targetText + " is " + cb.isChecked(),
 								Toast.LENGTH_LONG).show();
-						Item.setSelected(cb.isChecked(), cur_Loc,
-								targetText.toString(), func_code); // 선택됨을 체크
+						Item.setSelected(cb.isChecked(), cur_Loc,targetText.toString(), func_code); // 선택됨을 체크
 																	// (선택 시 해당
 																	// 경로와 이름을
 																	// 저장 )
@@ -786,12 +831,8 @@ public class RecvActivity extends Activity {
 		tempBundle.putString("sName", sName);*/
 		
 		startActivityForResult(cmdToInstall, 1);
-		
 
 		//CopyToAppData(packageName, sName);
-		
-		
-		
 		
 		/* Tar로 묶기 */
 		// TarTieDir("com.example.applist", apkName);
@@ -801,18 +842,17 @@ public class RecvActivity extends Activity {
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
 		switch (requestCode) {
-		   case 1:
-			   CopyToAppData(pName, UsedsName);
-			   Log.v("lll", "ddododododododod");
-		////////////////////////////
-		//B의 신호를 받아 실행할 작업
-		////////////////////////////
-		   break;
+		case 1:
+			CopyToAppData(pName, UsedsName);
+			Log.v("lll", "ddododododododod");
+			
+			
+			break;
 
 		default:
-		   break;
+			break;
 		}
-		}
+	}
 	
 	private void CopyToAppData(String packageName,  String sName) {
 		try {
@@ -1013,6 +1053,14 @@ public class RecvActivity extends Activity {
 
 	}
 
+	
+	
+
+
+	
+
+	
+	
 	public void mOnClick(View v) {
 		switch (v.getId()) {
 		case R.id.startRecv: // startRecovery
@@ -1031,97 +1079,149 @@ public class RecvActivity extends Activity {
 
 					@Override
 					public void run() {
-						ProgressDialog progressDialog;
-						progressDialog = new ProgressDialog(RecvActivity.this);
-						progressDialog
-								.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-						progressDialog.setMax(ItemList.size());
-						progressDialog.setMessage("파일 복원 중 입니다...");
-
-						progressDialog.setCancelable(true);
-						progressDialog.show();
-
-						for (int i = 0; i < ItemList.size(); i++) {
-							Item Item = ItemList.get(i);
-
-							if (Item.isSelected()) {
-								/* /data/data영역 체크 */
-								String dataCoverPath = Item.getPath().replace(
-										sName, "/sdcard/");
-								String apkCoverPath = null;
-								// TODO : 경로체크 필요
-
-								Log.v("path",
-										Item.getPath().replace(sName, "/data")); // 실제
-																					// 경로
-																					// 경로체크
-
-								progressDialog.setProgress(i);
-
-								// 마운트 진행 후 파일을 옮긴다. ( Sdcard 혹은 Server로 전송 )
-								try {
-									p = new ProcessBuilder("su").start();
-
-									String mountCom = "mount -t ext4 /dev/vg/"
-											+ sName + " /sdcard/ssDir/" + sName
-											+ "\n";
-
-									Log.v("eee", mountCom);
-
-									p.getOutputStream().write(
-											mountCom.getBytes());
-
-									/*
-									 * pName-1.apk가 없으면 pName-2.apk로 해준다.
-									 */
-
-									String apkName = ExtractAPKName(Item
-											.getPath().replace(sName, "")
-											.replace("/app/", ""),
-											"/sdcard/ssDir/" + sName + "/app/");
-									String cpCom = "cp /sdcard/ssDir/" + sName
-											+ "/app/" + apkName + " "
-											+ "/sdcard/" + "\n";
-
-									
-									p.getOutputStream().write(cpCom.getBytes());
-
-									String modCom = "chmod 777 /sdcard/"
-											+ apkName+"\n";
-
-									p.getOutputStream()
-											.write(modCom.getBytes());
-
-									p.getOutputStream().write(
-											"exit\n".getBytes());
-									p.getOutputStream().flush();
-
-									Log.d("APP",
-											Item.getPath().replace(sName, "")
-													.replace("/app/", ""));
-
-									// ExtractAPKName(Item.getPath().replace(sName,
-									// "").replace("/app/", ""),
-									// "/sdcard/ssDir/" + sName);
-									StartInstall2(apkName, "/sdcard/", sName);
-
-									mountCom = "umount /sdcard/ssDir/" + sName
-											+ "\n";
-
-									p.getOutputStream().write(
-											mountCom.getBytes());
-
-									p.getOutputStream().write(
-											"exit\n".getBytes());
-									p.getOutputStream().flush();
-
+						
+						if(func_code == RECV_SETTINGS ){
+//							try {
+//								p.getOutputStream().write(("mount -t ext4 /dev/vg/"+sName+"_usersystem /sdcard/ssDir/"+sName+"_usersystem\n").getBytes());
+//							} catch (IOException e1) {
+//								// TODO Auto-generated catch block
+//								e1.printStackTrace();
+//							}
+							
+							SystemSetting ss = new SystemSetting();
+							ss.set_permission();   // root 권한 및 경로에 777권한 부여 
+			                  
+			                  if(CONTACTS == 1){
+			                     // 전화번호부 복원루틴 수행
+			                  }
+			                  if(PASSWORD == 1){
+			                     // 비밀번호 복원 루틴 수행
+			                	  String copy_password = "cp /sdcard/ssDir/"+sName+"_usersystem/system/password.key /sdcard/password.key\n";
+			                	  try {
+									p.getOutputStream().write(copy_password.getBytes());
 								} catch (IOException e) {
 									// TODO Auto-generated catch block
 									e.printStackTrace();
 								}
-							}
+			                  }
+			                  if(WIFI == 1){
+			                     // 와이파이 복원 루틴 수행                  
+					        		String copy_wifi = "cp /sdcard/ssDir/"+sName+"_usersystem/misc/wifi/wpa_supplicant.conf /sdcard/wpa_supplicant.conf\n";
+					        		try {
+										p.getOutputStream().write(copy_wifi.getBytes());
+									} catch (IOException e) {
+										// TODO Auto-generated catch block
+										e.printStackTrace();
+									}
+			                  }
+			                  if(GESTURE == 1){
+			                     // 패턴 복원 루틴 수행
+								String copy_gesture = "cp /sdcard/ssDir/"+sName+"_usersystem/system/gesture.key /sdcard/gesture.key\n";
+								try {
+									p.getOutputStream().write(copy_gesture.getBytes());
+								} catch (IOException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+			                  }
+			                  
 						}
-						progressDialog.dismiss();
+						else{
+							ProgressDialog progressDialog;
+							progressDialog = new ProgressDialog(RecvActivity.this);
+							progressDialog
+									.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+							progressDialog.setMax(ItemList.size());
+							progressDialog.setMessage("파일 복원 중 입니다...");
+
+							progressDialog.setCancelable(true);
+							progressDialog.show();
+
+							for (int i = 0; i < ItemList.size(); i++) {
+								Item Item = ItemList.get(i);
+
+								if (Item.isSelected()) {
+									/* /data/data영역 체크 */
+									String dataCoverPath = Item.getPath().replace(
+											sName, "/sdcard/");
+									String apkCoverPath = null;
+									// TODO : 경로체크 필요
+
+									Log.v("path",
+											Item.getPath().replace(sName, "/data")); // 실제
+																						// 경로
+																						// 경로체크
+
+									progressDialog.setProgress(i);
+
+									// 마운트 진행 후 파일을 옮긴다. ( Sdcard 혹은 Server로 전송 )
+									try {
+										p = new ProcessBuilder("su").start();
+
+										String mountCom = "mount -t ext4 /dev/vg/"
+												+ sName + " /sdcard/ssDir/" + sName
+												+ "\n";
+
+										Log.v("eee", mountCom);
+
+										p.getOutputStream().write(
+												mountCom.getBytes());
+
+										/*
+										 * pName-1.apk가 없으면 pName-2.apk로 해준다.
+										 */
+
+										String apkName = ExtractAPKName(Item
+												.getPath().replace(sName, "")
+												.replace("/app/", ""),
+												"/sdcard/ssDir/" + sName + "/app/");
+										String cpCom = "cp /sdcard/ssDir/" + sName
+												+ "/app/" + apkName + " "
+												+ "/sdcard/" + "\n";
+
+										
+										p.getOutputStream().write(cpCom.getBytes());
+
+										String modCom = "chmod 777 /sdcard/"
+												+ apkName+"\n";
+
+										p.getOutputStream()
+												.write(modCom.getBytes());
+
+										p.getOutputStream().write(
+												"exit\n".getBytes());
+										p.getOutputStream().flush();
+
+										Log.d("APP",
+												Item.getPath().replace(sName, "")
+														.replace("/app/", ""));
+
+										// ExtractAPKName(Item.getPath().replace(sName,
+										// "").replace("/app/", ""),
+										// "/sdcard/ssDir/" + sName);
+										StartInstall2(apkName, "/sdcard/", sName);
+
+										mountCom = "umount /sdcard/ssDir/" + sName
+												+ "\n";
+
+										p.getOutputStream().write(
+												mountCom.getBytes());
+
+										p.getOutputStream().write(
+												"exit\n".getBytes());
+										p.getOutputStream().flush();
+
+									} catch (IOException e) {
+										// TODO Auto-generated catch block
+										e.printStackTrace();
+									}
+								}
+							}
+							progressDialog.dismiss();
+							
+						}
+						
+					
 					}
 				};
 				break;

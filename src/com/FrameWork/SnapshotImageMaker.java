@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -43,150 +44,37 @@ public class SnapshotImageMaker extends Thread {
 
 	@Override
 	public void run() {
-
-		
+		Log.e("eee", "snapshot maker!!!");
+		Process p;
 		try {
 			
-			Process p = Runtime.getRuntime().exec("su"); // root 쉘
-
-			oos.writeObject("전송을 시작합니다");
+			Log.v("eee","---------------- s NAme : "+sName);
 			
-			// 스레드로 처리해야 할 듯 함.. timeout 됨.
-
-			// obs : 10240 (10 kb 씩 read)
-			String command = "dd if=/dev/vg/" + sName + " obs=512k\n"; // 1mb 단위로 읽음
-
-			// 명령어 실행
-			// command = "dd if=/dev/vg/test.txt obs=1024\n";
-			//command = "dd if=/dev/vg/test.txt obs=512k\n";
-			 
-			Log.i("thread", "command : " + command );
-
+			//int cnt = 1*1024*1024*1024 / 512*3000;
+			
+			p = Runtime.getRuntime().exec("su");
 			OutputStream os = p.getOutputStream(); // 프로세스용 output stream
-			InputStream is = p.getInputStream(); // 
-			
-			/*readThread rT = new readThread(is , oos); 
-			rT.start();*/
 
-			// input command
+			String command = "dd if=/dev/vg/" + sName
+					+ " of=/data/userrecover/test.img count=100 bs=4096\n"; // 1mb
+																				// 단위로
+																				// 읽음
+
 			os.write(command.getBytes());
-			os.write("exit\n".getBytes());
+
 			os.flush();
-			Log.d("lvm2", "Stream finished 11");
-			
-			// -----------------------------------------------------------------------------------------
-			
-			byte buffer[] = new byte[1024*512]; // 512k
-			int size = 0;
-			long totalSize = 0;
-			try {
-				/*if (sc.isConnected()) { // 소켓 연결시 파일전송
-					fs = new FileSender(sc);
-				} else {
-					return;
-				}*/
-				
-				/*
-				 * input stream 에서 읽어 socket 으로 쏜다.
-				 */
-				
-				oos.writeInt(0); // 서버에게 전송을 시작한다는 신호를 보냄.
-				
-				//gOut = new GZIPOutputStream(oos);
-
-				//gOut.write(buffer, 0, size); // 압축해서 서버로 바로 쏜다
-				
-				// avail  > input stream에 남아있는 바이트
-				
-				int avail ;
-				int bunchSize = 0; // bunch size 는 한번에  어느정도 양을 보낼지 결정한다.
-				
-				while ((size = is.read(buffer)) > 0) {
-					
-					Log.e("lvm2", "size : "+size +" / buf Size : "+buffer.length);
-					//Log.e("lvm2", "in while (avail : "+avail+")");
-					String str = new String ( buffer, 0 , size);
-					
-					//Log.e("lvm2", "string : " + str);
-					// buffer 2 ~ end 까지 서버로 전송
-					
-					//gOut.write(buffer, 0, size); // 압축해서 서버로 바로 쏜다
-					totalSize += size;
-					bunchSize += size;
-				
-					oos.writeInt(0); // 전송을 알림
-					oos.writeInt(bunchSize); // 전송할 크기 알림
-					// Log.d("lvm2","전송 할 크기 : "+bunchSize);
-					oos.write(buffer, 0, bunchSize);
-					//gOut.write(buffer, 0, bunchSize);
-					
-					bunchSize = 0;
-					
-				}
-				// 잔여 버퍼를 전송
-				if(bunchSize > 0){
-					oos.writeInt(0); // 전송을 알림						
-					oos.writeInt(bunchSize); // 전송할 크기 알림
-					oos.write(buffer, 0, bunchSize);
-					bunchSize = 0 ;
-				}
-				
-				oos.writeInt(-1); // 전송의 끝을 알림
-				
-				Log.d("lvm2", Long.toString(totalSize));
-				
-				Log.e("lvm2", "out of while");
-				
-				oos.flush();
-				/*gOut.flush();
-				gOut.close();*/
-			} catch (UnknownHostException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}finally{
-				Log.d("lvm", "total : " + Long.toString(totalSize / 1024)+ "kb");
-			}
-			
-			
-			// ----------------------------------------------------------
-			
 			os.close();
-			oos.close();
-			is.close();
 			
-			
-			/*
-			 * p.exitValue 로 끝을 체크하려고 함 끊길지 잘 모르겠다.
-			 */
-			try {
-				//rT.join(); // 전송 스레드 대기
-				
-				p.waitFor();
-				if (p.exitValue() != 255) {
-					// TODO Code to run on success
-					Log.i("lvm2", "su and dd command successed");
-				} else {
-					// TODO Code to run on unsuccessful
-					Log.i("lvm2", "su fail");
-				}
-
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				Log.i("lvm2", "not root");
-			} 
-
-			Log.d("lvm2", "Stream finished");
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} finally {
+		} // root 쉘
 
-		}
+		
+		
+		
+		
 
 	}
 }

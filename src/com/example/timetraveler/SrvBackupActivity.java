@@ -162,9 +162,9 @@ public class SrvBackupActivity extends Activity {
 				
 				for(int i = 0 ; i < strArr.length ; i++){
 					if(strArr[i].equals("vg")){
-						ssStrList.add(strArr[i-1]); // 임시등록						
-						/*if(strArr[i+1].startsWith("s")) // 스냅샷만 출력해 주는 부분
-							ssStrList.add(strArr[i-1]);*/
+						//ssStrList.add(strArr[i-1]); // 임시등록						
+						if(strArr[i+1].startsWith("s")) // 스냅샷만 출력해 주는 부분
+							ssStrList.add(strArr[i-1]);
 					}
 				}
 				
@@ -218,6 +218,9 @@ public class SrvBackupActivity extends Activity {
 
 								
 								// Snapshot Imaging
+								
+								
+								
 								// Snapshot Send to Server
 								
 

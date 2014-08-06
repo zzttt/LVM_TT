@@ -1,6 +1,8 @@
 package com.FrameWork;
 
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.Collator;
@@ -8,7 +10,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
+import android.content.ContentResolver;
 import android.content.Context;
+import android.database.Cursor;
+import android.provider.ContactsContract;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -23,14 +28,8 @@ public class SnapshotAlteration {
 	}
 
 	public String getSettingStrAlteration(String sName) {
-		fiList = getSettingAlteration(sName);
-		StringBuffer result = new StringBuffer();
 
-		for (int i = 0; i < 3 && i < fiList.size(); i++)
-			// item 은 3개만 리턴
-			result.append(fiList.get(i).getName() + "\n");
-
-		return result.toString();
+		return getSettingAlteration(sName).toString();
 	}
 
 	/**
@@ -70,7 +69,7 @@ public class SnapshotAlteration {
 	}
 
 	public String getStrAppAlteration(String sName , Context context) {
-		fiList = getAppAlteration(sName, context);
+		/*		fiList = getAppAlteration(sName, context);
 		StringBuffer result = new StringBuffer();
 
 		Collections.sort(fiList, date); // 날짜별
@@ -87,8 +86,10 @@ public class SnapshotAlteration {
 						+ fiList.get(i).getTime() + ")" + "\n\n");
 			}
 
-		}
-		return result.toString();
+		}*/
+		
+		
+		return "zz";
 	}
 
 	/**
@@ -167,6 +168,7 @@ public class SnapshotAlteration {
 			mountCom = "umount /sdcard/ssDir/" + sName + "\n";
 			p.getOutputStream().write(mountCom.getBytes());
 
+			
 			// root 종료
 			p.getOutputStream().write("exit\n".getBytes());
 			p.getOutputStream().flush();
@@ -349,142 +351,83 @@ public class SnapshotAlteration {
 	 *            // 변화내역을 알고자 하는 스냅샷 이름
 	 * @return
 	 */
-	public ArrayList<FileInfo> getSettingAlteration(String sName) {
+	// setting 값 복원 //
+	public StringBuilder getSettingAlteration(String sName) {
 		String result = null;
+		int end = 0;
+		StringBuilder sb = new StringBuilder();
+		SystemSetting SysSet = new SystemSetting(null);
 
+		// DatabaseHandler dh = new DatabaseHandler(context);
+		// dh.getContactsCount();
+		//
+		// 여기서 스냅샷 시점의 파일을 마운트 해야함 //
+		Process p;
+		SystemSetting ss = new SystemSetting(null);
+		ss.set_permission();
+		
 		try {
-			Process p = Runtime.getRuntime().exec("su");
-
+			p = Runtime.getRuntime().exec("su");
 			// snapshot 을 ext4 로 마운트하여 내용을 확인한다.
-			String mountCom = "mount -t ext4 /dev/vg/" + sName
-					+ " /sdcard/ssDir/" + sName + "\n";
+			// String mountCom = "mount -t ext4 /dev/vg/" + sName +
+			// " /sdcard/ssDir/" + sName + "\n";
+			// p.getOutputStream().write(mountCom.getBytes());
 
-			p.getOutputStream().write(mountCom.getBytes());
-
-			// root 계정상태에서 ls -lR (sub directory 까지 read)
-			String com = "ls -lR /sdcard/ssDir/" + sName + "\n";
-			p.getOutputStream().write(com.getBytes());
-
-			// root 종료
-			p.getOutputStream().write("exit\n".getBytes());
-			p.getOutputStream().flush();
-
-			// snapshot list load standard i/o
-			BufferedReader br = new BufferedReader(new InputStreamReader(
-					p.getInputStream()));
-
-			String line = null;
-			ArrayList<String> lineArr = new ArrayList<String>(); // 명령의
-																	// 결과
-																	// String
-																	// line
-			// StringBuffer sTotalList = new StringBuffer();
-
-			// 라인별로 읽기 시작한다.
-			while ((line = br.readLine()) != null) {
-				// sTotalList.append(line+"\n");
-				lineArr.add(line);
-			}
-
-			// 라인별 파싱
-			for (String s : lineArr) {
-
-				String[] info = s.split(" ");
-				ArrayList<String> splitedInfo = new ArrayList<String>();
-
-				for (String ss : info) {
-					ss = ss.trim();
-					if (ss.length() != 0)
-						splitedInfo.add(ss);
-				}
-
-				FileInfo fi;
-				// split 결과는 실제 파일의 정보 , 하위 디렉토리 이름 으로 나누어짐.
-				// 하위디렉토리 이름은 무시한다
-				int idx = 0;
-
-				char fileType = ' ';
-
-				if (splitedInfo.size() != 0) { // 한 라인의 가장
-												// 첫번째 문자는
-												// 파일 형식을
-												// 나타냄..
-					fileType = splitedInfo.get(0).charAt(0);
-					// Log.d("lvm",
-					// "("+String.valueOf(fileType)+")");
-
-					if (fileType == 'l') { // 링크파일의 경우 파일명
-											// 수정 필요 ( idx 5
-											// 부터 fileName..
-											// 5 이후 문자열을 통합
-											// )
-						String fName = splitedInfo.get(5) + splitedInfo.get(6)
-								+ splitedInfo.get(7);
-						splitedInfo.set(5, fName);
-						splitedInfo.remove(7);
-						splitedInfo.remove(6);
-					}
-
-				}
-
-				if (fileType == 'd' || fileType == 'b' || fileType == 'c'
-						|| fileType == 'p' || fileType == 'l'
-						|| fileType == 's') { // special
-												// files
-					// b(Block file(b) , Character device
-					// file(c) , Named pipe file or just a
-					// pipe file(p)
-					// Symbolic link file(l), Socket file(s)
-
-					fi = new FileInfo(String.valueOf(fileType), splitedInfo
-							.get(0).substring(1), splitedInfo.get(3),
-							splitedInfo.get(4), splitedInfo.get(5));
-					fiList.add(fi); // fiList 에 등록
-				} else if (fileType == '-') { // general
-												// files
-					// general file에는 용량정보까지 포함 됨.
-					fi = new FileInfo(String.valueOf(fileType), splitedInfo
-							.get(0).substring(1), splitedInfo.get(3),
-							splitedInfo.get(4), splitedInfo.get(5),
-							splitedInfo.get(6));
-					fiList.add(fi); // fiList 에 등록
-				} else { // directory 정보는 객체를 따로 저장하지 않음.
-							// nothing to do
-				}
-
-			}
-
-			try {
-				p.waitFor();
-				if (p.exitValue() != 255) {
-					// TODO Code to run on success
-					/*
-					 * Toast.makeText(vv.getContext(), "root",
-					 * Toast.LENGTH_SHORT).show();
-					 */
-				} else {
-					// TODO Code to run on unsuccessful
-					/*
-					 * Toast.makeText(vv.getContext(), "not root",
-					 * Toast.LENGTH_SHORT) .show();
-					 */
-				}
-
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				/*
-				 * Toast.makeText(vv.getContext(), "not root",
-				 * Toast.LENGTH_SHORT).show();
-				 */
-			}
-
+			// String copy_file = "cp /dev/vg/"+sName+"/sdcard/ssDir"+sName
+			// " /storage/sdcard0/password.key";
+			p.getOutputStream().write(("mount -t ext4 /dev/vg/"+sName+"_usersystem /sdcard/ssDir/"+sName+"_usersystem\n").getBytes());
+				
+			 String copy_password = "cp /sdcard/ssDir/"+sName+"_usersystem/system/password.key /sdcard/password.key\n";
+			 p.getOutputStream().write(copy_password.getBytes());
+			 
+			 String copy_wifi = "cp /sdcard/ssDir/"+sName+"_usersystem/misc/wifi/wpa_supplicant.conf /sdcard/wpa_supplicant.conf\n";
+			 p.getOutputStream().write(copy_wifi.getBytes());
+			
+			 String copy_gesture = "cp /sdcard/ssDir/"+sName+"_usersystem/system/gesture.key /sdcard/gesture.key\n";
+			 p.getOutputStream().write(copy_gesture.getBytes());
+			   
+			 p.getOutputStream().write(("umount /sdcard/ssDir/"+sName+"_usersystem\n").getBytes());
+			 
+			 p.getOutputStream().write("exit\n".getBytes());
+	         p.getOutputStream().flush();
+	         p.getOutputStream().close();
+			 
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} // root 쉘
+		}
 
-		return fiList;
+
+		if (SystemSetting.sdcard_passwordkey_file.length() == 0 ) { // 마운트된 경로
+			sb.append("1) PIN_비밀번호     : 사용중이지 않았음 \n");
+		} else {
+			if (SysSet.compare(SystemSetting.sdcard_passwordkey_file, SystemSetting.passwordkey_file)) //
+			{
+				sb.append("1) PIN_비밀번호      : 변경사항 없음\n");
+			} else {
+				sb.append("1) PIN_비밀번호      : 변경사항 있음\n");
+			}
+		}
+		// 스냅샷 시점에서 사용중이지 않았음
+		if (SystemSetting.sdcard_gesture_file.length() == 0) { // 스냅샷 시점에서 패턴이
+																// 사용중이지 않았음
+			sb.append("2) 패턴_비밀번호    : 사용중이지 않았음 \n");
+		} else {
+			if (SysSet.compare(SystemSetting.sdcard_gesture_file, SystemSetting.gesturekey_file)) //
+			{
+				sb.append("2) 패턴_비밀번호    : 변경사항 없음\n");
+			} else {
+				sb.append("2) 패턴_비밀번호    : 변경사항 있음\n");
+			}
+		}
+
+		if (SysSet.compare(SystemSetting.sdcard_wifi_file, SystemSetting.wifi_file)) //
+		{
+			sb.append("3) WiFi_설정        : 변경사항 없음\n");
+		} else {
+			sb.append("3) WiFi_설정        : 변경사항 있음\n");
+		}
+		return sb;
 	}
 
 	private final Comparator<FileInfo> date = new Comparator<FileInfo>() {
@@ -506,9 +449,9 @@ public class SnapshotAlteration {
 		@Override
 		public int compare(FileInfo object1, FileInfo object2) {
 			return collator.compare(object1.getTime(), object2.getTime()); // 내림차순
-																			// 정렬
 
 		}
 	};
-
+	
+	
 }

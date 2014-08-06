@@ -20,6 +20,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.SortedMap;
@@ -386,7 +387,6 @@ public class MainActivity extends Activity implements OnClickListener {
 								sBackIntent.putExtra("userCode", rd.getUserCode()); // 사용자 코드를 다음 인텐트로 전송
 								startActivity(sBackIntent);
 							}
-
 							break;
 						case 1: // 복원 시점 생성 ------------------------------------------ Create Snapshot
 							// child menu 1개 이므로 바로 진행
@@ -456,12 +456,9 @@ public class MainActivity extends Activity implements OnClickListener {
 							
 						case 2: // scheduled snapshot
 							// Alarm Manager
-
-							setVal0 = true;
-							Toast.makeText(getApplicationContext(),
-									"자동 스냅샷이 설정되었습니다.", Toast.LENGTH_SHORT)
-									.show();
-
+		                    SnapshotSetup test = new SnapshotSetup(getApplicationContext());
+		                     Calendar cal1 = new GregorianCalendar();   // 현재시간정보 받아오기
+		                     test.setup_time(setVal0, setVal2, cal1);   // snapshot setup
 							break;
 						}
 						return false;
@@ -715,7 +712,6 @@ public class MainActivity extends Activity implements OnClickListener {
 
 			switch (msg.what) {
 			case 0:
-
 				break;
 			case 1:
 				break;
@@ -912,7 +908,9 @@ public class MainActivity extends Activity implements OnClickListener {
 							}else if(mName.equals("사용자 데이터")){
 								fiList.addAll(sa.getUserDataAlteration(sName)); // sName에 해당하는 FileInfoList를 얻는다.	
 							}else if(mName.equals("Contacts, Settings")){
-								fiList.addAll(sa.getSettingAlteration(sName));
+								StringBuilder sb = sa.getSettingAlteration(sName);
+								fiList.add(new FileInfo("", "", "", "", "", sb.toString()));
+								//fiList.addAll();
 							}else{ //전체복원
 								
 							}
@@ -954,7 +952,6 @@ public class MainActivity extends Activity implements OnClickListener {
 							 * 
 							 * 
 							 */
-							
 							Toast.makeText(vv.getContext(), "Server Img", Toast.LENGTH_SHORT).show();
 
 						}
@@ -991,13 +988,20 @@ public class MainActivity extends Activity implements OnClickListener {
 									Log.e("ddd", fiList.get(i).getName());
 									changedList.add(fiList.get(i).getName());
 
-									if (!fiList.get(i).getType().equals("d")) {
-										vListSize++;
-										sbMessage.append(fiList.get(i).getName()
-												+ "\n( time : "
-												+ fiList.get(i).getDate() + " "
-												+ fiList.get(i).getTime() + ")"
-												+ "\n\n");
+									if(!mName.contains("Contacts")){
+										if (!fiList.get(i).getType().equals("d")) {
+											vListSize++;
+											sbMessage.append(fiList.get(i).getName()
+													+ "\n( time : "
+													+ fiList.get(i).getDate() + " "
+													+ fiList.get(i).getTime() + ")"
+													+ "\n\n");
+										}
+									}else{
+										if (!fiList.get(i).getType().equals("d")) {
+											vListSize++;
+											sbMessage.append(fiList.get(i).getName());
+										}
 									}
 								}
 								

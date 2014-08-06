@@ -335,6 +335,7 @@ public class ConnectionManager extends Thread {
 				changedItem3 = sa.getSettingStrAlteration(this.itemName);
 				ssData.setSettingValChanged(changedItem3);
 				
+				
 
 				// sInfoList 에 있는 데이터들을 ssData 에 입력 (snapshot 객체화 )
 				ssData.setInfoLists(sInfoLists);
